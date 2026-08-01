@@ -75,13 +75,17 @@ Open `http://127.0.0.1:8000`. The seeders create demonstration forms and users w
 
 ## Create the first administrator
 
-Run the interactive command and enter a unique email and a password of at least 12 characters:
+`app:create-admin` is a one-time bootstrap command for an installation that has no platform administrator. Run it interactively and enter a new, dedicated email address and a password of at least 12 characters:
 
 ```powershell
 php artisan app:create-admin
 ```
 
-The command never hardcodes or prints the password. Optional non-secret prompts can be supplied as `--name` and `--email`; the password remains interactive.
+The command never accepts the password as an argument, hardcodes it, or prints it. Optional non-secret prompts can be supplied as `--name` and `--email`; the password remains interactive and hidden.
+
+The bootstrap check and account creation are transactionally protected against concurrent attempts. The command fails without changing any account when a platform administrator already exists or when the supplied email belongs to an existing user; it never promotes a public respondent account.
+
+After bootstrap, create or promote additional platform administrators only through the authenticated **System users** interface while signed in as a platform administrator. Those actions are written to the audit log. This command is not a normal administrator-management tool.
 
 ## Database, migrations, and demo data
 

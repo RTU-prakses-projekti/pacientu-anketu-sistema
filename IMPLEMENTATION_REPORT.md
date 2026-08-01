@@ -1,6 +1,6 @@
 # Universal Form Builder — Implementation Report
 
-Date: 2026-08-01  
+Date: 2026-08-02
 Branch: `universal-form-builder` (unchanged; nothing was committed, pushed, merged, or staged)
 
 ## 1. Executive summary
@@ -25,6 +25,14 @@ The 2026-08-01 corrective pass resolved the confirmed workflow and isolation def
 - Form duplication requires both source view and destination-organisation `forms.create` permission.
 - Organisation user administration no longer receives the platform directory; it shows current members and accepts only exact-email membership lookup.
 - Publication validation now requires access codes and timer durations when applicable, rejects contradictory anonymous/identified flags, and blocks activation for archived forms.
+
+### First-admin bootstrap hardening
+
+- `php artisan app:create-admin` is now strictly a one-time bootstrap command. It succeeds only while no user has the global `platform_admin` role and refuses to promote any existing account.
+- The existence check and new administrator creation run in one database transaction while a cross-process bootstrap lock prevents concurrent command instances from creating two first administrators.
+- The password remains an interactive hidden prompt and is not accepted as a command-line argument.
+- Public registration continues to create only ordinary respondent accounts and ignores attempted role or permission escalation input.
+- Additional platform administrators can be created or promoted only from the authenticated platform-administrator **System users** interface. Both operations produce audit records.
 
 ## 2. Architecture implemented
 
@@ -73,7 +81,8 @@ It adds `is_active` and `locale` to `users` and creates:
 - Creator submission filters/details, attempt grant, deadline extension, invalidation, CSV/XLSX export, private authorized download, and audit trails.
 - XLSX sheets: Summary, Submissions, Answers, and Component statistics. CSV formula injection is neutralized.
 - LV default respondent interface with EN/RU selectors and locale fallback.
-- Interactive `php artisan app:create-admin` command with no stored/default password.
+- Transactionally locked, one-time interactive `php artisan app:create-admin` bootstrap command with no stored/default/argument password and no existing-account promotion.
+- Authenticated platform-administrator controls for audited creation and promotion of additional platform administrators.
 - Active legacy quiz routes were retired; legacy schema and implementation files remain available for rollback/migration reference.
 
 ## 5. Files and packages added
@@ -99,7 +108,7 @@ Composer package added: `openspout/openspout` v5.8.0 for streaming XLSX creation
 
 ## 7. Tests created
 
-The feature suite currently passes **27 tests / 139 assertions** using in-memory SQLite. It covers:
+The feature suite currently passes **32 tests / 177 assertions** using in-memory SQLite. It covers:
 
 - registration identity persistence, role-escalation rejection, and login throttling;
 - organisation isolation and creator/reviewer permissions;
@@ -119,6 +128,7 @@ The feature suite currently passes **27 tests / 139 assertions** using in-memory
 - choice option label stability and publication-time scoring-reference validation;
 - attachment cloning across versions and form duplication;
 - duplicate authorization, organisation directory isolation, and publication configuration guards.
+- first-administrator bootstrap success, repeat and existing-account rejection, public-registration role isolation, concurrent bootstrap exclusion, and authenticated audited administrator management.
 
 ## 8. Commands run and results
 
@@ -131,7 +141,7 @@ npm.cmd audit --omit=dev --audit-level=high 0 vulnerabilities
 php artisan about                         Laravel 13.20.0 / PHP 8.5.9 / SQLite
 php artisan route:list --except-vendor    65 routes
 php artisan migrate:status                all migrations ran; universal migration batch 2
-php artisan test                           27 passed, 139 assertions
+php artisan test                           32 passed, 177 assertions
 npm.cmd run build                         Vite production build passed
 PHP syntax check                          99 files passed
 php artisan schedule:list                 overdue command scheduled every minute
@@ -196,13 +206,15 @@ For frontend development, additionally run `npm.cmd run dev`. Open `http://127.0
 
 ## 13. Exact first-admin creation instructions
 
-Run the interactive command and provide a unique email and a password of at least 12 characters containing letters and numbers:
+This is a one-time installation bootstrap command, not a normal administrator-management tool. It can run only when no user has the global `platform_admin` role. Provide a new, dedicated email address and a password of at least 12 characters containing letters and numbers:
 
 ```powershell
 php artisan app:create-admin
 ```
 
-Optional non-secret prompts can be passed as `--name` and `--email`; the password always remains interactive and is not printed or hardcoded.
+Optional non-secret prompts can be passed as `--name` and `--email`; the password always remains interactive and hidden and cannot be passed as an argument. The command performs the existence check and account creation transactionally, excludes concurrent bootstrap attempts, refuses an email belonging to any existing user, and makes no changes when an administrator already exists.
+
+Create or promote every additional platform administrator through the authenticated **System users** interface while signed in as an existing platform administrator. Administrator creation and promotion through that interface are audit logged.
 
 ## 14. Remaining work ordered by priority
 

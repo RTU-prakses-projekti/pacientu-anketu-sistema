@@ -20,6 +20,8 @@ use App\Models\SubmissionAnswer;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Console\Command as ConsoleCommand;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -41,13 +43,49 @@ class UniversalFormWorkflowTest extends TestCase
 
     public function test_registration_persists_identity_without_role_escalation_and_login_is_throttled(): void
     {
-        $response=$this->post('/register',['name'=>'New Respondent','email'=>'new@example.test','student_id'=>'RESP-1','role'=>'platform_admin','password'=>'LongPassword123','password_confirmation'=>'LongPassword123']);
+        $response=$this->post('/register',['name'=>'New Respondent','email'=>'new@example.test','student_id'=>'RESP-1','role'=>'platform_admin','permissions'=>['*'],'password'=>'LongPassword123','password_confirmation'=>'LongPassword123']);
         $response->assertRedirect(route('dashboard'));
         $user=User::where('email','new@example.test')->firstOrFail();
         $this->assertSame('RESP-1',$user->student_id);$this->assertSame('student',$user->role);$this->assertFalse($user->isPlatformAdmin());
         auth()->logout();
         for($i=0;$i<5;$i++)$this->post('/login',['email'=>'new@example.test','password'=>'wrong']);
         $this->post('/login',['email'=>'new@example.test','password'=>'wrong'])->assertStatus(429);
+    }
+
+    public function test_first_platform_administrator_can_be_bootstrapped_once(): void
+    {
+        $this->bootstrapAdmin('First Admin','first-admin@example.test')->expectsOutput('First platform administrator created. Future administrators must be managed through the authorised administration interface.')->assertExitCode(ConsoleCommand::SUCCESS);
+        $user=User::where('email','first-admin@example.test')->firstOrFail();$this->assertTrue($user->isPlatformAdmin());$this->assertTrue($user->is_active);$this->assertTrue(Hash::check('BootstrapPassword123',$user->password));
+    }
+
+    public function test_second_bootstrap_invocation_is_rejected_without_changes(): void
+    {
+        $this->bootstrapAdmin('First Admin','first-admin@example.test')->assertExitCode(ConsoleCommand::SUCCESS);$first=User::where('email','first-admin@example.test')->firstOrFail();$password=$first->password;
+        $this->artisan('app:create-admin',['--name'=>'Second Admin','--email'=>'second-admin@example.test'])->expectsOutput('A platform administrator already exists. Additional administrators must be managed through the authorised administration interface.')->assertExitCode(ConsoleCommand::FAILURE);
+        $this->assertSame(1,User::count());$this->assertDatabaseMissing('users',['email'=>'second-admin@example.test']);$this->assertSame($password,$first->fresh()->password);$this->assertTrue($first->fresh()->isPlatformAdmin());
+    }
+
+    public function test_existing_respondent_cannot_be_promoted_by_bootstrap_command(): void
+    {
+        $respondent=User::factory()->create(['email'=>'existing@example.test','password'=>Hash::make('OriginalPassword123'),'is_active'=>false]);$password=$respondent->password;
+        $this->artisan('app:create-admin',['--name'=>'Replacement Name','--email'=>'existing@example.test'])->expectsOutput('That email already belongs to an existing account. Initial bootstrap requires a new dedicated administrator account.')->assertExitCode(ConsoleCommand::FAILURE);
+        $respondent->refresh();$this->assertSame($password,$respondent->password);$this->assertFalse($respondent->is_active);$this->assertFalse($respondent->isPlatformAdmin());
+    }
+
+    public function test_concurrent_bootstrap_lock_prevents_two_first_administrators(): void
+    {
+        $lock=Cache::lock('app:create-admin:first-platform-admin',60);$this->assertTrue($lock->get());
+        try{$this->artisan('app:create-admin',['--name'=>'Racing Admin','--email'=>'race@example.test'])->expectsOutput('Another first-administrator bootstrap attempt is already in progress.')->assertExitCode(ConsoleCommand::FAILURE);}finally{$lock->release();}
+        $this->assertSame(0,User::whereHas('globalRoles',fn($query)=>$query->where('name','platform_admin'))->count());$this->bootstrapAdmin('Winning Admin','winner@example.test')->assertExitCode(ConsoleCommand::SUCCESS);$this->assertSame(1,User::whereHas('globalRoles',fn($query)=>$query->where('name','platform_admin'))->count());
+    }
+
+    public function test_additional_platform_administrators_require_authenticated_audited_interface(): void
+    {
+        $role=Role::where('name','platform_admin')->firstOrFail();$admin=User::factory()->create(['is_active'=>true]);$admin->globalRoles()->attach($role);$candidate=User::factory()->create(['is_active'=>true]);
+        $this->post(route('system.platform-admins.store'),['name'=>'Blocked','email'=>'blocked@example.test','password'=>'AnotherPassword123','password_confirmation'=>'AnotherPassword123'])->assertRedirect(route('login'));
+        $this->actingAs($candidate)->post(route('system.platform-admins.promote',$candidate))->assertForbidden();
+        $this->actingAs($admin)->post(route('system.platform-admins.store'),['name'=>'Created Admin','email'=>'created-admin@example.test','password'=>'AnotherPassword123','password_confirmation'=>'AnotherPassword123'])->assertRedirect();$created=User::where('email','created-admin@example.test')->firstOrFail();$this->assertTrue($created->isPlatformAdmin());$this->assertDatabaseHas('audit_logs',['actor_id'=>$admin->id,'action'=>'platform_admin.created','subject_id'=>$created->id]);
+        $this->actingAs($admin)->post(route('system.platform-admins.promote',$candidate))->assertRedirect();$this->assertTrue($candidate->fresh()->isPlatformAdmin());$this->assertDatabaseHas('audit_logs',['actor_id'=>$admin->id,'action'=>'platform_admin.promoted','subject_id'=>$candidate->id]);
     }
 
     public function test_organisation_policies_prevent_cross_organisation_access(): void
@@ -253,6 +291,13 @@ class UniversalFormWorkflowTest extends TestCase
     private function member(string $roleName, ?Organisation $organisation=null): array
     {
         $organisation??=Organisation::create(['name'=>Str::random(8),'slug'=>Str::lower(Str::random(10)),'is_active'=>true]);$user=User::factory()->create(['student_id'=>Str::uuid()->toString(),'is_active'=>true]);$membership=OrganisationMembership::create(['organisation_id'=>$organisation->id,'user_id'=>$user->id,'is_active'=>true]);$membership->roles()->attach(Role::where('name',$roleName)->firstOrFail());return [$user,$organisation];
+    }
+
+    private function bootstrapAdmin(string $name, string $email)
+    {
+        return $this->artisan('app:create-admin',['--name'=>$name,'--email'=>$email])
+            ->expectsQuestion('Password (minimum 12 characters)','BootstrapPassword123')
+            ->expectsQuestion('Confirm password','BootstrapPassword123');
     }
 
     private function publication(Form $form,$version,array $overrides=[]): Publication

@@ -54,6 +54,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/organisations/{organisation}', [OrganisationController::class, 'update'])->name('organisations.update');
     Route::get('/system/audit', [AuditLogController::class, 'index'])->name('audit.system');
     Route::get('/system/users', [SystemAdministrationController::class, 'users'])->name('system.users');
+    Route::post('/system/platform-admins', [SystemAdministrationController::class, 'createPlatformAdmin'])->name('system.platform-admins.store');
+    Route::post('/system/platform-admins/{user}/promote', [SystemAdministrationController::class, 'promotePlatformAdmin'])->name('system.platform-admins.promote');
     Route::get('/system/roles', [SystemAdministrationController::class, 'roles'])->name('system.roles');
     Route::put('/system/roles/{role}', [SystemAdministrationController::class, 'updateRole'])->name('system.roles.update');
     Route::post('/users/{user}/toggle', [UserAdministrationController::class, 'toggleUser'])->name('users.toggle');
