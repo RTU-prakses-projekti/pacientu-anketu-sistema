@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Domain\Audit\AuditService;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -14,22 +17,18 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request, AuditService $audit)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
+        $credentials = $request->validated();
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::attempt($credentials) && Auth::user()->is_active) {
             $request->session()->regenerate();
             
-            if (Auth::user()->isAdmin()) {
-                return redirect()->route('admin.tests.index');
-            }
-            
-            return redirect()->route('student.tests');
+            $audit->record('security.login', Auth::user());
+            return redirect()->intended(route('dashboard'));
         }
+
+        if (Auth::check()) Auth::logout();
 
         return back()->withErrors([
             'email' => 'Invalid credentials.'
@@ -41,26 +40,22 @@ class AuthController extends Controller
         return view('auth.register');
     }
 
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'student_id' => 'required|string|unique:users',
-            'password' => 'required|min:6|confirmed'
-        ]);
+        $validated = $request->validated();
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'student_id' => $validated['student_id'],
             'password' => Hash::make($validated['password']),
-            'role' => 'student'
+            'locale' => 'lv',
+            'is_active' => true,
         ]);
 
         Auth::login($user);
 
-        return redirect()->route('student.tests');
+        return redirect()->route('dashboard');
     }
 
     public function logout(Request $request)

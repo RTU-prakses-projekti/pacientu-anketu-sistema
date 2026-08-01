@@ -1,57 +1,37 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="{{ app()->getLocale() }}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Quiz System')</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    @stack('styles')
+    <title>@yield('title', __('messages.app_name'))</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-50">
-    @auth
-    <nav class="bg-white shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <a href="{{ Auth::user()->isAdmin() ? route('admin.tests.index') : route('student.tests') }}" 
-                       class="text-xl font-bold text-blue-600">
-                        📝 Quiz System
-                    </a>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-gray-700">{{ Auth::user()->name }}</span>
-                    @if(Auth::user()->isAdmin())
-                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">Admin</span>
-                    @else
-                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Student</span>
-                    @endif
-                    <form action="{{ route('logout') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="text-red-500 hover:text-red-700">Logout</button>
-                    </form>
-                </div>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+<header class="border-b border-slate-200 bg-white">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <a class="text-lg font-bold text-indigo-700" href="{{ auth()->check() ? route('dashboard') : route('login') }}">{{ __('messages.app_name') }}</a>
+        <nav class="flex flex-wrap items-center gap-3 text-sm" aria-label="Main navigation">
+            @auth
+                <a href="{{ route('dashboard') }}">{{ __('messages.dashboard') }}</a>
+                @if(auth()->user()->isPlatformAdmin())<a href="{{ route('organisations.index') }}">{{ __('messages.organisations') }}</a><a href="{{ route('system.users') }}">{{ __('messages.users') }}</a><a href="{{ route('system.roles') }}">{{ __('messages.roles') }}</a><a href="{{ route('audit.system') }}">{{ __('messages.audit') }}</a>@endif
+                <span class="text-slate-500">{{ auth()->user()->name }}</span>
+                <form method="POST" action="{{ route('logout') }}">@csrf<button class="link-button">{{ __('messages.logout') }}</button></form>
+            @endauth
+            @guest<a href="{{ route('login') }}">{{ __('messages.login') }}</a><a href="{{ route('register') }}">{{ __('messages.register') }}</a>@endguest
+            <div class="flex gap-1" aria-label="{{ __('messages.language') }}">
+                @foreach(['lv'=>'LV','en'=>'EN','ru'=>'RU'] as $code=>$label)<form method="POST" action="{{ route('locale',$code) }}">@csrf<button class="rounded px-2 py-1 {{ app()->getLocale()===$code?'bg-indigo-100 font-semibold':'' }}">{{ $label }}</button></form>@endforeach
             </div>
-        </div>
-    </nav>
-    @endauth
-
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        @if(session('success'))
-            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                {{ session('error') }}
-            </div>
-        @endif
-
-        @yield('content')
-    </main>
-
-    @stack('scripts')
+        </nav>
+    </div>
+</header>
+<main class="mx-auto max-w-7xl px-4 py-8">
+    @if(session('success'))<div class="notice success" role="status">{{ session('success') }}</div>@endif
+    @if(session('invitation_url'))<div class="notice success"><strong>{{ __('messages.invitation_url') }}:</strong> <code class="break-all">{{ session('invitation_url') }}</code></div>@endif
+    @if($errors->any())<div class="notice error" role="alert"><strong>{{ __('messages.validation_errors') }}</strong><ul class="list-disc pl-6">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+    @yield('content')
+</main>
+<footer class="mx-auto max-w-7xl px-4 py-8 text-xs text-slate-500"><p>{{ __('messages.security_warning') }}</p></footer>
+@stack('scripts')
 </body>
 </html>

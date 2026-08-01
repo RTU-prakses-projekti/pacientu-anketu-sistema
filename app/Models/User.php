@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'student_id', 'locale', 'is_active'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -27,7 +27,36 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
+    }
+
+    public function memberships()
+    {
+        return $this->hasMany(OrganisationMembership::class);
+    }
+
+    public function globalRoles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles');
+    }
+
+    public function isPlatformAdmin(): bool
+    {
+        return $this->globalRoles()->where('name', 'platform_admin')->exists();
+    }
+
+    public function hasOrganisationPermission(int $organisationId, string $permission): bool
+    {
+        if ($this->isPlatformAdmin()) {
+            return true;
+        }
+
+        return $this->memberships()
+            ->where('organisation_id', $organisationId)
+            ->where('is_active', true)
+            ->whereHas('roles.permissions', fn ($query) => $query->where('permissions.name', $permission))
+            ->exists();
     }
     public function isAdmin()
 {

@@ -1,0 +1,2 @@
+@extends('layouts.app')
+@section('content')<div class="page-header"><h1>{{ $form->name }} · {{ __('messages.preview') }}</h1><a class="btn" href="{{ route('forms.builder',$form) }}">{{ __('messages.builder') }}</a></div><div class="renderer preview">@foreach($version->sections as $section)<section class="form-page"><h2>{{ $section->title }}</h2><p>{{ $section->description }}</p>@foreach($section->components as $component)@include('forms.components.generic',['answers'=>[]])@endforeach</section>@endforeach</div>@endsection
