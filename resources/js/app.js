@@ -15,6 +15,25 @@ document.querySelectorAll('[data-component-form]').forEach((form) => {
     type.addEventListener('change', refresh); refresh();
 });
 
+document.querySelectorAll('[data-locale-editor]').forEach((editor) => {
+    const tabs = [...editor.querySelectorAll('[data-locale-tab]')];
+    const panels = [...editor.querySelectorAll('[data-locale-panel]')];
+    const activate = (locale) => {
+        tabs.forEach((tab) => { const active = tab.dataset.localeTab === locale; tab.classList.toggle('is-active', active); tab.setAttribute('aria-selected', active ? 'true' : 'false'); });
+        panels.forEach((panel) => { panel.hidden = panel.dataset.localePanel !== locale; });
+    };
+    const refreshStatus = () => panels.forEach((panel) => {
+        const tab = tabs.find((item) => item.dataset.localeTab === panel.dataset.localePanel);
+        const status = tab?.querySelector('[data-locale-status]');
+        if (!status) return;
+        const filled = [...panel.querySelectorAll('input,textarea')].some((input) => input.value.trim() !== '');
+        status.textContent = filled ? status.dataset.filledLabel : status.dataset.emptyLabel;
+    });
+    tabs.forEach((tab) => tab.addEventListener('click', () => activate(tab.dataset.localeTab)));
+    editor.addEventListener('input', refreshStatus);
+    refreshStatus();
+});
+
 document.querySelectorAll('select[data-move-url]').forEach((select) => select.addEventListener('change', async () => {
     if (!select.value) return;
     const body = new FormData(); body.append('_token', csrf()); body.append('direction', 'section'); body.append('section_id', select.value);
@@ -110,13 +129,13 @@ if (runner) {
     };
 
     const setStatus = (key) => {
-        const labels = {saving: document.documentElement.lang === 'lv' ? 'Saglabā…' : 'Saving…', saved: document.documentElement.lang === 'lv' ? 'Saglabāts' : 'Saved', offline: document.documentElement.lang === 'lv' ? 'Bezsaistē' : 'Offline', error: document.documentElement.lang === 'lv' ? 'Saglabāšanas kļūda' : 'Save error'};
+        const labels = {saving: runner.dataset.statusSaving, saved: runner.dataset.statusSaved, offline: runner.dataset.statusOffline, error: runner.dataset.statusSaveError};
         status.textContent = labels[key]; status.dataset.state = key;
     };
 
-    const saveNow = async () => {
+    const saveNow = async (force = false) => {
         if (activeSave) return activeSave;
-        if (runner.dataset.autosaveEnabled !== '1' || !dirty) return true;
+        if (!dirty || (!force && runner.dataset.autosaveEnabled !== '1')) return true;
         if (!navigator.onLine) { retryPending = true; setStatus('offline'); return false; }
         const savedSequence = changeSequence;
         activeSave = (async () => { setStatus('saving');
@@ -134,6 +153,12 @@ if (runner) {
 
     const queueSave = () => { dirty = true; changeSequence++; clearTimeout(timer); timer = setTimeout(saveNow, 700); conditionalVisibility(); pages.forEach((item,index)=>item.hidden=index!==page||item.dataset.conditionVisible!=='1'); updateProgress(); };
     form.addEventListener('input', queueSave); form.addEventListener('change', queueSave);
+    document.querySelectorAll('[data-locale-form]').forEach((localeForm) => localeForm.addEventListener('submit', async (event) => {
+        if (localeForm.dataset.saveAcknowledged === '1') return;
+        event.preventDefault(); clearTimeout(timer);
+        while (activeSave || dirty) { if (!(await saveNow(true))) return; }
+        localeForm.dataset.saveAcknowledged = '1'; localeForm.requestSubmit();
+    }));
     window.addEventListener('online', () => { if (retryPending || dirty) saveNow(); });
     window.addEventListener('offline', () => setStatus('offline'));
     window.addEventListener('beforeunload', (event) => { if (dirty || activeSave) { event.preventDefault(); event.returnValue = ''; } });

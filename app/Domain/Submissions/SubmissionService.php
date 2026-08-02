@@ -4,6 +4,7 @@ namespace App\Domain\Submissions;
 
 use App\Domain\Audit\AuditService;
 use App\Domain\Forms\ComponentRegistry;
+use App\Domain\Forms\LocalizedContent;
 use App\Models\AttemptGrant;
 use App\Models\ConsentRecord;
 use App\Models\FormSubmission;
@@ -20,7 +21,7 @@ use Illuminate\Validation\ValidationException;
 
 class SubmissionService
 {
-    public function __construct(private ComponentRegistry $registry, private ScoringService $scoring, private ConditionalLogicService $conditions, private AuditService $audit) {}
+    public function __construct(private ComponentRegistry $registry, private ScoringService $scoring, private ConditionalLogicService $conditions, private AuditService $audit, private LocalizedContent $localized) {}
 
     public function start(Publication $publication, ?User $user, ?string $accessCode, ?string $invitationToken, string $anonymousKey): FormSubmission
     {
@@ -162,7 +163,7 @@ class SubmissionService
             $errors = [];
             foreach ($locked->formVersion->components as $component) {
                 if (!$this->conditions->componentIsVisible($locked->formVersion, $component->id, $visibility) || !$this->registry->validatesAnswers($component->type)) continue;
-                if ($component->is_required && (!$this->hasAnswer($answerMap, $component->id))) $errors['answers.'.$component->id] = __('messages.required_answer', ['label' => $component->label]);
+                if ($component->is_required && (!$this->hasAnswer($answerMap, $component->id))) $errors['answers.'.$component->id] = __('messages.required_answer', ['label' => $component->localizedLabel()]);
             }
             if ($errors) throw ValidationException::withMessages($errors);
             if ($locked->publication->consent_required && !$locked->consentRecords()->where('decision', 'accepted')->exists()) throw ValidationException::withMessages(['consent' => __('messages.consent_required')]);
@@ -218,11 +219,23 @@ class SubmissionService
 
     private function recordConsent(FormSubmission $submission, $component, bool $accepted): void
     {
-        $text = (string) (($component->settings['consent_text'] ?? null) ?: $component->description ?: $component->label);
-        ConsentRecord::updateOrCreate(
-            ['form_submission_id' => $submission->id, 'form_component_id' => $component->id],
-            ['form_version_id' => $submission->form_version_id, 'decision' => $accepted ? 'accepted' : 'refused', 'consent_text_hash' => hash('sha256', $text), 'recorded_at' => now()]
-        );
-        $this->audit->record('consent.recorded', $submission, $submission->organisation_id, ['decision' => $accepted ? 'accepted' : 'refused', 'component_id' => $component->id]);
+        $decision = $accepted ? 'accepted' : 'refused';
+        $existing = ConsentRecord::where('form_submission_id', $submission->id)->where('form_component_id', $component->id)->first();
+        if ($existing?->decision === $decision) return;
+
+        $requestedLocale = $this->localized->locale();
+        $contentLocale = $component->localizedConsentTextSourceLocale($requestedLocale);
+        $evidence = [
+            'form_version_id' => $submission->form_version_id,
+            'decision' => $decision,
+            'content_locale' => $contentLocale,
+            'consent_text_hash' => hash('sha256', (string) $component->localizedConsentText($requestedLocale)),
+            'recorded_at' => now(),
+        ];
+
+        if ($existing) $existing->update($evidence);
+        else ConsentRecord::create(['form_submission_id' => $submission->id, 'form_component_id' => $component->id, ...$evidence]);
+
+        $this->audit->record('consent.recorded', $submission, $submission->organisation_id, ['decision' => $decision, 'component_id' => $component->id, 'requested_locale' => $requestedLocale, 'content_locale' => $contentLocale]);
     }
 }

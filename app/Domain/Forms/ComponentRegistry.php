@@ -12,7 +12,7 @@ class ComponentRegistry
         'form_title' => ['name' => 'Form title', 'category' => 'content', 'answer' => false, 'settings' => ['layout_width']],
         'heading' => ['name' => 'Heading', 'category' => 'content', 'answer' => false, 'settings' => ['layout_width']],
         'explanatory_text' => ['name' => 'Explanatory text', 'category' => 'content', 'answer' => false, 'settings' => ['layout_width']],
-        'image' => ['name' => 'Image', 'category' => 'content', 'answer' => false, 'settings' => ['attachment_id', 'layout_width']],
+        'image' => ['name' => 'Image', 'category' => 'content', 'answer' => false, 'settings' => ['attachment_id', 'image_title', 'image_caption', 'layout_width']],
         'file_attachment' => ['name' => 'File attachment', 'category' => 'content', 'answer' => false, 'settings' => ['attachment_id', 'layout_width']],
         'short_text' => ['name' => 'Short text', 'category' => 'input', 'answer' => true, 'settings' => ['placeholder', 'default_value', 'min_length', 'max_length', 'layout_width']],
         'long_text' => ['name' => 'Long text', 'category' => 'input', 'answer' => true, 'settings' => ['placeholder', 'default_value', 'min_length', 'max_length', 'layout_width']],

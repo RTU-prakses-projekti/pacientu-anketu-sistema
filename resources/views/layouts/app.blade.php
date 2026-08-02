@@ -20,7 +20,7 @@
             @endauth
             @guest<a href="{{ route('login') }}">{{ __('messages.login') }}</a><a href="{{ route('register') }}">{{ __('messages.register') }}</a>@endguest
             <div class="flex gap-1" aria-label="{{ __('messages.language') }}">
-                @foreach(['lv'=>'LV','en'=>'EN','ru'=>'RU'] as $code=>$label)<form method="POST" action="{{ route('locale',$code) }}">@csrf<button class="rounded px-2 py-1 {{ app()->getLocale()===$code?'bg-indigo-100 font-semibold':'' }}">{{ $label }}</button></form>@endforeach
+                @foreach(config('form_locales.supported') as $code)<form method="POST" action="{{ route('locale',$code) }}" data-locale-form data-locale="{{ $code }}">@csrf<button class="rounded px-2 py-1 {{ app()->getLocale()===$code?'bg-indigo-100 font-semibold':'' }}">{{ strtoupper($code) }}</button></form>@endforeach
             </div>
         </nav>
     </div>

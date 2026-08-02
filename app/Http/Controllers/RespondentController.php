@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class RespondentController extends Controller
 {
-    public function show(Publication $publication, Request $request) { if($publication->access_mode==='authenticated'&&!$request->user())return redirect()->guest(route('login')); return view('respondent.landing',compact('publication')); }
+    public function show(Publication $publication, Request $request) { if($publication->access_mode==='authenticated'&&!$request->user())return redirect()->guest(route('login'));$publication->load('formVersion'); return view('respondent.landing',compact('publication')); }
 
     public function start(Publication $publication, Request $request, SubmissionService $service)
     {
@@ -28,7 +28,7 @@ class RespondentController extends Controller
 
     public function complete(FormSubmission $submission, Request $request)
     {
-        $this->assertOwner($submission,$request); $submission->load('publication.form','answers.component.options','answers.component.scoringRule','answers.score'); return view('respondent.complete',compact('submission'));
+        $this->assertOwner($submission,$request); $submission->load('publication.form','formVersion','answers.component.options','answers.component.scoringRule','answers.score'); return view('respondent.complete',compact('submission'));
     }
 
     public static function assertOwner(FormSubmission $submission, Request $request): void

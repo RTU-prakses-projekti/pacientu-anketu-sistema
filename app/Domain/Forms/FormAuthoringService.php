@@ -16,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 
 class FormAuthoringService
 {
-    public function __construct(private AuditService $audit, private ComponentRegistry $registry, private ScoringRuleValidator $scoringRules) {}
+    public function __construct(private AuditService $audit, private ComponentRegistry $registry, private ScoringRuleValidator $scoringRules, private LocalizedContent $localized) {}
 
     public function create(int $organisationId, User $creator, string $name, string $preset): Form
     {
@@ -33,22 +33,31 @@ class FormAuthoringService
             $version = $form->versions()->create([
                 'version_number' => 1,
                 'status' => 'draft',
+                'title' => $name,
+                'translations' => ['lv' => ['title' => $name]],
                 'created_by' => $creator->id,
                 'settings' => $this->presetSettings($preset),
             ]);
-            $section = $version->sections()->create(['stable_key' => (string) Str::uuid(), 'title' => __('messages.first_section'), 'display_order' => 0]);
+            $sectionTitle = __('messages.first_section', [], 'lv');
+            $section = $version->sections()->create(['stable_key' => (string) Str::uuid(), 'title' => $sectionTitle, 'translations' => ['lv' => ['title' => $sectionTitle]], 'display_order' => 0]);
             $this->applyPreset($version, $section, $preset);
             $this->audit->record('form.created', $form, $organisationId, ['preset' => $preset]);
             return $form->load('versions.sections.components.options');
         });
     }
 
-    public function addSection(FormVersion $version, string $title): FormSection
+    public function addSection(FormVersion $version, string|array $input): FormSection
     {
         $this->ensureDraft($version);
+        $translations = is_array($input)
+            ? $this->localized->normalize($input['translations'] ?? null, ['title', 'description'])
+            : ['lv' => ['title' => trim($input)]];
+        $title = data_get($translations, 'lv.title');
         return DB::transaction(fn () => $version->sections()->create([
             'stable_key' => (string) Str::uuid(),
             'title' => $title,
+            'description' => data_get($translations, 'lv.description'),
+            'translations' => $translations,
             'display_order' => ((int) $version->sections()->max('display_order')) + 1,
         ]));
     }
@@ -58,30 +67,36 @@ class FormAuthoringService
         $this->ensureDraft($version);
         if ($section->form_version_id !== $version->id) throw ValidationException::withMessages(['section' => __('messages.invalid_section')]);
         $definition = $this->registry->definition($data['type']);
-        $settings = $this->registry->filterSettings($data['type'], $data['settings'] ?? []);
+        $translations = $this->componentTranslations($data);
+        $settings = $this->componentSettings($data['type'], $data['settings'] ?? [], $translations);
         if (!empty($settings['attachment_id']) && !$version->attachments()->whereKey($settings['attachment_id'])->exists()) {
             throw ValidationException::withMessages(['settings.attachment_id' => __('messages.invalid_attachment')]);
         }
 
-        return DB::transaction(function () use ($version, $section, $data, $definition, $settings) {
+        return DB::transaction(function () use ($version, $section, $data, $definition, $settings, $translations) {
+            $label = data_get($translations, 'lv.label') ?: trim((string) ($data['label'] ?? '')) ?: $definition['name'];
             $component = $section->components()->create([
                 'form_version_id' => $version->id,
                 'stable_key' => (string) Str::uuid(),
                 'type' => $data['type'],
-                'label' => $data['label'] ?: $definition['name'],
-                'description' => $data['description'] ?? null,
-                'help_text' => $data['help_text'] ?? null,
+                'label' => $label,
+                'description' => data_get($translations, 'lv.description') ?: $this->nullableString($data['description'] ?? null),
+                'help_text' => data_get($translations, 'lv.help_text') ?: $this->nullableString($data['help_text'] ?? null),
                 'display_order' => ((int) $section->components()->max('display_order')) + 1,
                 'is_required' => (bool) ($data['is_required'] ?? false),
                 'visible' => (bool) ($data['visible'] ?? true),
                 'max_points' => (float) ($data['max_points'] ?? 0),
                 'manual_grading' => (bool) ($data['manual_grading'] ?? false),
                 'settings' => $settings,
-                'translations' => $data['translations'] ?? null,
+                'translations' => $translations,
             ]);
-            foreach ($data['options'] ?? [] as $index => $label) {
-                if (trim((string) $label) === '') continue;
-                $component->options()->create(['stable_key' => (string) Str::uuid(), 'label' => trim($label), 'value' => Str::slug($label).'-'.($index + 1), 'display_order' => $index]);
+            foreach ($data['options'] ?? [] as $index => $optionInput) {
+                $optionTranslations = is_array($optionInput)
+                    ? $this->localized->normalize($optionInput['translations'] ?? $optionInput, ['label'])
+                    : ['lv' => ['label' => trim((string) $optionInput)]];
+                $optionLabel = data_get($optionTranslations, 'lv.label');
+                if (!$this->localized->isPresent($optionLabel)) continue;
+                $component->options()->create(['stable_key' => (string) Str::uuid(), 'label' => $optionLabel, 'value' => (string) Str::uuid(), 'display_order' => $index, 'translations' => $optionTranslations]);
             }
             if (!empty($data['scoring_strategy']) && $data['scoring_strategy'] !== 'none') {
                 $rules = $this->scoringRules->validate($component, $data['scoring_strategy'], $data['scoring_rules'] ?? []);
@@ -124,7 +139,7 @@ class FormAuthoringService
         $published->load('sections.components.options', 'sections.components.validationRules', 'sections.components.scoringRule', 'conditionalRules.actions');
 
         return DB::transaction(function () use ($published, $creator) {
-            $draft = $published->form->versions()->create(['version_number' => ((int) $published->form->versions()->max('version_number')) + 1, 'status' => 'draft', 'settings' => $published->settings, 'created_by' => $creator->id]);
+            $draft = $published->form->versions()->create(['version_number' => ((int) $published->form->versions()->max('version_number')) + 1, 'status' => 'draft', 'title' => $published->title, 'description' => $published->description, 'translations' => $published->translations, 'settings' => $published->settings, 'created_by' => $creator->id]);
             $this->copyStructure($published, $draft);
             $this->audit->record('form.draft_created', $draft, $published->form->organisation_id, ['source_version' => $published->version_number]);
             return $draft;
@@ -139,7 +154,7 @@ class FormAuthoringService
             $draft = $copy->versions()->first();
             $draft->sections()->each(fn ($section) => $section->delete());
             $this->copyStructure($source, $draft);
-            $draft->update(['settings' => $source->settings]);
+            $draft->update(['title' => $source->title, 'description' => $source->description, 'translations' => $source->translations, 'settings' => $source->settings]);
             $this->audit->record('form.duplicated', $copy, $copy->organisation_id, ['source_form_id' => $form->id]);
             return $copy;
         });
@@ -194,12 +209,51 @@ class FormAuthoringService
     private function applyPreset(FormVersion $version, FormSection $section, string $preset): void
     {
         if ($preset === 'test') {
-            $component = $this->addComponent($version, $section, ['type' => 'single_choice', 'label' => __('messages.sample_question'), 'is_required' => true, 'max_points' => 1, 'options' => [__('messages.option_a'), __('messages.option_b')], 'scoring_strategy' => 'single_choice', 'scoring_rules' => []]);
+            $component = $this->addComponent($version, $section, ['type' => 'single_choice', 'label' => __('messages.sample_question', [], 'lv'), 'is_required' => true, 'max_points' => 1, 'options' => [__('messages.option_a', [], 'lv'), __('messages.option_b', [], 'lv')], 'scoring_strategy' => 'single_choice', 'scoring_rules' => []]);
             $component->scoringRule()->update(['rules' => ['correct' => $component->options()->orderBy('display_order')->value('value')]]);
         }
         if ($preset === 'patient_questionnaire') {
-            $this->addComponent($version, $section, ['type' => 'consent_checkbox', 'label' => __('messages.consent_label'), 'description' => __('messages.demo_consent_text'), 'is_required' => true, 'settings' => ['consent_text' => __('messages.demo_consent_text'), 'refusal_policy' => 'block'], 'options' => []]);
-            $this->addComponent($version, $section, ['type' => 'long_text', 'label' => __('messages.sample_questionnaire_prompt'), 'is_required' => false, 'options' => []]);
+            $consentText = __('messages.demo_consent_text', [], 'lv');
+            $this->addComponent($version, $section, ['type' => 'consent_checkbox', 'label' => __('messages.consent_label', [], 'lv'), 'description' => $consentText, 'is_required' => true, 'settings' => ['consent_text' => $consentText, 'refusal_policy' => 'block'], 'options' => []]);
+            $this->addComponent($version, $section, ['type' => 'long_text', 'label' => __('messages.sample_questionnaire_prompt', [], 'lv'), 'is_required' => false, 'options' => []]);
         }
+    }
+
+    private function componentTranslations(array $data): ?array
+    {
+        $translations = $this->localized->normalize($data['translations'] ?? null, [
+            'label', 'description', 'help_text', 'placeholder', 'consent_text',
+            'minimum_label', 'maximum_label', 'image_title', 'image_caption',
+        ]) ?? [];
+
+        foreach (['label', 'description', 'help_text'] as $field) {
+            if (!data_get($translations, 'lv.'.$field) && $this->localized->isPresent($data[$field] ?? null)) {
+                $translations['lv'][$field] = trim((string) $data[$field]);
+            }
+        }
+
+        foreach (['placeholder', 'consent_text', 'minimum_label', 'maximum_label', 'image_title', 'image_caption'] as $field) {
+            if (!data_get($translations, 'lv.'.$field) && $this->localized->isPresent(data_get($data, 'settings.'.$field))) {
+                $translations['lv'][$field] = trim((string) data_get($data, 'settings.'.$field));
+            }
+        }
+
+        return $translations ?: null;
+    }
+
+    private function componentSettings(string $type, array $settings, ?array $translations): array
+    {
+        foreach (['placeholder', 'consent_text', 'minimum_label', 'maximum_label', 'image_title', 'image_caption'] as $field) {
+            $value = data_get($translations, 'lv.'.$field);
+            if ($this->localized->isPresent($value)) $settings[$field] = $value;
+            elseif (array_key_exists($field, $settings) && !$this->localized->isPresent($settings[$field])) unset($settings[$field]);
+        }
+
+        return $this->registry->filterSettings($type, $settings);
+    }
+
+    private function nullableString(mixed $value): ?string
+    {
+        return $this->localized->isPresent($value) ? trim((string) $value) : null;
     }
 }

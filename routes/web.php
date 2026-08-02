@@ -30,7 +30,7 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 Route::post('/locale/{locale}', function (Request $request, string $locale) {
-    abort_unless(in_array($locale, ['lv', 'en', 'ru'], true), 404);
+    abort_unless(in_array($locale, config('form_locales.supported'), true), 404);
     $request->session()->put('locale', $locale);
     if ($request->user()) $request->user()->update(['locale' => $locale]);
     return back();
@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/forms/{form}', [FormController::class, 'update'])->name('forms.update');
     Route::get('/forms/{form}/builder', [BuilderController::class, 'edit'])->name('forms.builder');
     Route::get('/forms/{form}/preview', [BuilderController::class, 'preview'])->name('forms.preview');
+    Route::put('/forms/{form}/versions/{version}', [BuilderController::class, 'updateVersion'])->name('builder.versions.update');
     Route::post('/forms/{form}/versions/{version}/publish', [FormController::class, 'publish'])->name('forms.publish');
     Route::post('/forms/{form}/versions/{version}/new-draft', [FormController::class, 'newDraft'])->name('forms.new-draft');
     Route::post('/forms/{form}/duplicate', [FormController::class, 'duplicate'])->name('forms.duplicate');

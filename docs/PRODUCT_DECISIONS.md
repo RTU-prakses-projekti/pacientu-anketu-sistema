@@ -11,7 +11,12 @@
 - Server time is authoritative. Attempt deadlines are stored once and checked on autosave/finalization; refresh does not reset time.
 - Consent is a component plus an immutable consent record referencing the exact form version and content hash.
 - Results default to completion-only. Correct answers require an explicit publication setting.
-- Latvian is the application default; English is fallback; Russian is available.
+- Form content supports exactly Latvian (`lv`), English (`en`), and Russian (`ru`), configured centrally in `config/form_locales.php`. Latvian is the form-content default.
+- Localized text resolves in this order: requested non-empty translation, Latvian translation, legacy/base value, configured system-fallback translation, then the first non-empty supported translation. Null, empty, and whitespace-only values are absent.
+- Respondent-visible form title/description/completion/result content belongs to the exact `FormVersion`; `Form.name` remains a mutable internal administrative name for backward compatibility.
+- Component option `stable_key` and `value` are technical immutable identities. Labels may change independently in LV/EN/RU without changing answers or scoring references.
+- Builder translation fields use compact LV/EN/RU tabs. Preview chooses a content locale independently from the administrator interface locale and reads the exact draft/published version without starting an attempt.
+- Changing language during an active response saves dirty browser state through the existing revisioned autosave request first, then reloads the same submission. Submission identity, deadline, answers, option values, and scoring are language-independent.
 
 ## Decisions still requiring owners
 

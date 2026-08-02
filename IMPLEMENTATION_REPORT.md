@@ -34,6 +34,16 @@ The 2026-08-01 corrective pass resolved the confirmed workflow and isolation def
 - Public registration continues to create only ordinary respondent accounts and ignores attempted role or permission escalation input.
 - Additional platform administrators can be created or promoted only from the authenticated platform-administrator **System users** interface. Both operations produce audit records.
 
+### Versioned multilingual form content
+
+- A central `LocalizedContent` service and `config/form_locales.php` define the only supported content locales (`lv`, `en`, `ru`) and one null/empty/whitespace-safe fallback algorithm.
+- Respondent-visible title, description, completion text, and result text are implemented on immutable `FormVersion` records. The additive migration ran successfully on the local `database.sqlite` and performed a non-destructive backfill while preserving source `forms` fields and legacy tables.
+- FormVersion, section, component, and option models expose reusable localized helper methods; preview and respondent rendering no longer implement ad hoc translation fallbacks.
+- The builder presents one active language at a time through consistent LV/EN/RU tabs for version, section, component, and option text, with completion/fallback status indicators.
+- Choice labels are edited independently of UUID-backed `component_options.value` and `stable_key`; scoring continues to reference stable technical values that are never displayed to respondents.
+- Admin preview validates a `locale` query parameter, previews the exact version without creating submissions, attempts, timers, or writes, and marks fallback use.
+- Active respondent language changes force dirty state through the existing autosave/revision request—even when normal autosave is disabled—before reloading the same submission. The deadline, answers, revision acknowledgement, option values, and scoring references are preserved.
+
 ## 2. Architecture implemented
 
 - Laravel 13 / PHP modular monolith with Blade, Vite, Tailwind CSS, vanilla JavaScript, session authentication, database queues, and the scheduler.
@@ -51,7 +61,13 @@ More detail is in `docs/TARGET_ARCHITECTURE.md`, `docs/DATABASE_SCHEMA.md`, and 
 
 ## 3. Database tables and migration created
 
-Forward-only migration: `database/migrations/2026_08_01_000000_create_universal_form_builder_tables.php`.
+Forward-only base migration: `database/migrations/2026_08_01_000000_create_universal_form_builder_tables.php`.
+
+Additive multilingual-content migration: `database/migrations/2026_08_02_000100_add_localized_content_to_form_versions.php`. It adds nullable `title`, `description`, and `translations` columns to `form_versions`, backfills them from the related `forms` record, maps legacy locale `name` values to versioned `title` values, and leaves the source form fields intact. `down()` removes only these columns.
+
+Additive consent-evidence migration: `database/migrations/2026_08_02_000200_add_content_locale_to_consent_records.php`. It adds nullable `content_locale` to `consent_records`; `down()` removes only this column. Same-decision autosaves preserve the first recorded locale, consent-text hash, and timestamp, while a real decision change records new evidence.
+
+Both 2026-08-02 migrations ran successfully on the local `database.sqlite` and are recorded as **Ran, batch 3**. They were additive: existing data was preserved, legacy tables were not deleted, and the source `forms` fields were not destructively rewritten.
 
 It adds `is_active` and `locale` to `users` and creates:
 
@@ -77,10 +93,11 @@ It adds `is_active` and `locale` to `users` and creates:
 - Revision-safe/idempotent autosave with exact-version component validation and unique answer upsert.
 - Persisted server deadline, expiration on write/finalize, and `submissions:finalize-overdue` every minute.
 - Server-only automatic scoring, partial scoring, numeric tolerance, manual grading/comments, and audited grading completion.
-- Consent decision/text hash/exact-version records. Refusal causes unrelated answers to be removed and prevents successful finalization.
+- Consent decision/text hash/exact-version records. `consent_records.content_locale` stores the actual resolved source locale of the displayed and hashed consent text, so it may differ from the requested locale after fallback; legacy/base consent content maps to LV. Refusal causes unrelated answers to be removed and prevents successful finalization.
 - Creator submission filters/details, attempt grant, deadline extension, invalidation, CSV/XLSX export, private authorized download, and audit trails.
 - XLSX sheets: Summary, Submissions, Answers, and Component statistics. CSV formula injection is neutralized.
 - LV default respondent interface with EN/RU selectors and locale fallback.
+- Centralized selected-language → LV → base → system-fallback → first-available content resolution; versioned form content; compact builder language tabs; localized preview and respondent/result rendering.
 - Transactionally locked, one-time interactive `php artisan app:create-admin` bootstrap command with no stored/default/argument password and no existing-account promotion.
 - Authenticated platform-administrator controls for audited creation and promotion of additional platform administrators.
 - Active legacy quiz routes were retired; legacy schema and implementation files remain available for rollback/migration reference.
@@ -90,10 +107,11 @@ It adds `is_active` and `locale` to `users` and creates:
 Major additions:
 
 - `app/Domain/{Audit,Exports,Forms,Submissions}/` services.
+- `config/form_locales.php`, `LocalizedContent`, localized model concern/helpers, and `LocalizedContentRules`.
 - New controllers, Form Requests, middleware, policies, notification, queue job, command, and domain models under `app/`.
-- Universal migration and `RolePermissionSeeder` / local-only `DemoSeeder`.
+- Universal migration, additive FormVersion localization migration, and `RolePermissionSeeder` / local-only `DemoSeeder`.
 - Builder/respondent/admin/export/audit/system Blade views, translation files, and rebuilt Vite CSS/JavaScript.
-- `tests/Feature/UniversalFormWorkflowTest.php`.
+- `tests/Feature/UniversalFormWorkflowTest.php` and `tests/Unit/LocalizedContentTest.php`.
 - `load-tests/universal-form-builder.js`.
 - Project README and six documents under `docs/`.
 
@@ -108,7 +126,7 @@ Composer package added: `openspout/openspout` v5.8.0 for streaming XLSX creation
 
 ## 7. Tests created
 
-The feature suite currently passes **32 tests / 177 assertions** using in-memory SQLite. It covers:
+The complete suite currently passes **45 tests / 309 assertions** using in-memory SQLite. It covers:
 
 - registration identity persistence, role-escalation rejection, and login throttling;
 - organisation isolation and creator/reviewer permissions;
@@ -129,6 +147,15 @@ The feature suite currently passes **32 tests / 177 assertions** using in-memory
 - attachment cloning across versions and form duplication;
 - duplicate authorization, organisation directory isolation, and publication configuration guards.
 - first-administrator bootstrap success, repeat and existing-account rejection, public-registration role isolation, concurrent bootstrap exclusion, and authenticated audited administrator management.
+- all resolver fallback cases, including null/empty/whitespace translations and unsupported locales;
+- FormVersion localized-content creation, draft cloning, form duplication, and published nested-translation immutability;
+- LV/EN/RU builder persistence, locale-key rejection, stable option values/keys, and stable scoring references;
+- RU preview, LV fallback, and proof that preview creates no submission, attempt, timer, or database write;
+- RU respondent rendering, localized option fallback, and language-change preservation of submission ID, revision, deadline, answers, and scoring references.
+- explicit-LV system preset generation independent from `APP_LOCALE`;
+- consent requested-versus-resolved source locale and exact-text hashing for direct RU and RU-to-LV fallback, plus content-locale/hash/timestamp preservation across a same-decision language switch;
+- RU autosave status data, RU preview Yes/No system text, expanded object-level fallback indicators, image fallback detection limited to rendered image fields, and localized component-copy label consistency;
+- direct FormVersion migration backfill coverage preserving source form fields and an existing legacy-table record.
 
 ## 8. Commands run and results
 
@@ -139,9 +166,9 @@ composer validate --no-check-publish     valid
 composer audit --locked --no-interaction no advisories
 npm.cmd audit --omit=dev --audit-level=high 0 vulnerabilities
 php artisan about                         Laravel 13.20.0 / PHP 8.5.9 / SQLite
-php artisan route:list --except-vendor    65 routes
-php artisan migrate:status                all migrations ran; universal migration batch 2
-php artisan test                           32 passed, 177 assertions
+php artisan route:list --except-vendor    68 routes
+php artisan migrate:status                both 2026-08-02 migrations Ran, batch 3
+php artisan test                           45 passed, 309 assertions
 npm.cmd run build                         Vite production build passed
 PHP syntax check                          99 files passed
 php artisan schedule:list                 overdue command scheduled every minute
@@ -149,13 +176,13 @@ php artisan queue:work --stop-when-empty  completed successfully
 git diff --check                          passed
 ```
 
-The additive migration and local-only demo seed both ran successfully after the backup. A browser smoke test loaded the public patient questionnaire in Latvian, started an anonymous attempt, rendered consent and questionnaire controls through the generic runner, and reported no console errors. That created one non-PII demonstration `form_submissions` row in the local development database; legacy data remains unchanged.
+The base universal migration and local-only demo seed ran successfully after the backup. The two later additive localization/consent migrations also ran successfully on the saved SQLite database as batch 3; existing data and legacy tables were preserved, and source `forms` fields were not destructively rewritten. A browser smoke test loaded the public patient questionnaire in Latvian, started an anonymous attempt, rendered consent and questionnaire controls through the generic runner, and reported no console errors. The saved local database currently contains that one non-PII demonstration `form_submissions` row; legacy data remains unchanged.
 
 ## 9. Known limitations
 
 - Password reset, email verification, SSO, MFA, privileged-session/device management, and account recovery are not implemented.
 - The registry supports validated settings including defaults, randomization, width, scale labels, and refusal policy, but the MVP builder does not yet expose every registry setting. The dedicated `validation_rules` schema is versioned/cloned, while current field min/max/length validation is primarily driven by validated component settings rather than a full custom-rule editor.
-- Form and component label translation entry is available. Section, description/help, option, and consent translation data structures/fallback exist, but the builder does not yet provide a complete editing UI for every translatable field. Professional LV/EN/RU translation and completeness review are required.
+- The LV/EN/RU builder and fallback behavior are implemented, but professional translation/content review and automated translation-completeness policy gates are still required.
 - Conditional logic is simple visibility logic only; it has no nested AND/OR groups, calculations, branching destinations, or cycle graph analysis beyond same-version/self-reference checks.
 - Consent withdrawal lifecycle UI and policy-driven retention workflows are not implemented. Refusal handling is a technical safeguard, not legal consent compliance.
 - Notification delivery is a generic queued creator email with no per-form template/preferences, digesting, retry dashboard, or provider configuration UI.
@@ -222,7 +249,7 @@ Create or promote every additional platform administrator through the authentica
 2. Deploy and validate production PostgreSQL/MySQL, Redis, private object storage, HTTPS/security headers, monitoring, encrypted backups, restore drills, and retention/deletion workflows.
 3. Run tenant-isolation penetration tests and production-like concurrency/locking/load tests, including the documented 150-user k6 scenario.
 4. Add password reset, verified identity/SSO, administrator MFA, privileged-session controls, and formal role review workflows.
-5. Complete the builder UI for all registry validation/layout/randomization settings and all form-content translations; add professional LV/EN/RU review and automated translation completeness gates.
+5. Complete the builder UI for remaining non-text registry validation/layout/randomization settings; add professional LV/EN/RU review and automated translation completeness gates.
 6. Add consent withdrawal, approved retention policies, legal text/version management, and data-subject workflows after legal design approval.
 7. Add malware scanning/DLP/quarantine, private-object lifecycle management, and scheduled expired export cleanup.
 8. Add notification preferences/templates, provider configuration, delivery observability, retry/dead-letter operations, and broader browser E2E/WCAG automation.

@@ -9,6 +9,7 @@ use App\Domain\Submissions\SubmissionService;
 use App\Domain\Submissions\ConditionalLogicService;
 use App\Models\Export;
 use App\Models\Attachment;
+use App\Models\ConsentRecord;
 use App\Models\Form;
 use App\Models\FormSubmission;
 use App\Models\Invitation;
@@ -116,6 +117,20 @@ class UniversalFormWorkflowTest extends TestCase
         [$creator,$organisation]=$this->member('form_creator');$authoring=app(FormAuthoringService::class);$builder=app(BuilderService::class);$form=$authoring->create($organisation->id,$creator,'Builder','blank');$version=$form->versions()->first();$first=$version->sections()->first();$second=$authoring->addSection($version,'Second');$component=$authoring->addComponent($version,$first,['type'=>'short_text','label'=>'Name','is_required'=>true,'settings'=>['placeholder'=>'Answer'],'options'=>[]]);$copy=$builder->copyComponent($component->load('section','options','validationRules','scoringRule'));$this->assertSame(2,$first->components()->count());$builder->moveComponent($copy,$second,'section');$this->assertSame($second->id,$copy->fresh()->form_section_id);$builder->moveSection($second,'up');$this->assertLessThan($first->fresh()->display_order,$second->fresh()->display_order);$this->assertSame('Answer',$component->fresh()->settings['placeholder']);
     }
 
+    public function test_component_copy_keeps_base_and_latvian_label_consistent_without_changing_option_values_or_scoring(): void
+    {
+        [$creator,$organisation]=$this->member('form_creator');$authoring=app(FormAuthoringService::class);$builder=app(BuilderService::class);$form=$authoring->create($organisation->id,$creator,'Copy localization','blank');$version=$form->versions()->firstOrFail();$component=$authoring->addComponent($version,$version->sections()->firstOrFail(),['type'=>'single_choice','translations'=>['lv'=>['label'=>'Jautājums'],'en'=>['label'=>'Question']],'options'=>['Pirmais','Otrais'],'max_points'=>1,'scoring_strategy'=>'single_choice','scoring_rules'=>[]]);$correct=$component->options()->first()->value;$component->scoringRule()->update(['rules'=>['correct'=>$correct]]);$originalValues=$component->options()->orderBy('display_order')->pluck('value')->all();$originalKeys=$component->options()->orderBy('display_order')->pluck('stable_key')->all();
+        $copy=$builder->copyComponent($component->load('section','options','validationRules','scoringRule'));
+        $this->assertSame('Jautājums (copy)',$copy->label);$this->assertSame($copy->label,$copy->localizedLabel('lv'));$this->assertSame($copy->label,data_get($copy->translations,'lv.label'));$this->assertSame($originalValues,$copy->options()->orderBy('display_order')->pluck('value')->all());$this->assertNotSame($originalKeys,$copy->options()->orderBy('display_order')->pluck('stable_key')->all());$this->assertSame($correct,$copy->scoringRule()->firstOrFail()->rules['correct']);
+    }
+
+    public function test_system_generated_preset_latvian_content_is_independent_from_application_locale(): void
+    {
+        app()->setLocale('en');[$creator,$organisation]=$this->member('form_creator');$authoring=app(FormAuthoringService::class);$testForm=$authoring->create($organisation->id,$creator,'English admin title','test');$testVersion=$testForm->versions()->firstOrFail();$section=$testVersion->sections()->firstOrFail();$question=$testVersion->components()->with('options')->firstOrFail();
+        $this->assertSame(__('messages.first_section',[],'lv'),$section->title);$this->assertSame($section->title,data_get($section->translations,'lv.title'));$this->assertSame(__('messages.sample_question',[],'lv'),$question->label);$this->assertSame($question->label,data_get($question->translations,'lv.label'));$this->assertSame([__('messages.option_a',[],'lv'),__('messages.option_b',[],'lv')],$question->options->pluck('label')->all());$this->assertSame($question->options->pluck('label')->all(),$question->options->map(fn($option)=>data_get($option->translations,'lv.label'))->all());$this->assertNotSame(__('messages.sample_question',[],'en'),$question->label);
+        $patientForm=$authoring->create($organisation->id,$creator,'Patient preset','patient_questionnaire');$patientComponents=$patientForm->versions()->firstOrFail()->components()->get();$consent=$patientComponents->firstWhere('type','consent_checkbox');$prompt=$patientComponents->firstWhere('type','long_text');$this->assertSame(__('messages.consent_label',[],'lv'),$consent->label);$this->assertSame(__('messages.demo_consent_text',[],'lv'),$consent->settings['consent_text']);$this->assertSame(__('messages.sample_questionnaire_prompt',[],'lv'),$prompt->label);
+    }
+
     public function test_test_workflow_autosaves_idempotently_resumes_and_scores_server_side(): void
     {
         [$creator,$organisation]=$this->member('form_creator');[$respondent]=$this->member('respondent',$organisation);
@@ -125,7 +140,7 @@ class UniversalFormWorkflowTest extends TestCase
         $saved=$service->autosave($submission,0,$mutation,[$component->id=>$correct]);$this->assertSame(1,$saved['revision']);
         $repeat=$service->autosave($submission->fresh(),0,$mutation,[$component->id=>$correct]);$this->assertTrue($repeat['idempotent']);$this->assertSame(1,SubmissionAnswer::count());
         $resumed=$service->start($publication,$respondent,null,null,'unused');$this->assertSame($submission->id,$resumed->id);$this->assertTrue($deadline->equalTo($resumed->deadline_at));
-        $final=$service->finalize($resumed);$this->assertSame('graded',$final->status);$this->assertEquals(1.0,(float)$final->final_points);$this->assertEquals(100.0,(float)$final->percentage);$this->actingAs($respondent)->get(route('submissions.complete',$final))->assertOk()->assertSee($correct);
+        $final=$service->finalize($resumed);$this->assertSame('graded',$final->status);$this->assertEquals(1.0,(float)$final->final_points);$this->assertEquals(100.0,(float)$final->percentage);$correctLabel=$component->options->firstWhere('value',$correct)->localizedLabel();$this->actingAs($respondent)->get(route('submissions.complete',$final))->assertOk()->assertSee($correctLabel)->assertDontSee($correct);
         try{$service->start($publication,$respondent,null,null,'unused');$this->fail('Expected attempt limit');}catch(ValidationException $e){$this->assertArrayHasKey('attempt',$e->errors());}
         $this->expectException(ValidationException::class);$service->autosave($final,1,(string)Str::uuid(),[$component->id=>$correct]);
     }
@@ -169,6 +184,48 @@ class UniversalFormWorkflowTest extends TestCase
         $service->autosave($submission,0,(string)Str::uuid(),[$text->id=>'Sensitive demo answer',$consent->id=>false]);
         $this->assertDatabaseHas('consent_records',['form_submission_id'=>$submission->id,'form_version_id'=>$published->id,'decision'=>'refused']);$this->assertDatabaseMissing('submission_answers',['form_submission_id'=>$submission->id,'form_component_id'=>$text->id]);
         $this->expectException(ValidationException::class);$service->finalize($submission->fresh());
+    }
+
+    public function test_repeated_same_consent_decision_preserves_original_locale_hash_and_recorded_time(): void
+    {
+        [$creator,$organisation]=$this->member('form_creator');[$respondent]=$this->member('respondent',$organisation);$authoring=app(FormAuthoringService::class);$form=$authoring->create($organisation->id,$creator,'Consent evidence','patient_questionnaire');$version=$form->versions()->firstOrFail();$consent=$version->components()->where('type','consent_checkbox')->firstOrFail();$translations=$consent->translations;$translations['ru']['consent_text']='Русский текст согласия';$consent->update(['translations'=>$translations]);$published=$authoring->publish($version);$publication=$this->publication($form,$published,['consent_required'=>true]);$submission=app(SubmissionService::class)->start($publication,$respondent,null,null,'unused');$service=app(SubmissionService::class);
+        app()->setLocale('lv');$service->autosave($submission,0,(string)Str::uuid(),[$consent->id=>true]);$record=ConsentRecord::where('form_submission_id',$submission->id)->where('form_component_id',$consent->id)->firstOrFail();$expectedHash=hash('sha256',(string)$consent->localizedConsentText('lv'));$recordedAt=$record->recorded_at->copy();$this->assertSame('lv',$record->content_locale);$this->assertSame($expectedHash,$record->consent_text_hash);
+        $this->travel(1)->minute();app()->setLocale('ru');$service->autosave($submission->fresh(),1,(string)Str::uuid(),[$consent->id=>true]);$record->refresh();$this->assertSame('accepted',$record->decision);$this->assertSame('lv',$record->content_locale);$this->assertSame($expectedHash,$record->consent_text_hash);$this->assertTrue($recordedAt->equalTo($record->recorded_at));
+    }
+
+    public function test_consent_evidence_records_the_resolved_text_source_locale_and_exact_hash(): void
+    {
+        [$creator,$organisation]=$this->member('form_creator');
+        [$respondent]=$this->member('respondent',$organisation);
+        $authoring=app(FormAuthoringService::class);
+        $service=app(SubmissionService::class);
+        app()->setLocale('ru');
+
+        $russianForm=$authoring->create($organisation->id,$creator,'Russian consent source','patient_questionnaire');
+        $russianVersion=$russianForm->versions()->firstOrFail();
+        $russianConsent=$russianVersion->components()->where('type','consent_checkbox')->firstOrFail();
+        $russianTranslations=$russianConsent->translations ?? [];
+        $russianTranslations['ru']['consent_text']='Exact Russian consent text';
+        $russianConsent->update(['translations'=>$russianTranslations]);
+        $russianPublished=$authoring->publish($russianVersion);
+        $russianSubmission=$service->start($this->publication($russianForm,$russianPublished,['consent_required'=>true]),$respondent,null,null,'unused');
+        $service->autosave($russianSubmission,0,(string)Str::uuid(),[$russianConsent->id=>true]);
+        $russianRecord=ConsentRecord::where('form_submission_id',$russianSubmission->id)->where('form_component_id',$russianConsent->id)->firstOrFail();
+        $this->assertSame('ru',$russianConsent->localizedConsentTextSourceLocale('ru'));
+        $this->assertSame('ru',$russianRecord->content_locale);
+        $this->assertSame(hash('sha256','Exact Russian consent text'),$russianRecord->consent_text_hash);
+
+        $latvianForm=$authoring->create($organisation->id,$creator,'Latvian consent fallback','patient_questionnaire');
+        $latvianVersion=$latvianForm->versions()->firstOrFail();
+        $latvianConsent=$latvianVersion->components()->where('type','consent_checkbox')->firstOrFail();
+        $resolvedLatvianText=(string)$latvianConsent->localizedConsentText('ru');
+        $latvianPublished=$authoring->publish($latvianVersion);
+        $latvianSubmission=$service->start($this->publication($latvianForm,$latvianPublished,['consent_required'=>true]),$respondent,null,null,'unused');
+        $service->autosave($latvianSubmission,0,(string)Str::uuid(),[$latvianConsent->id=>true]);
+        $latvianRecord=ConsentRecord::where('form_submission_id',$latvianSubmission->id)->where('form_component_id',$latvianConsent->id)->firstOrFail();
+        $this->assertSame('lv',$latvianConsent->localizedConsentTextSourceLocale('ru'));
+        $this->assertSame('lv',$latvianRecord->content_locale);
+        $this->assertSame(hash('sha256',$resolvedLatvianText),$latvianRecord->consent_text_hash);
     }
 
     public function test_partial_numeric_and_manual_scoring_share_one_engine_and_grading_is_audited(): void
@@ -280,6 +337,81 @@ class UniversalFormWorkflowTest extends TestCase
         [$creator,$organisation]=$this->member('form_creator');$authoring=app(FormAuthoringService::class);$form=$authoring->create($organisation->id,$creator,'Publication rules','blank');$published=$authoring->publish($form->versions()->first());$base=['form_version_id'=>$published->id,'name'=>'Configured','access_mode'=>'authenticated','attempt_limit'=>1,'result_visibility'=>'completion','status'=>'active'];
         $this->actingAs($creator)->post(route('publications.store',$form),array_merge($base,['access_mode'=>'access_code']))->assertSessionHasErrors('access_code');$this->actingAs($creator)->post(route('publications.store',$form),array_merge($base,['timer_enabled'=>1]))->assertSessionHasErrors('duration_minutes');$this->actingAs($creator)->post(route('publications.store',$form),array_merge($base,['anonymous_allowed'=>1,'identified_required'=>1]))->assertSessionHasErrors('anonymous_allowed');
         $inactive=$this->publication($form,$published,['status'=>'inactive']);$authoring->archive($form);$this->actingAs($creator)->post(route('publications.toggle',[$form,$inactive]))->assertStatus(422);$this->actingAs($creator)->post(route('publications.store',$form),$base)->assertSessionHasErrors('status');
+    }
+
+    public function test_localized_form_version_content_is_created_cloned_duplicated_and_immutable_when_published(): void
+    {
+        [$creator,$organisation]=$this->member('form_creator');$authoring=app(FormAuthoringService::class);$builder=app(BuilderService::class);$form=$authoring->create($organisation->id,$creator,'Internal form name','blank');$version=$form->versions()->firstOrFail();
+        $this->assertSame('Internal form name',$version->title);$this->assertSame('Internal form name',data_get($version->translations,'lv.title'));
+        $translations=['lv'=>['title'=>'LV virsraksts','description'=>'LV apraksts','completion_text'=>'LV pabeigts','result_text'=>'LV rezultāts'],'en'=>['title'=>'English title','description'=>'English description','completion_text'=>'English complete','result_text'=>'English result'],'ru'=>['title'=>'Русский заголовок','description'=>'Русское описание','completion_text'=>'Завершено','result_text'=>'Результат']];$builder->updateVersion($version,['translations'=>$translations]);
+        $section=$version->sections()->firstOrFail();$builder->updateSection($section,['visible'=>true,'translations'=>['lv'=>['title'=>'LV sadaļa'],'en'=>['title'=>'EN section'],'ru'=>['title'=>'RU section']]]);
+        $component=$authoring->addComponent($version,$section,['type'=>'single_choice','translations'=>['lv'=>['label'=>'LV jautājums'],'en'=>['label'=>'EN question'],'ru'=>['label'=>'RU question']],'options'=>[['translations'=>['lv'=>['label'=>'LV variants'],'en'=>['label'=>'EN option'],'ru'=>['label'=>'RU option']]]]]);
+        $published=$authoring->publish($version);$draft=$authoring->createDraftFrom($published,$creator);$duplicate=$authoring->duplicate($form,$creator);$duplicateVersion=$duplicate->versions()->firstOrFail();
+        $this->assertSame($translations,$draft->translations);$this->assertSame($translations,$duplicateVersion->translations);$this->assertSame('RU section',$draft->sections()->firstOrFail()->localizedTitle('ru'));$this->assertSame('RU question',$duplicateVersion->components()->firstOrFail()->localizedLabel('ru'));$this->assertSame('RU option',$duplicateVersion->components()->firstOrFail()->options()->firstOrFail()->localizedLabel('ru'));
+        $immutableModels=[$published,$published->sections()->firstOrFail(),$published->components()->firstOrFail(),$published->components()->firstOrFail()->options()->firstOrFail()];$blocked=0;foreach($immutableModels as $model){try{$model->update(['translations'=>['lv'=>['title'=>'Tampered','label'=>'Tampered']]]);}catch(LogicException){$blocked++;}}$this->assertSame(4,$blocked);
+    }
+
+    public function test_builder_saves_supported_locales_and_option_translation_edits_preserve_value_and_scoring(): void
+    {
+        [$creator,$organisation]=$this->member('form_creator');$authoring=app(FormAuthoringService::class);$form=$authoring->create($organisation->id,$creator,'Builder locales','blank');$version=$form->versions()->firstOrFail();$section=$version->sections()->firstOrFail();
+        $this->actingAs($creator)->get(route('forms.builder',$form))->assertOk()->assertSee('data-locale-tab="lv"',false)->assertSee('data-locale-tab="en"',false)->assertSee('data-locale-tab="ru"',false)->assertSee(__('messages.translation_lv_fallback'));
+        $this->actingAs($creator)->put(route('builder.versions.update',[$form,$version]),['translations'=>['lv'=>['title'=>'LV forma','description'=>'LV apraksts'],'en'=>['title'=>'EN form','description'=>'EN description'],'ru'=>['title'=>'RU form','description'=>'RU description']]])->assertRedirect();
+        $this->actingAs($creator)->put(route('builder.sections.update',[$form,$section]),['visible'=>1,'translations'=>['lv'=>['title'=>'LV sadaļa','description'=>'LV sadaļas apraksts'],'en'=>['title'=>'EN section','description'=>'EN section description'],'ru'=>['title'=>'RU section','description'=>'RU section description']]])->assertRedirect();
+        $component=$authoring->addComponent($version->fresh(),$section->fresh(),['type'=>'dropdown','max_points'=>1,'translations'=>['lv'=>['label'=>'LV jautājums','description'=>'LV apraksts','help_text'=>'LV palīdzība','placeholder'=>'LV vietturis'],'en'=>['label'=>'EN question','description'=>'EN description','help_text'=>'EN help','placeholder'=>'EN placeholder'],'ru'=>['label'=>'RU question','description'=>'RU description','help_text'=>'RU help','placeholder'=>'RU placeholder']],'options'=>[['translations'=>['lv'=>['label'=>'Pirmais'],'en'=>['label'=>'First'],'ru'=>['label'=>'Первый']]],['translations'=>['lv'=>['label'=>'Otrais'],'en'=>['label'=>'Second'],'ru'=>['label'=>'Второй']]]],'scoring_strategy'=>'single_choice','scoring_rules'=>[]]);$options=$component->options()->orderBy('display_order')->get();$correct=$options[0]->value;$stableKey=$options[0]->stable_key;$component->scoringRule()->update(['rules'=>['correct'=>$correct]]);
+        $payload=['visible'=>1,'max_points'=>1,'translations'=>['lv'=>['label'=>'LV mainīts','description'=>'LV mainīts apraksts','help_text'=>'LV mainīta palīdzība','placeholder'=>'LV mainīts vietturis'],'en'=>['label'=>'EN changed','description'=>'EN changed description','help_text'=>'EN changed help','placeholder'=>'EN changed placeholder'],'ru'=>['label'=>'RU changed','description'=>'RU changed description','help_text'=>'RU changed help','placeholder'=>'RU changed placeholder']],'options'=>['existing'=>[$options[0]->id=>['translations'=>['lv'=>['label'=>'Pirmais mainīts'],'en'=>['label'=>'First changed'],'ru'=>['label'=>'Первый изменён']]],$options[1]->id=>['translations'=>['lv'=>['label'=>'Otrais'],'en'=>['label'=>'Second'],'ru'=>['label'=>'Второй']]]],'new'=>[]],'scoring_strategy'=>'single_choice','scoring_rules'=>['correct'=>$correct]];
+        $this->actingAs($creator)->put(route('builder.components.update',[$form,$component]),$payload)->assertRedirect();$component->refresh();$first=$component->options()->findOrFail($options[0]->id);
+        $this->assertSame('LV mainīts',$component->label);$this->assertSame('LV mainīts apraksts',$component->description);$this->assertSame('LV mainīta palīdzība',$component->help_text);$this->assertSame('LV mainīts vietturis',$component->settings['placeholder']);$this->assertSame('RU changed',$component->localizedLabel('ru'));$this->assertSame('Первый изменён',$first->localizedLabel('ru'));$this->assertSame($correct,$first->value);$this->assertSame($stableKey,$first->stable_key);$this->assertSame($correct,$component->scoringRule()->firstOrFail()->rules['correct']);
+        $this->actingAs($creator)->from(route('forms.builder',$form))->put(route('builder.versions.update',[$form,$version]),['translations'=>['lv'=>['title'=>'Valid LV'],'de'=>['title'=>'Nicht erlaubt']]])->assertSessionHasErrors('translations');$this->assertSame('LV forma',$version->fresh()->title);
+    }
+
+    public function test_localized_preview_uses_requested_language_and_fallback_without_creating_execution_state(): void
+    {
+        [$creator,$organisation]=$this->member('form_creator');$authoring=app(FormAuthoringService::class);$builder=app(BuilderService::class);$form=$authoring->create($organisation->id,$creator,'Preview internal','blank');$version=$form->versions()->firstOrFail();$builder->updateVersion($version,['translations'=>['lv'=>['title'=>'LV preview title','description'=>'LV preview description','completion_text'=>'LV completion fallback'],'ru'=>['title'=>'RU preview title','description'=>'RU preview description']]]);$section=$version->sections()->firstOrFail();$builder->updateSection($section,['visible'=>true,'translations'=>['lv'=>['title'=>'LV preview section','description'=>'LV section fallback'],'ru'=>['title'=>'RU preview section']]]);$component=$authoring->addComponent($version,$section,['type'=>'single_choice','translations'=>['lv'=>['label'=>'LV preview question'],'ru'=>['label'=>'RU preview question']],'options'=>[['translations'=>['lv'=>['label'=>'LV first'],'ru'=>['label'=>'RU first']]],['translations'=>['lv'=>['label'=>'LV fallback option']]]]]);$yesNo=$authoring->addComponent($version,$section,['type'=>'yes_no','translations'=>['lv'=>['label'=>'LV yes/no'],'ru'=>['label'=>'RU yes/no']],'options'=>[]]);$fallbackText=$authoring->addComponent($version,$section,['type'=>'short_text','translations'=>['lv'=>['label'=>'LV field','description'=>'LV fallback description','help_text'=>'LV fallback help','placeholder'=>'LV fallback placeholder'],'ru'=>['label'=>'RU field']],'options'=>[]]);
+        $before=json_encode([$version->fresh()->toArray(),$section->fresh()->toArray(),$component->fresh()->toArray(),$component->options()->orderBy('id')->get()->toArray(),$yesNo->fresh()->toArray(),$fallbackText->fresh()->toArray()]);$response=$this->actingAs($creator)->withSession(['locale'=>'en'])->get(route('forms.preview',$form).'?locale=ru');$response->assertOk()->assertSee('RU preview title')->assertSee('RU preview section')->assertSee('RU preview question')->assertSee('RU first')->assertSee('LV fallback option')->assertSee('LV fallback used')->assertSee(__('messages.yes',[],'ru'))->assertSee(__('messages.no',[],'ru'))->assertDontSee('> Yes',false)->assertDontSee('> No',false)->assertDontSee('LV preview question');$this->assertSame('en',session('locale'));$this->assertTrue($version->usesContentFallback('ru'));$this->assertTrue($section->usesContentFallback('ru'));$this->assertTrue($fallbackText->usesContentFallback('ru'));
+        $after=json_encode([$version->fresh()->toArray(),$section->fresh()->toArray(),$component->fresh()->toArray(),$component->options()->orderBy('id')->get()->toArray(),$yesNo->fresh()->toArray(),$fallbackText->fresh()->toArray()]);$this->assertSame($before,$after);$this->assertSame(0,FormSubmission::count());$this->assertSame(0,\DB::table('attempt_grants')->count());
+    }
+
+    public function test_image_preview_ignores_the_non_rendered_generic_label_when_detecting_fallback(): void
+    {
+        [$creator,$organisation]=$this->member('form_creator');
+        $authoring=app(FormAuthoringService::class);
+        $builder=app(BuilderService::class);
+        $form=$authoring->create($organisation->id,$creator,'Image fallback preview','blank');
+        $version=$form->versions()->firstOrFail();
+        $builder->updateVersion($version,['translations'=>['lv'=>['title'=>'LV image preview'],'ru'=>['title'=>'RU image preview']]]);
+        $section=$version->sections()->firstOrFail();
+        $builder->updateSection($section,['visible'=>true,'translations'=>['lv'=>['title'=>'LV image section'],'ru'=>['title'=>'RU image section']]]);
+        $image=$authoring->addComponent($version,$section,[
+            'type'=>'image',
+            'translations'=>[
+                'lv'=>['label'=>'Nerenderēta iekšējā etiķete'],
+                'ru'=>['image_title'=>'RU rendered image title'],
+            ],
+            'options'=>[],
+        ]);
+
+        $this->assertFalse($image->usesContentFallback('ru'));
+        $this->actingAs($creator)
+            ->withSession(['locale'=>'en'])
+            ->get(route('forms.preview',$form).'?locale=ru')
+            ->assertOk()
+            ->assertSee('RU rendered image title')
+            ->assertDontSee(__('messages.fallback_used',[],'en'));
+    }
+
+    public function test_respondent_locale_change_keeps_submission_revision_deadline_answers_and_scoring_references(): void
+    {
+        [$creator,$organisation]=$this->member('form_creator');[$respondent]=$this->member('respondent',$organisation);$authoring=app(FormAuthoringService::class);$builder=app(BuilderService::class);$form=$authoring->create($organisation->id,$creator,'Respondent internal','blank');$version=$form->versions()->firstOrFail();$builder->updateVersion($version,['translations'=>['lv'=>['title'=>'LV respondent title'],'ru'=>['title'=>'RU respondent title']]]);$section=$version->sections()->firstOrFail();$builder->updateSection($section,['visible'=>true,'translations'=>['lv'=>['title'=>'LV respondent section'],'ru'=>['title'=>'RU respondent section']]]);$component=$authoring->addComponent($version,$section,['type'=>'single_choice','is_required'=>true,'max_points'=>1,'translations'=>['lv'=>['label'=>'LV respondent question'],'ru'=>['label'=>'RU respondent question']],'options'=>[['translations'=>['lv'=>['label'=>'LV answer'],'ru'=>['label'=>'RU answer']]],['translations'=>['lv'=>['label'=>'LV option fallback']]]],'scoring_strategy'=>'single_choice','scoring_rules'=>[]]);$correct=$component->options()->first()->value;$component->scoringRule()->update(['rules'=>['correct'=>$correct]]);$published=$authoring->publish($version);$publication=$this->publication($form,$published,['timer_enabled'=>true,'duration_minutes'=>30,'autosave_enabled'=>false]);$submission=app(SubmissionService::class)->start($publication,$respondent,null,null,'unused');app(SubmissionService::class)->autosave($submission,0,(string)Str::uuid(),[$component->id=>$correct]);$submission->refresh();$deadline=$submission->deadline_at->copy();$revision=$submission->revision;$answer=$submission->answers()->firstOrFail()->value;$scoring=$component->scoringRule()->firstOrFail()->rules;
+        $take=$this->actingAs($respondent)->withSession(['locale'=>'ru'])->get(route('submissions.take',$submission));$take->assertOk()->assertSee('RU respondent title')->assertSee('RU respondent section')->assertSee('RU respondent question')->assertSee('RU answer')->assertSee('LV option fallback')->assertSee('data-locale-form',false)->assertSee('data-status-saving="'.__('messages.saving',[],'ru').'"',false)->assertSee('data-status-saved="'.__('messages.saved_state',[],'ru').'"',false)->assertSee('data-status-offline="'.__('messages.offline',[],'ru').'"',false)->assertSee('data-status-save-error="'.__('messages.save_error',[],'ru').'"',false)->assertSee($submission->public_id);
+        $this->actingAs($respondent)->withSession(['locale'=>'ru'])->from(route('submissions.take',$submission))->post(route('locale','en'))->assertRedirect(route('submissions.take',$submission));$submission->refresh();
+        $this->assertSame(1,FormSubmission::count());$this->assertSame($revision,$submission->revision);$this->assertTrue($deadline->equalTo($submission->deadline_at));$this->assertSame($answer,$submission->answers()->firstOrFail()->value);$this->assertSame($scoring,$component->scoringRule()->firstOrFail()->rules);$javascript=file_get_contents(resource_path('js/app.js'));$this->assertStringContainsString('saveNow(true)',$javascript);$this->assertStringNotContainsString('document.documentElement.lang',$javascript);
+    }
+
+    public function test_form_version_localization_migration_backfills_legacy_data_without_changing_sources_or_legacy_tables(): void
+    {
+        [$creator,$organisation]=$this->member('form_creator');$form=app(FormAuthoringService::class)->create($organisation->id,$creator,'Internal legacy name','blank');$version=$form->versions()->firstOrFail();$legacyTranslations=['lv'=>['name'=>'Latviešu virsraksts','description'=>'LV apraksts','completion_text'=>'LV pabeigts','result_text'=>'LV rezultāts'],'en'=>['name'=>'English title','description'=>'English description','completion_text'=>'English complete','result_text'=>'English result'],'ru'=>['name'=>'Русский заголовок','description'=>'Русское описание','completion_text'=>'Завершено','result_text'=>'Результат']];$form->update(['translations'=>$legacyTranslations]);\DB::table('tests')->insert(['title'=>'Preserved legacy test','description'=>'Must remain','duration_minutes'=>25,'is_active'=>true,'created_at'=>now(),'updated_at'=>now()]);$sourceName=$form->fresh()->name;$sourceTranslations=\DB::table('forms')->where('id',$form->id)->value('translations');$legacyCount=\DB::table('tests')->count();$migration=require database_path('migrations/2026_08_02_000100_add_localized_content_to_form_versions.php');
+        $migration->down();$this->assertFalse(Schema::hasColumn('form_versions','title'));$migration->up();$row=\DB::table('form_versions')->where('id',$version->id)->first();$backfilled=json_decode($row->translations,true);
+        $this->assertSame($sourceName,$row->title);$this->assertSame('Latviešu virsraksts',data_get($backfilled,'lv.title'));$this->assertSame('English title',data_get($backfilled,'en.title'));$this->assertSame('Русский заголовок',data_get($backfilled,'ru.title'));foreach(['lv','en','ru'] as $locale){foreach(['description','completion_text','result_text'] as $field)$this->assertSame(data_get($legacyTranslations,$locale.'.'.$field),data_get($backfilled,$locale.'.'.$field));}$this->assertSame($sourceName,\DB::table('forms')->where('id',$form->id)->value('name'));$this->assertSame($sourceTranslations,\DB::table('forms')->where('id',$form->id)->value('translations'));$this->assertSame($legacyCount,\DB::table('tests')->count());$this->assertDatabaseHas('tests',['title'=>'Preserved legacy test']);
     }
 
     public function test_legacy_tables_remain_and_broken_legacy_routes_are_retired(): void
