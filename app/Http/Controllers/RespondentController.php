@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Submissions\SubmissionService;
+use App\Domain\Patients\PatientAccessService;
 use App\Models\FormSubmission;
 use App\Models\Publication;
 use Illuminate\Http\Request;
@@ -22,8 +23,9 @@ class RespondentController extends Controller
 
     public function take(FormSubmission $submission, Request $request)
     {
-        $this->assertOwner($submission,$request); $submission->load('publication.form','formVersion.sections.components.options','formVersion.conditionalRules.actions','answers');
-        return view('respondent.take',compact('submission'));
+        $this->assertOwner($submission,$request); abort_unless($submission->status === 'in_progress', 409); $submission->load('publication.form','formVersion.sections.components.options','formVersion.conditionalRules.actions','answers');
+        $patientAccessPackage=app(PatientAccessService::class)->packageForSubmission($request,$submission);
+        return view('respondent.take',compact('submission','patientAccessPackage'));
     }
 
     public function complete(FormSubmission $submission, Request $request)
@@ -35,6 +37,7 @@ class RespondentController extends Controller
     {
         $owned=$request->user()&&$submission->user_id===$request->user()->id;
         $anonymous=$submission->anonymous_key_hash&&$request->session()->has('respondent_key')&&hash_equals($submission->anonymous_key_hash,hash('sha256',$request->session()->get('respondent_key')));
-        abort_unless($owned || $anonymous, 403);
+        $patient=app(PatientAccessService::class)->packageForSubmission($request,$submission);
+        abort_unless($owned || $anonymous || $patient, 403);
     }
 }

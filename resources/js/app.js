@@ -4,6 +4,14 @@ document.querySelectorAll('[data-confirm]').forEach((form) => form.addEventListe
     if (!window.confirm(form.dataset.confirm)) event.preventDefault();
 }));
 
+document.querySelectorAll('[data-copy-target]').forEach((button) => button.addEventListener('click', async () => {
+    const input = document.getElementById(button.dataset.copyTarget);
+    if (!input) return;
+    try { await navigator.clipboard.writeText(input.value); }
+    catch { input.select(); document.execCommand('copy'); }
+    button.textContent = button.dataset.copiedLabel || '✓';
+}));
+
 document.querySelectorAll('[data-component-form]').forEach((form) => {
     const registry = JSON.parse(form.dataset.registry || '{}');
     const type = form.querySelector('[data-component-type]');

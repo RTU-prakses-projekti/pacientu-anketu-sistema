@@ -88,4 +88,5 @@
   .status-square { @apply mx-auto inline-flex h-9 w-9 items-center justify-center rounded-md border text-base font-bold no-underline; }
   .status-square.completed { @apply border-emerald-700 bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white hover:no-underline; }
   .status-square.not-completed { @apply border-slate-300 bg-slate-100 text-slate-500; }
+  .patient-status-complete { @apply bg-emerald-100 text-emerald-800; }
 }

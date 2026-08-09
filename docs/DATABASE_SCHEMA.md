@@ -58,3 +58,9 @@ JSON is used for type-specific settings, translations, answer values, scoring pa
 Patient results are associated through the assignment's non-null invitation. An assignment without an invitation remains not completed and cannot expose an unrelated invitation-free submission. Doctor access requires patient ownership and an active organisation doctor membership carrying the relevant clinical permission. Platform-administrator status has no PatientCase policy bypass and no doctor workspace by itself. Any `form_submissions` row linked through `patient_form_assignments.invitation_id` is clinical: generic submission administration, grading/attempt administration, and general-purpose export queries exclude or deny it.
 
 For a future research export, `patient_code` and doctor-selected questionnaire answer columns form the shareable boundary. `first_name`, `last_name`, `external_patient_code`, and `note` are excluded from that boundary by default. No export implementation is included in this change.
+
+## Patient access packages
+
+`patient_access_packages` stores a UUID clean-route identifier, patient case, creating doctor, SHA-256 token hash, required expiry, optional revocation, and timestamps. Plaintext secrets are never persisted. Nullable `patient_form_assignments.patient_access_package_id` links assigned parts to the currently issued package while preserving existing assignments.
+
+Regeneration revokes prior active package rows and repoints assignments to the new package without changing their invitations or submissions. This preserves in-progress answers and attempt identity while invalidating old tokens and clean-URL sessions. Foreign keys use restricted deletion, and package/token data is not part of exports.

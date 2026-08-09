@@ -28,6 +28,7 @@ class PatientCase extends Model
     public function organisation() { return $this->belongsTo(Organisation::class); }
     public function doctor() { return $this->belongsTo(User::class, 'doctor_id'); }
     public function assignments() { return $this->hasMany(PatientFormAssignment::class)->orderBy('display_order')->orderBy('id'); }
+    public function accessPackages() { return $this->hasMany(PatientAccessPackage::class); }
     public function getRouteKeyName(): string { return 'public_id'; }
 
     public function scopeVisibleTo(Builder $query, User $user): Builder

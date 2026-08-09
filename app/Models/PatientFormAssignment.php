@@ -36,7 +36,15 @@ class PatientFormAssignment extends Model
     public function patientCase() { return $this->belongsTo(PatientCase::class); }
     public function publication() { return $this->belongsTo(Publication::class); }
     public function invitation() { return $this->belongsTo(Invitation::class); }
+    public function accessPackage() { return $this->belongsTo(PatientAccessPackage::class, 'patient_access_package_id'); }
     public function submissions() { return $this->hasMany(FormSubmission::class, 'invitation_id', 'invitation_id'); }
     public function completedSubmission() { return $this->hasOne(FormSubmission::class, 'invitation_id', 'invitation_id')->whereNotNull('form_submissions.invitation_id')->whereIn('status', FormSubmission::PATIENT_COMPLETED_STATUSES)->latestOfMany('submitted_at'); }
     public function getRouteKeyName(): string { return 'public_id'; }
+
+    public function status(): string
+    {
+        if ($this->completedSubmission()->exists()) return 'completed';
+        if ($this->submissions()->where('status', 'in_progress')->exists()) return 'in_progress';
+        return 'not_started';
+    }
 }

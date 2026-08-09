@@ -32,7 +32,7 @@
 <td class="patient-id-column"><input class="patient-id-input" form="patient-slot-{{ $slot }}" name="external_patient_code" value="{{ $patientCase?->external_patient_code }}" aria-label="{{ __('messages.patient_id') }} {{ $slot }}"></td>
 <td class="research-id-column"><code>{{ $patientCase?->patient_code ?? '—' }}</code></td>
 <td class="note-column"><textarea class="patient-note-input" form="patient-slot-{{ $slot }}" name="note" rows="2" aria-label="{{ __('messages.patient_note') }} {{ $slot }}">{{ $patientCase?->note }}</textarea></td>
-<td class="actions-column"><form id="patient-slot-{{ $slot }}" method="POST" action="{{ route('doctor.patients.slots.update', [$selectedMembership->organisation, $selectedMembership->user, $slot]) }}">@csrf @method('PUT')<button class="btn" type="submit">{{ $patientCase ? __('messages.save_note') : __('messages.create_patient') }}</button></form></td>
+<td class="actions-column"><form id="patient-slot-{{ $slot }}" method="POST" action="{{ route('doctor.patients.slots.update', [$selectedMembership->organisation, $selectedMembership->user, $slot]) }}">@csrf @method('PUT')<button class="btn" type="submit">{{ $patientCase ? __('messages.save_note') : __('messages.create_patient') }}</button></form>@if($patientCase)<a class="btn mt-2" href="{{ route('doctor.questionnaires.index',$patientCase) }}">{{ __('messages.questionnaires') }}</a>@endif</td>
 @foreach($columns as $column)
 @php($assignment = $patientCase?->assignments->firstWhere('publication_id', $column->publication_id))
 @php($completedSubmission = $assignment?->completedSubmission)

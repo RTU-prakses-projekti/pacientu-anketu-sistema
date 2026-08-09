@@ -28,10 +28,32 @@ class SubmissionService
         $invitation = $this->authorizeAccess($publication, $user, $accessCode, $invitationToken);
         $anonymousHash = $user ? null : hash('sha256', $anonymousKey);
 
-        return DB::transaction(function () use ($publication, $user, $invitation, $anonymousHash) {
+        return $this->startAuthorized($publication, $user, $invitation, $anonymousHash);
+    }
+
+    public function startForInvitation(Publication $publication, Invitation $invitation): FormSubmission
+    {
+        if (!$publication->isOpen() || $publication->access_mode !== 'invitation' || $invitation->publication_id !== $publication->id
+            || $invitation->revoked_at || ($invitation->expires_at && $invitation->expires_at->isPast())) {
+            throw ValidationException::withMessages(['invitation' => __('messages.invalid_invitation')]);
+        }
+
+        return $this->startAuthorized($publication, null, $invitation, null, true);
+    }
+
+    private function startAuthorized(Publication $publication, ?User $user, ?Invitation $invitation, ?string $anonymousHash, bool $forceResume = false): FormSubmission
+    {
+
+        return DB::transaction(function () use ($publication, $user, $invitation, $anonymousHash, $forceResume) {
             $query = FormSubmission::where('publication_id', $publication->id)->where('status', 'in_progress');
             $this->identityQuery($query, $user, $invitation, $anonymousHash);
-            if ($publication->resume_enabled && ($existing = $query->first())) return $existing;
+            if (($publication->resume_enabled || $forceResume) && ($existing = $query->first())) return $existing;
+
+            if ($invitation) {
+                $lockedInvitation = Invitation::lockForUpdate()->findOrFail($invitation->id);
+                if ($lockedInvitation->uses >= $lockedInvitation->max_uses) throw ValidationException::withMessages(['invitation' => __('messages.invalid_invitation')]);
+                $invitation = $lockedInvitation;
+            }
 
             $attemptQuery = FormSubmission::where('publication_id', $publication->id)->whereNotIn('status', ['cancelled']);
             $this->identityQuery($attemptQuery, $user, $invitation, $anonymousHash);
@@ -206,7 +228,7 @@ class SubmissionService
         if ($publication->access_mode !== 'invitation') return null;
         if (!$invitationToken) throw ValidationException::withMessages(['invitation' => __('messages.invalid_invitation')]);
         $invitation = $publication->invitations()->where('token_hash', hash('sha256', $invitationToken))->first();
-        if (!$invitation || $invitation->revoked_at || ($invitation->expires_at && $invitation->expires_at->isPast()) || $invitation->uses >= $invitation->max_uses) throw ValidationException::withMessages(['invitation' => __('messages.invalid_invitation')]);
+        if (!$invitation || $invitation->revoked_at || ($invitation->expires_at && $invitation->expires_at->isPast())) throw ValidationException::withMessages(['invitation' => __('messages.invalid_invitation')]);
         return $invitation;
     }
 

@@ -8,6 +8,7 @@ use App\Http\Controllers\AutosaveController;
 use App\Http\Controllers\BuilderController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DoctorDashboardController;
+use App\Http\Controllers\DoctorQuestionnaireController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FinalizeSubmissionController;
 use App\Http\Controllers\FormController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\GradingController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\PublicationController;
+use App\Http\Controllers\PatientPortalController;
 use App\Http\Controllers\RespondentController;
 use App\Http\Controllers\SystemAdministrationController;
 use App\Http\Controllers\UserAdministrationController;
@@ -38,6 +40,9 @@ Route::post('/locale/{locale}', function (Request $request, string $locale) {
 })->name('locale');
 
 Route::get('/f/{publication}', [RespondentController::class, 'show'])->name('publications.show');
+Route::get('/patient-access/{token}', [PatientPortalController::class, 'access'])->middleware('throttle:30,1')->name('patient.access');
+Route::get('/patient-portal/{patientAccessPackage}', [PatientPortalController::class, 'portal'])->name('patient.portal');
+Route::post('/patient-portal/{patientAccessPackage}/assignments/{assignment}/start', [PatientPortalController::class, 'start'])->name('patient.assignments.start');
 Route::post('/f/{publication}/start', [RespondentController::class, 'start'])->name('publications.start');
 Route::get('/respond/{submission}', [RespondentController::class, 'take'])->name('submissions.take');
 Route::post('/respond/{submission}/autosave', AutosaveController::class)->middleware('throttle:autosave')->name('submissions.autosave');
@@ -50,6 +55,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/doctor', [DoctorDashboardController::class, 'index'])->name('doctor.dashboard');
     Route::put('/doctor/organisations/{organisation}/doctors/{doctor}/slots/{slot}', [DoctorDashboardController::class, 'updateSlot'])->name('doctor.patients.slots.update');
     Route::get('/doctor/patients/{patientCase}/assignments/{assignment}/result', [DoctorDashboardController::class, 'result'])->name('doctor.results.show');
+    Route::get('/doctor/patients/{patientCase}/questionnaires', [DoctorQuestionnaireController::class, 'index'])->name('doctor.questionnaires.index');
+    Route::post('/doctor/patients/{patientCase}/questionnaires', [DoctorQuestionnaireController::class, 'store'])->name('doctor.questionnaires.store');
+    Route::post('/doctor/patients/{patientCase}/patient-link', [DoctorQuestionnaireController::class, 'issueLink'])->name('doctor.patient-link.issue');
+    Route::delete('/doctor/patients/{patientCase}/patient-link/{patientAccessPackage}', [DoctorQuestionnaireController::class, 'revokeLink'])->name('doctor.patient-link.revoke');
 
     Route::get('/organisations', [OrganisationController::class, 'index'])->name('organisations.index');
     Route::get('/organisations/create', [OrganisationController::class, 'create'])->name('organisations.create');
