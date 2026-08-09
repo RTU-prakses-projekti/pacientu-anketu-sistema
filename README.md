@@ -19,10 +19,10 @@ Key implementation locations:
 
 ## Prerequisites
 
-- PHP 8.3+ with PDO SQLite, mbstring, XML, and ZIP extensions
+- PHP 8.3+ with PDO MySQL, mbstring, XML, and ZIP extensions
 - Composer 2
 - Node.js/npm compatible with Vite 8
-- SQLite for local development
+- MySQL 8 or MariaDB (the local development environment uses XAMPP MariaDB)
 - A queue worker and scheduler for queued exports/deadline reconciliation
 - PostgreSQL or MySQL 8 is recommended for production after portability and load verification
 
@@ -34,14 +34,14 @@ Do not run destructive migration commands against an existing environment.
 composer install
 Copy-Item .env.example .env   # only when .env does not exist
 php artisan key:generate      # only for a new local environment
-New-Item -ItemType File database/database.sqlite -Force
+# Create the DB_DATABASE database with utf8mb4 first, using your verified local credentials.
 php artisan migrate
 php artisan db:seed
 npm.cmd install
 npm.cmd run build
 ```
 
-For this repository, the pre-builder database backup is at `storage/app/private/backups/database-before-universal-builder.sqlite`. The Composer `setup` script runs migrations automatically; review it before use.
+For this repository, the original SQLite source is retained at `database/database.sqlite`, and the pre-builder backup is at `storage/app/private/backups/database-before-universal-builder.sqlite`. Do not delete or overwrite either file. The Composer `setup` script runs migrations automatically; review it before use and create the configured MySQL/MariaDB database first.
 
 Important environment settings:
 
@@ -50,7 +50,12 @@ APP_ENV=local
 APP_DEBUG=true
 APP_LOCALE=lv
 APP_FALLBACK_LOCALE=en
-DB_CONNECTION=sqlite
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=kontroldarbu_sistema
+DB_USERNAME=root
+DB_PASSWORD=
 QUEUE_CONNECTION=database
 CACHE_STORE=database
 SESSION_DRIVER=file
@@ -117,6 +122,12 @@ npm.cmd run build
 ```
 
 Tests use in-memory SQLite and cover authentication, role escalation prevention, throttling, tenant isolation, versions, autosave/idempotency, deadlines, attempts, scoring, consent, export safety/XLSX, and legacy preservation.
+
+## Database migration to MySQL
+
+On 2026-08-09 the local development application was migrated from its retained SQLite source to the XAMPP MariaDB database `kontroldarbu_sistema` using `utf8mb4`. All Laravel migrations ran on MariaDB, existing rows were copied with primary keys and relationships preserved, and foreign-key/count verification completed successfully. PHPUnit intentionally continues to use isolated in-memory SQLite; it does not touch the development database.
+
+The checked-in `.env.example` contains non-secret local defaults. Verify the host, port, username, and password for your own installation before running migrations. Never commit `.env`, database dumps, or MySQL data files.
 
 ## Performance test
 

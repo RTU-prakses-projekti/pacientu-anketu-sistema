@@ -25,4 +25,4 @@ Publishing validates references, hashes the complete version graph, and changes 
 
 ## Deployment direction
 
-Use PostgreSQL or MySQL 8 for production, Redis for queues/cache/rate limits, private object storage, multiple stateless PHP workers, HTTPS, a supervised queue worker, one scheduler trigger, centralized redacted logs, metrics/alerts, and tested backups. The current SQLite/database-queue environment is for local development.
+Use PostgreSQL or MySQL 8 for production, Redis for queues/cache/rate limits, private object storage, multiple stateless PHP workers, HTTPS, a supervised queue worker, one scheduler trigger, centralized redacted logs, metrics/alerts, and tested backups. Local development now uses XAMPP MariaDB with the database queue; PHPUnit remains isolated on in-memory SQLite.

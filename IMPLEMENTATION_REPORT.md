@@ -188,7 +188,7 @@ The base universal migration and local-only demo seed ran successfully after the
 - Notification delivery is a generic queued creator email with no per-form template/preferences, digesting, retry dashboard, or provider configuration UI.
 - The admin filtering UI covers core fields but is not a full reporting/query builder.
 - Production malware scanning/DLP, antivirus quarantine, object storage, export/attachment cleanup jobs, retention/legal-hold/data-subject workflows, and backup encryption are not included.
-- SQLite is supported locally, but MySQL 8/PostgreSQL portability, query plans, failover, and production lock/concurrency behavior have not yet been exercised in CI.
+- Local development was moved to XAMPP MariaDB 10.4 on 2026-08-09, with all migrations, imported-data counts, foreign keys, Laravel queries, and the regression suite verified. MySQL 8/PostgreSQL CI portability, query plans, failover, and production lock/concurrency behavior have not yet been exercised.
 - Accessibility has keyboard controls and labelled/status foundations, but no independent WCAG audit has been performed.
 - The current local `.env` reports locale `en`; `.env.example` defaults to `lv`, and the locale middleware defaults unauthenticated respondents to Latvian. Set `APP_LOCALE=lv` in deployments without exposing environment secrets.
 
