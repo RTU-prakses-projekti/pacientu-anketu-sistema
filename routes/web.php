@@ -17,6 +17,7 @@ use App\Http\Controllers\GradingController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\OrganisationController;
 use App\Http\Controllers\PublicationController;
+use App\Http\Controllers\QuestionnairePackageController;
 use App\Http\Controllers\PatientPortalController;
 use App\Http\Controllers\RespondentController;
 use App\Http\Controllers\SystemAdministrationController;
@@ -75,6 +76,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/users/{user}/toggle', [UserAdministrationController::class, 'toggleUser'])->name('users.toggle');
 
     Route::get('/organisations/{organisation}/forms', [FormController::class, 'index'])->name('forms.index');
+    Route::get('/organisations/{organisation}/questionnaires/import', [QuestionnairePackageController::class, 'index'])->name('questionnaires.index');
+    Route::post('/organisations/{organisation}/questionnaires/import', [QuestionnairePackageController::class, 'import'])->name('questionnaires.import');
     Route::get('/organisations/{organisation}/forms/create', [FormController::class, 'create'])->name('forms.create');
     Route::post('/forms', [FormController::class, 'store'])->name('forms.store');
     Route::get('/forms/{form}', [FormController::class, 'show'])->name('forms.show');
@@ -83,6 +86,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/forms/{form}/preview', [BuilderController::class, 'preview'])->name('forms.preview');
     Route::put('/forms/{form}/versions/{version}', [BuilderController::class, 'updateVersion'])->name('builder.versions.update');
     Route::post('/forms/{form}/versions/{version}/publish', [FormController::class, 'publish'])->name('forms.publish');
+    Route::post('/forms/{form}/versions/{version}/export-questionnaire', [QuestionnairePackageController::class, 'export'])->name('questionnaires.export');
     Route::post('/forms/{form}/versions/{version}/new-draft', [FormController::class, 'newDraft'])->name('forms.new-draft');
     Route::post('/forms/{form}/duplicate', [FormController::class, 'duplicate'])->name('forms.duplicate');
     Route::post('/forms/{form}/archive', [FormController::class, 'archive'])->name('forms.archive');

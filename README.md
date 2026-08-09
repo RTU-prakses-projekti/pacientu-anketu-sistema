@@ -146,6 +146,15 @@ php artisan test
 npm.cmd run build
 ```
 
+## Anketas nodošana caur Git
+
+1. Izveido savu branch ar savu vārdu, piemēram, `laura`, `gustavs` vai `janis`.
+2. Savā branch palaid projektu, izveido anketu un pārbaudi to ar Preview.
+3. Formas skatā pie vajadzīgās versijas nospied “Eksportēt uz Git”.
+4. Veic commit savā branch — nav nepieciešams manuāli atlasīt tikai `questionnaires/` failus.
+5. Push savu branch uz GitHub.
+6. `.env`, MySQL datubāzes failus, SQL dumpus un `storage` runtime failus Git nepievieno.
+
 ## Biežākās problēmas
 
 ### Composer prasa jaunāku PHP
