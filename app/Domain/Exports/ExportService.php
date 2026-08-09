@@ -18,6 +18,7 @@ class ExportService
         $export->update(['status' => 'processing']);
         try {
             $submissions = FormSubmission::with('publication.form', 'user', 'answers.component')->where('organisation_id', $export->organisation_id)
+                ->withoutPatientAssignment()
                 ->when($export->form_id, fn ($q) => $q->whereHas('publication', fn ($p) => $p->where('form_id', $export->form_id)))->get();
             $relative = 'exports/'.$export->organisation_id.'/'.$export->public_id.'.'.$export->format;
             Storage::disk('local')->makeDirectory(dirname($relative));

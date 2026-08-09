@@ -14,4 +14,5 @@ class Organisation extends Model
 
     public function memberships() { return $this->hasMany(OrganisationMembership::class); }
     public function forms() { return $this->hasMany(Form::class); }
+    public function patientCases() { return $this->hasMany(PatientCase::class); }
 }

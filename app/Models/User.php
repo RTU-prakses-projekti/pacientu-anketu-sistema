@@ -41,6 +41,50 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class, 'user_roles');
     }
 
+    public function patientCases()
+    {
+        return $this->hasMany(PatientCase::class, 'doctor_id');
+    }
+
+    public function doctorMemberships()
+    {
+        return $this->memberships()
+            ->where('is_active', true)
+            ->whereHas('roles', fn ($query) => $query->where('roles.name', 'doctor'));
+    }
+
+    public function hasDoctorWorkspace(): bool
+    {
+        return $this->doctorMemberships()->exists();
+    }
+
+    public function hasMembershipPermission(int $organisationId, string $permission): bool
+    {
+        return $this->memberships()
+            ->where('organisation_id', $organisationId)
+            ->where('is_active', true)
+            ->whereHas('roles.permissions', fn ($query) => $query->where('permissions.name', $permission))
+            ->exists();
+    }
+
+    public function isDoctorOnly(): bool
+    {
+        if ($this->isPlatformAdmin() || !$this->doctorMemberships()->exists()) {
+            return false;
+        }
+
+        $administrativePermissions = [
+            'organisation.manage', 'forms.view', 'forms.create', 'forms.update', 'forms.publish',
+            'submissions.view', 'submissions.grade', 'submissions.manage', 'exports.create',
+            'audit.view', 'users.manage',
+        ];
+
+        return !$this->memberships()
+            ->where('is_active', true)
+            ->whereHas('roles.permissions', fn ($query) => $query->whereIn('permissions.name', $administrativePermissions))
+            ->exists();
+    }
+
     public function isPlatformAdmin(): bool
     {
         return $this->globalRoles()->where('name', 'platform_admin')->exists();

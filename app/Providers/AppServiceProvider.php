@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Models\Form;
 use App\Models\FormSubmission;
 use App\Models\Organisation;
+use App\Models\PatientCase;
 use App\Policies\FormPolicy;
 use App\Policies\FormSubmissionPolicy;
 use App\Policies\OrganisationPolicy;
+use App\Policies\PatientCasePolicy;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Organisation::class, OrganisationPolicy::class);
         Gate::policy(Form::class, FormPolicy::class);
         Gate::policy(FormSubmission::class, FormSubmissionPolicy::class);
+        Gate::policy(PatientCase::class, PatientCasePolicy::class);
 
         RateLimiter::for('login', fn (Request $request) => Limit::perMinute(5)->by(strtolower((string) $request->input('email')).'|'.$request->ip()));
         RateLimiter::for('registration', fn (Request $request) => Limit::perMinute(5)->by($request->ip()));

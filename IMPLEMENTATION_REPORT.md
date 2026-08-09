@@ -32,7 +32,7 @@ The 2026-08-01 corrective pass resolved the confirmed workflow and isolation def
 - The existence check and new administrator creation run in one database transaction while a cross-process bootstrap lock prevents concurrent command instances from creating two first administrators.
 - The password remains an interactive hidden prompt and is not accepted as a command-line argument.
 - Public registration continues to create only ordinary respondent accounts and ignores attempted role or permission escalation input.
-- Additional platform administrators can be created or promoted only from the authenticated platform-administrator **System users** interface. Both operations produce audit records.
+- The authenticated Admin 1 **System users** interface creates ordinary users without roles, then manages global Admin 1 and organisation-scoped Admin 2, Admin 3, doctor, reviewer, and patient roles in a dedicated audited editor. The final Admin 1 cannot remove their own only Admin 1 role.
 
 ### Versioned multilingual form content
 
@@ -82,7 +82,7 @@ It adds `is_active` and `locale` to `users` and creates:
 ## 4. Main features completed
 
 - Platform organisation CRUD; multi-organisation membership; organisation-level users/roles; platform user activation and role/permission screens; organisation and system audit views.
-- Seeded configurable roles: `platform_admin`, `organisation_admin`, `form_creator`, `reviewer`, and `respondent`.
+- Seeded configurable roles: `platform_admin`, `organisation_admin`, `form_creator`, `doctor`, `reviewer`, and `respondent`.
 - Blank, Test/examination, and Patient questionnaire presets using one engine.
 - Draft/published/archived lifecycle; preview; immutable publish; new draft cloning; duplicate; archive; version history.
 - Builder section/component create, edit, copy, reorder, cross-section move, visibility, empty-section deletion, choice options, scoring, conditional visibility, and private attachment upload/linking.
@@ -99,7 +99,7 @@ It adds `is_active` and `locale` to `users` and creates:
 - LV default respondent interface with EN/RU selectors and locale fallback.
 - Centralized selected-language → LV → base → system-fallback → first-available content resolution; versioned form content; compact builder language tabs; localized preview and respondent/result rendering.
 - Transactionally locked, one-time interactive `php artisan app:create-admin` bootstrap command with no stored/default/argument password and no existing-account promotion.
-- Authenticated platform-administrator controls for audited creation and promotion of additional platform administrators.
+- Authenticated Admin 1 controls for ordinary-user creation and audited, scope-valid global/organisation role assignment and revocation.
 - Active legacy quiz routes were retired; legacy schema and implementation files remain available for rollback/migration reference.
 
 ## 5. Files and packages added
@@ -126,9 +126,10 @@ Composer package added: `openspout/openspout` v5.8.0 for streaming XLSX creation
 
 ## 7. Tests created
 
-The complete suite currently passes **45 tests / 309 assertions** using in-memory SQLite. It covers:
+The complete suite currently passes **49 tests / 369 assertions** using in-memory SQLite. It covers:
 
 - registration identity persistence, role-escalation rejection, and login throttling;
+- role display hierarchy, least-privilege Admin 3/doctor permissions, Admin 1-only doctor assignment, 200-slot rendering, pseudonymous patient creation, doctor ownership isolation, finalized-status projection, and patient-scoped read-only results;
 - organisation isolation and creator/reviewer permissions;
 - draft authoring, component copy/reorder/move, publish immutability, new drafts, and history-preserving archive;
 - access code and publication windows, hashed invitation use limits, and attempt limits;
@@ -241,7 +242,7 @@ php artisan app:create-admin
 
 Optional non-secret prompts can be passed as `--name` and `--email`; the password always remains interactive and hidden and cannot be passed as an argument. The command performs the existence check and account creation transactionally, excludes concurrent bootstrap attempts, refuses an email belonging to any existing user, and makes no changes when an administrator already exists.
 
-Create or promote every additional platform administrator through the authenticated **System users** interface while signed in as an existing platform administrator. Administrator creation and promotion through that interface are audit logged.
+Create users through the authenticated **System users** interface while signed in as an existing Admin 1. New users receive no privileged role by default. Use **Change roles** to assign or revoke global Admin 1 and organisation-specific Admin 2, Admin 3, doctor, reviewer, or patient roles; these changes are audit logged and validated against each role's stored scope.
 
 ## 14. Remaining work ordered by priority
 
@@ -253,3 +254,11 @@ Create or promote every additional platform administrator through the authentica
 6. Add consent withdrawal, approved retention policies, legal text/version management, and data-subject workflows after legal design approval.
 7. Add malware scanning/DLP/quarantine, private-object lifecycle management, and scheduled expired export cleanup.
 8. Add notification preferences/templates, provider configuration, delivery observability, retry/dead-letter operations, and broader browser E2E/WCAG automation.
+
+## 15. Doctor workspace and role hierarchy
+
+The permission seeder and additive migration expose the requested Admin 1/Admin 2/Admin 3 display hierarchy without changing stable role keys. Admin 3 is limited to form authoring, publishing, and submission viewing. The doctor role has only doctor-dashboard, patient-view/update, and patient-questionnaire permissions, and only Admin 1 may assign it. Doctor-only navigation omits form-builder and system-administration links.
+
+`patient_cases` provides 200 unique slots per organisation/doctor with doctor-only first/last names, a manually entered Patient ID in `external_patient_code`, notes, and a generated immutable `PAT-` Research ID in `patient_code`. The dashboard places these fields in separate columns and keeps the save/create action visible in its own column. Its wide dynamic-questionnaire table retains the native lower scrollbar and adds a synchronized upper scrollbar whose spacer is recalculated from the real table `scrollWidth` with resize observation. `patient_form_assignments` provides dynamic questionnaire-part labels/order and an optional invitation link. The dashboard uses green status only for finalized submission states and opens a read-only patient-scoped result. Policies and route checks reject cross-doctor, cross-patient, invitation-free, and platform-admin-only result access.
+
+Platform administration is explicitly separated from clinical data access. Admin 1 retains system administration and doctor-role assignment but receives neither doctor patient-data permissions nor a PatientCase policy bypass. Patient-linked submissions are also excluded from generic submission administration and existing general-purpose exports, so the generic FormSubmission policy cannot bypass clinical ownership. A future research export may include `patient_code` and doctor-selected questionnaire answers; it must exclude `first_name`, `last_name`, `external_patient_code`, and `note` by default. That research export remains intentionally unimplemented.

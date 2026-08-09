@@ -90,7 +90,7 @@ The command never accepts the password as an argument, hardcodes it, or prints i
 
 The bootstrap check and account creation are transactionally protected against concurrent attempts. The command fails without changing any account when a platform administrator already exists or when the supplied email belongs to an existing user; it never promotes a public respondent account.
 
-After bootstrap, create or promote additional platform administrators only through the authenticated **System users** interface while signed in as a platform administrator. Those actions are written to the audit log. This command is not a normal administrator-management tool.
+After bootstrap, use the authenticated **System users** interface while signed in as Admin 1. It creates ordinary users without privileged defaults, then provides a scoped role editor: global Admin 1 assignments use `user_roles`, while Admin 2, Admin 3, Ārsts, Vērtētājs, and Pacients are attached to a specific active organisation membership. Creation and role changes are audit logged, and the sole remaining Admin 1 cannot remove their own Admin 1 role. This command is not a normal administrator-management tool.
 
 ## Database, migrations, and demo data
 
@@ -155,3 +155,9 @@ Before every migration deployment, take an application-consistent database and p
 - No formal performance result is claimed until k6 is run in a production-like environment.
 
 See `docs/SECURITY_NOTES.md` and `IMPLEMENTATION_REPORT.md` for further limitations.
+
+## Doctor workspace
+
+The organisation-scoped doctor workspace provides 200 fixed patient slots per doctor, doctor-only first/last name, a doctor-entered Patient ID stored in `external_patient_code`, notes, and a generated non-sequential `PAT-` Research ID stored in `patient_code`. Its wide table has synchronized horizontal scrollbars above and below: the upper bar measures the real table `scrollWidth` and follows later dynamic questionnaire columns, while the table wrapper retains native mouse/touchpad scrolling. The display hierarchy is Admin 1, Admin 2, Admin 3, Vērtētājs, Pacients, and Ārsts; stable role keys remain unchanged. Only Admin 1 may assign the doctor role, but platform administration alone grants no patient-data access. Doctor-only navigation contains no builder or system administration links, and one doctor cannot access another doctor's patient cases. Patient-linked submissions are excluded from generic administration lists, direct submission administration, grading/attempt administration, and existing general-purpose exports; clinical results are available only through the owning doctor's patient-scoped route.
+
+Future research exports must use `patient_code` as the pseudonymous subject identifier and only questionnaire columns explicitly selected by the doctor. `first_name`, `last_name`, `external_patient_code`, and `note` are clinical identity/context fields and must be excluded by default; no patient export is implemented yet.

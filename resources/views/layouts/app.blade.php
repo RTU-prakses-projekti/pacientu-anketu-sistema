@@ -10,10 +10,15 @@
 <body class="min-h-screen bg-slate-50 text-slate-900">
 <header class="border-b border-slate-200 bg-white">
     <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <a class="text-lg font-bold text-indigo-700" href="{{ auth()->check() ? route('dashboard') : route('login') }}">{{ __('messages.app_name') }}</a>
+        <a class="text-lg font-bold text-indigo-700" href="{{ auth()->check() ? (auth()->user()->isDoctorOnly() ? route('doctor.dashboard') : route('dashboard')) : route('login') }}">{{ __('messages.app_name') }}</a>
         <nav class="flex flex-wrap items-center gap-3 text-sm" aria-label="Main navigation">
             @auth
-                <a href="{{ route('dashboard') }}">{{ __('messages.dashboard') }}</a>
+                @if(auth()->user()->isDoctorOnly())
+                    <a href="{{ route('doctor.dashboard') }}">{{ __('messages.doctor_dashboard') }}</a>
+                @else
+                    <a href="{{ route('dashboard') }}">{{ __('messages.dashboard') }}</a>
+                    @if(auth()->user()->hasDoctorWorkspace())<a href="{{ route('doctor.dashboard') }}">{{ __('messages.doctor_dashboard') }}</a>@endif
+                @endif
                 @if(auth()->user()->isPlatformAdmin())<a href="{{ route('organisations.index') }}">{{ __('messages.organisations') }}</a><a href="{{ route('system.users') }}">{{ __('messages.users') }}</a><a href="{{ route('system.roles') }}">{{ __('messages.roles') }}</a><a href="{{ route('audit.system') }}">{{ __('messages.audit') }}</a>@endif
                 <span class="text-slate-500">{{ auth()->user()->name }}</span>
                 <form method="POST" action="{{ route('logout') }}">@csrf<button class="link-button">{{ __('messages.logout') }}</button></form>

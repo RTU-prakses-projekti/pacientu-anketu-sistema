@@ -12,7 +12,7 @@ class FormSubmissionController extends Controller
     public function index(Request $request, Organisation $organisation)
     {
         abort_unless($request->user()->hasOrganisationPermission($organisation->id,'submissions.view'),403);
-        $query=FormSubmission::with('publication.form','user')->where('organisation_id',$organisation->id);
+        $query=FormSubmission::with('publication.form','user')->where('organisation_id',$organisation->id)->withoutPatientAssignment();
         foreach(['status','grading_status','publication_id','user_id'] as $filter) if($request->filled($filter)) $query->where($filter,$request->input($filter));
         if($request->filled('form_id'))$query->whereHas('publication',fn($q)=>$q->where('form_id',$request->form_id));
         if($request->filled('from'))$query->whereDate('started_at','>=',$request->from); if($request->filled('to'))$query->whereDate('started_at','<=',$request->to);

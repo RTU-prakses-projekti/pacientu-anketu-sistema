@@ -83,10 +83,10 @@ class UniversalFormWorkflowTest extends TestCase
     public function test_additional_platform_administrators_require_authenticated_audited_interface(): void
     {
         $role=Role::where('name','platform_admin')->firstOrFail();$admin=User::factory()->create(['is_active'=>true]);$admin->globalRoles()->attach($role);$candidate=User::factory()->create(['is_active'=>true]);
-        $this->post(route('system.platform-admins.store'),['name'=>'Blocked','email'=>'blocked@example.test','password'=>'AnotherPassword123','password_confirmation'=>'AnotherPassword123'])->assertRedirect(route('login'));
-        $this->actingAs($candidate)->post(route('system.platform-admins.promote',$candidate))->assertForbidden();
-        $this->actingAs($admin)->post(route('system.platform-admins.store'),['name'=>'Created Admin','email'=>'created-admin@example.test','password'=>'AnotherPassword123','password_confirmation'=>'AnotherPassword123'])->assertRedirect();$created=User::where('email','created-admin@example.test')->firstOrFail();$this->assertTrue($created->isPlatformAdmin());$this->assertDatabaseHas('audit_logs',['actor_id'=>$admin->id,'action'=>'platform_admin.created','subject_id'=>$created->id]);
-        $this->actingAs($admin)->post(route('system.platform-admins.promote',$candidate))->assertRedirect();$this->assertTrue($candidate->fresh()->isPlatformAdmin());$this->assertDatabaseHas('audit_logs',['actor_id'=>$admin->id,'action'=>'platform_admin.promoted','subject_id'=>$candidate->id]);
+        $this->post(route('system.users.store'),['name'=>'Blocked','email'=>'blocked@example.test','password'=>'AnotherPassword123','password_confirmation'=>'AnotherPassword123'])->assertRedirect(route('login'));
+        $this->actingAs($candidate)->put(route('system.users.roles.update',$candidate),['global_roles'=>[$role->id]])->assertForbidden();
+        $this->actingAs($admin)->post(route('system.users.store'),['name'=>'Created User','email'=>'created-user@example.test','password'=>'AnotherPassword123','password_confirmation'=>'AnotherPassword123'])->assertRedirect();$created=User::where('email','created-user@example.test')->firstOrFail();$this->assertFalse($created->isPlatformAdmin());$this->assertDatabaseHas('audit_logs',['actor_id'=>$admin->id,'action'=>'user.created','subject_id'=>$created->id]);
+        $this->actingAs($admin)->put(route('system.users.roles.update',$candidate),['global_roles'=>[$role->id]])->assertRedirect();$this->assertTrue($candidate->fresh()->isPlatformAdmin());$this->assertDatabaseHas('audit_logs',['actor_id'=>$admin->id,'action'=>'user.roles_updated','subject_id'=>$candidate->id]);
     }
 
     public function test_organisation_policies_prevent_cross_organisation_access(): void

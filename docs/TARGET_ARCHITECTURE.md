@@ -26,3 +26,11 @@ Publishing validates references, hashes the complete version graph, and changes 
 ## Deployment direction
 
 Use PostgreSQL or MySQL 8 for production, Redis for queues/cache/rate limits, private object storage, multiple stateless PHP workers, HTTPS, a supervised queue worker, one scheduler trigger, centralized redacted logs, metrics/alerts, and tested backups. Local development now uses XAMPP MariaDB with the database queue; PHPUnit remains isolated on in-memory SQLite.
+
+## Doctor access model
+
+The doctor UI is a separate authenticated workspace backed by `patient_cases` and `patient_form_assignments`. A doctor-only account is redirected there and receives no form-builder or system-administration navigation. Rows are fixed slots; questionnaire columns are derived deterministically from assigned publications. Only `submitted`, `awaiting_grading`, and `graded` submissions count as completed.
+
+Access checks combine the owning `doctor_id`, an active doctor membership with the explicit clinical permission, patient/assignment consistency, and the assignment invitation, preventing cross-doctor and cross-patient result access. Platform administration and clinical access are separate trust domains: Admin 1 may manage users and doctor-role assignment but cannot inspect a doctor's patient workspace, identity fields, notes, or individual results merely because of the global role. Patient-assignment-linked submissions are denied by the generic FormSubmission policy and filtered from generic administration and export queries, closing alternate non-clinical access paths.
+
+The future export boundary is intentionally asymmetric. Doctor-only identity/context fields are `first_name`, `last_name`, the manually entered Patient ID in `external_patient_code`, and `note`. The shareable research side starts with the generated immutable `patient_code`/`PAT-*` Research ID pseudonym and may later add only questionnaire answer columns explicitly selected by the doctor. The current model documents this boundary but does not implement export UI or files.

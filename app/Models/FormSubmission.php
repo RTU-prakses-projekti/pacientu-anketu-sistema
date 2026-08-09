@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class FormSubmission extends Model
 {
+    public const PATIENT_COMPLETED_STATUSES = ['submitted', 'awaiting_grading', 'graded'];
+
     protected $guarded = [];
     protected $casts = ['started_at' => 'datetime', 'deadline_at' => 'datetime', 'submitted_at' => 'datetime', 'maximum_points' => 'decimal:2', 'automatic_points' => 'decimal:2', 'manual_points' => 'decimal:2', 'final_points' => 'decimal:2', 'percentage' => 'decimal:2'];
     public function publication() { return $this->belongsTo(Publication::class); }
@@ -14,5 +17,8 @@ class FormSubmission extends Model
     public function user() { return $this->belongsTo(User::class); }
     public function answers() { return $this->hasMany(SubmissionAnswer::class); }
     public function consentRecords() { return $this->hasMany(ConsentRecord::class); }
+    public function patientAssignment() { return $this->hasOne(PatientFormAssignment::class, 'invitation_id', 'invitation_id'); }
+    public function scopeWithoutPatientAssignment(Builder $query): Builder { return $query->whereDoesntHave('patientAssignment'); }
+    public function isPatientLinked(): bool { return $this->invitation_id !== null && $this->patientAssignment()->exists(); }
     public function getRouteKeyName(): string { return 'public_id'; }
 }

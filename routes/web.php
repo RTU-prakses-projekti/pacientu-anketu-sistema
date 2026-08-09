@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AutosaveController;
 use App\Http\Controllers\BuilderController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DoctorDashboardController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\FinalizeSubmissionController;
 use App\Http\Controllers\FormController;
@@ -46,6 +47,9 @@ Route::get('/respond/{submission}/attachments/{attachment}', [AttachmentControll
 
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
+    Route::get('/doctor', [DoctorDashboardController::class, 'index'])->name('doctor.dashboard');
+    Route::put('/doctor/organisations/{organisation}/doctors/{doctor}/slots/{slot}', [DoctorDashboardController::class, 'updateSlot'])->name('doctor.patients.slots.update');
+    Route::get('/doctor/patients/{patientCase}/assignments/{assignment}/result', [DoctorDashboardController::class, 'result'])->name('doctor.results.show');
 
     Route::get('/organisations', [OrganisationController::class, 'index'])->name('organisations.index');
     Route::get('/organisations/create', [OrganisationController::class, 'create'])->name('organisations.create');
@@ -54,8 +58,9 @@ Route::middleware('auth')->group(function () {
     Route::put('/organisations/{organisation}', [OrganisationController::class, 'update'])->name('organisations.update');
     Route::get('/system/audit', [AuditLogController::class, 'index'])->name('audit.system');
     Route::get('/system/users', [SystemAdministrationController::class, 'users'])->name('system.users');
-    Route::post('/system/platform-admins', [SystemAdministrationController::class, 'createPlatformAdmin'])->name('system.platform-admins.store');
-    Route::post('/system/platform-admins/{user}/promote', [SystemAdministrationController::class, 'promotePlatformAdmin'])->name('system.platform-admins.promote');
+    Route::post('/system/users', [SystemAdministrationController::class, 'storeUser'])->name('system.users.store');
+    Route::get('/system/users/{user}/roles', [SystemAdministrationController::class, 'editUserRoles'])->name('system.users.roles.edit');
+    Route::put('/system/users/{user}/roles', [SystemAdministrationController::class, 'updateUserRoles'])->name('system.users.roles.update');
     Route::get('/system/roles', [SystemAdministrationController::class, 'roles'])->name('system.roles');
     Route::put('/system/roles/{role}', [SystemAdministrationController::class, 'updateRole'])->name('system.roles.update');
     Route::post('/users/{user}/toggle', [UserAdministrationController::class, 'toggleUser'])->name('users.toggle');

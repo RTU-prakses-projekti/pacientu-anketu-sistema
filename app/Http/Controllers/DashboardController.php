@@ -11,6 +11,9 @@ class DashboardController extends Controller
     public function __invoke()
     {
         $user = auth()->user();
+        if ($user->isDoctorOnly()) {
+            return redirect()->route('doctor.dashboard');
+        }
         $organisationIds = $user->isPlatformAdmin() ? Organisation::pluck('id') : $user->memberships()->where('is_active', true)->pluck('organisation_id');
         return view('dashboard', [
             'organisations' => Organisation::whereIn('id', $organisationIds)->get(),

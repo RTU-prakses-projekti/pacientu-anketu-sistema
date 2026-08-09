@@ -40,6 +40,38 @@ document.querySelectorAll('select[data-move-url]').forEach((select) => select.ad
     await fetch(select.dataset.moveUrl, {method: 'POST', body}); window.location.reload();
 }));
 
+document.querySelectorAll('[data-doctor-scroll-container]').forEach((container) => {
+    const top = container.querySelector('[data-doctor-scroll-top]');
+    const bottom = container.querySelector('[data-doctor-scroll-bottom]');
+    const table = bottom?.querySelector('table');
+    const spacer = top?.querySelector('[data-doctor-scroll-spacer]');
+    if (!top || !bottom || !table || !spacer) return;
+
+    let syncing = false;
+    const mirror = (source, target) => {
+        if (syncing) return;
+        syncing = true;
+        target.scrollLeft = source.scrollLeft;
+        syncing = false;
+    };
+    const refreshWidth = () => {
+        spacer.style.width = `${table.scrollWidth}px`;
+        top.scrollLeft = bottom.scrollLeft;
+    };
+
+    top.addEventListener('scroll', () => mirror(top, bottom), {passive: true});
+    bottom.addEventListener('scroll', () => mirror(bottom, top), {passive: true});
+    if ('ResizeObserver' in window) {
+        const observer = new ResizeObserver(refreshWidth);
+        observer.observe(table);
+        observer.observe(bottom);
+    }
+    window.addEventListener('resize', refreshWidth, {passive: true});
+    window.addEventListener('load', refreshWidth, {once: true});
+    document.fonts?.ready.then(refreshWidth);
+    requestAnimationFrame(refreshWidth);
+});
+
 const runner = document.querySelector('#form-runner');
 if (runner) {
     const form = runner.querySelector('[data-response-form]');

@@ -3,12 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Audit\AuditService;
+use App\Models\Organisation;
+use App\Models\OrganisationMembership;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\Password;
 
 class SystemAdministrationController extends Controller
@@ -17,7 +21,11 @@ class SystemAdministrationController extends Controller
     {
         abort_unless($request->user()->isPlatformAdmin(), 403);
 
-        return view('system.users', ['users' => User::with('globalRoles')->orderBy('name')->paginate(50)]);
+        return view('system.users', [
+            'users' => User::with(['globalRoles', 'memberships.organisation', 'memberships.roles'])
+                ->orderBy('name')
+                ->paginate(50),
+        ]);
     }
 
     public function roles(Request $request)
@@ -40,7 +48,7 @@ class SystemAdministrationController extends Controller
         return back()->with('success', __('messages.saved'));
     }
 
-    public function createPlatformAdmin(Request $request, AuditService $audit)
+    public function storeUser(Request $request, AuditService $audit)
     {
         abort_unless($request->user()->isPlatformAdmin(), 403);
         $data = $request->validate([
@@ -48,24 +56,109 @@ class SystemAdministrationController extends Controller
             'email' => ['required','email','max:255','unique:users,email'],
             'password' => ['required','confirmed',Password::min(12)->letters()->numbers()],
         ]);
-        DB::transaction(function () use ($data, $audit) {
-            $role = Role::where('name','platform_admin')->lockForUpdate()->firstOrFail();
-            $user = User::create(['name'=>$data['name'],'email'=>strtolower($data['email']),'password'=>Hash::make($data['password']),'locale'=>'lv','is_active'=>true]);
-            $user->globalRoles()->attach($role->id);
-            $audit->record('platform_admin.created',$user,null);
+
+        $user = DB::transaction(function () use ($data, $audit) {
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => strtolower($data['email']),
+                'password' => Hash::make($data['password']),
+                'locale' => 'lv',
+                'is_active' => true,
+            ]);
+            $audit->record('user.created', $user);
+
+            return $user;
         });
-        return back()->with('success',__('messages.platform_admin_created'));
+
+        return redirect()->route('system.users.roles.edit', $user)
+            ->with('success', __('messages.user_created'));
     }
 
-    public function promotePlatformAdmin(Request $request, User $user, AuditService $audit)
+    public function editUserRoles(Request $request, User $user)
     {
         abort_unless($request->user()->isPlatformAdmin(), 403);
-        abort_if($user->isPlatformAdmin(), 422, __('messages.already_platform_admin'));
-        DB::transaction(function () use ($user, $audit) {
-            $role = Role::where('name','platform_admin')->lockForUpdate()->firstOrFail();
-            $user->globalRoles()->attach($role->id);
-            $audit->record('platform_admin.promoted',$user,null);
+
+        return view('system.user-roles', [
+            'managedUser' => $user->load(['globalRoles', 'memberships.roles']),
+            'globalRoles' => Role::where('scope', 'global')->orderBy('display_name')->get(),
+            'organisationRoles' => Role::where('scope', 'organisation')->orderBy('display_name')->get(),
+            'organisations' => Organisation::where('is_active', true)->orderBy('name')->get(),
+        ]);
+    }
+
+    public function updateUserRoles(Request $request, User $user, AuditService $audit)
+    {
+        abort_unless($request->user()->isPlatformAdmin(), 403);
+
+        $globalRoleIds = Role::where('scope', 'global')->pluck('id');
+        $organisationRoleIds = Role::where('scope', 'organisation')->pluck('id');
+        $activeOrganisations = Organisation::where('is_active', true)->orderBy('name')->get();
+        $activeOrganisationIds = $activeOrganisations->modelKeys();
+        $data = $request->validate([
+            'global_roles' => ['nullable', 'array'],
+            'global_roles.*' => ['integer', Rule::in($globalRoleIds->all())],
+            'organisation_roles' => ['nullable', 'array'],
+            'organisation_roles.*' => ['array'],
+            'organisation_roles.*.*' => ['integer', Rule::in($organisationRoleIds->all())],
+        ]);
+
+        $submittedOrganisationRoles = $data['organisation_roles'] ?? [];
+        foreach (array_keys($submittedOrganisationRoles) as $organisationId) {
+            if (!ctype_digit((string) $organisationId) || !in_array((int) $organisationId, $activeOrganisationIds, true)) {
+                throw ValidationException::withMessages([
+                    'organisation_roles' => __('messages.invalid_organisation_role_scope'),
+                ]);
+            }
+        }
+
+        $selectedGlobalRoleIds = collect($data['global_roles'] ?? [])->map(fn ($id) => (int) $id)->unique()->values();
+        $selectedByOrganisation = collect($submittedOrganisationRoles)
+            ->map(fn ($ids) => collect($ids)->map(fn ($id) => (int) $id)->unique()->values());
+
+        DB::transaction(function () use ($request, $user, $audit, $selectedGlobalRoleIds, $selectedByOrganisation, $activeOrganisations): void {
+            $platformRole = Role::where('name', 'platform_admin')->where('scope', 'global')->lockForUpdate()->firstOrFail();
+            $platformAdministrators = DB::table('user_roles')
+                ->where('role_id', $platformRole->id)
+                ->lockForUpdate()
+                ->pluck('user_id');
+
+            if ($request->user()->is($user)
+                && $platformAdministrators->contains($user->id)
+                && !$selectedGlobalRoleIds->contains($platformRole->id)
+                && $platformAdministrators->count() === 1) {
+                throw ValidationException::withMessages([
+                    'global_roles' => __('messages.last_platform_admin_required'),
+                ]);
+            }
+
+            $user->globalRoles()->sync($selectedGlobalRoleIds);
+
+            foreach ($activeOrganisations as $organisation) {
+                $roleIds = $selectedByOrganisation->get($organisation->id, collect());
+                $membership = OrganisationMembership::where('organisation_id', $organisation->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if ($roleIds->isNotEmpty()) {
+                    $membership ??= OrganisationMembership::create([
+                        'organisation_id' => $organisation->id,
+                        'user_id' => $user->id,
+                        'is_active' => true,
+                    ]);
+                    $membership->update(['is_active' => true]);
+                    $membership->roles()->sync($roleIds);
+                } elseif ($membership) {
+                    $membership->roles()->sync([]);
+                    $membership->update(['is_active' => false]);
+                }
+            }
+
+            $audit->record('user.roles_updated', $user, null, [
+                'global_role_ids' => $selectedGlobalRoleIds->all(),
+                'organisation_role_ids' => $selectedByOrganisation->map->all()->all(),
+            ]);
         });
-        return back()->with('success',__('messages.platform_admin_promoted'));
+
+        return redirect()->route('system.users')->with('success', __('messages.roles_updated'));
     }
 }

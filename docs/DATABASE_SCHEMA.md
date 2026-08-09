@@ -49,3 +49,12 @@ Only `lv`, `en`, and `ru` are accepted. Latvian values are mirrored into existin
 Foreign keys use restrict for immutable/history-bearing records and cascade only for role pivots or membership internals. Forms are archived/soft-deleted; published versions and response records have no destructive UI.
 
 JSON is used for type-specific settings, translations, answer values, scoring parameters, condition comparison values, filters, and redacted audit metadata. Foreign keys, statuses, types, order, flags, dates, attempts, deadlines, revisions, and points remain normal indexed columns. The migration uses Laravel schema primitives portable across SQLite, MySQL/MariaDB, and PostgreSQL. The complete migration and existing-data import have been exercised locally on MariaDB 10.4; MySQL 8 and PostgreSQL portability still require CI verification.
+
+## Doctor workspace
+
+- `patient_cases` — UUID public identifier, organisation and owning doctor, fixed slot number from 1 to 200, globally unique non-sequential Research ID/pseudonym in `patient_code`, doctor-only `first_name`, `last_name`, manually entered Patient ID in optional `external_patient_code`, and note. `(organisation_id, doctor_id, slot_number)` is unique.
+- `patient_form_assignments` — UUID public identifier, patient case, exact publication, optional invitation, administrator-defined label/order, and assignment time. A publication can occur once per patient case; an invitation can be linked once.
+
+Patient results are associated through the assignment's non-null invitation. An assignment without an invitation remains not completed and cannot expose an unrelated invitation-free submission. Doctor access requires patient ownership and an active organisation doctor membership carrying the relevant clinical permission. Platform-administrator status has no PatientCase policy bypass and no doctor workspace by itself. Any `form_submissions` row linked through `patient_form_assignments.invitation_id` is clinical: generic submission administration, grading/attempt administration, and general-purpose export queries exclude or deny it.
+
+For a future research export, `patient_code` and doctor-selected questionnaire answer columns form the shareable boundary. `first_name`, `last_name`, `external_patient_code`, and `note` are excluded from that boundary by default. No export implementation is included in this change.
