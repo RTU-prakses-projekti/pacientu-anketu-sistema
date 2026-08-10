@@ -1,0 +1,152 @@
+{
+    "attachments": [],
+    "conditional_rules": [],
+    "content_hash": "f749221bb2a26c5788d437f0cc29c1562b2d239882b46e7426bc7d7695501bd6",
+    "form": {
+        "name": "demoank123",
+        "preset_key": "blank",
+        "translations": {
+            "lv": {
+                "name": "demoank"
+            }
+        }
+    },
+    "package_type": "universal_form_questionnaire",
+    "schema_version": 1,
+    "sections": [
+        {
+            "components": [
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 1,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "piekrisana",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": {
+                        "max_points": 0.0,
+                        "rules": [],
+                        "strategy": "manual"
+                    },
+                    "settings": [],
+                    "stable_key": "cc2b2746-9383-4e6e-b37d-4bf0751cbb5b",
+                    "translations": {
+                        "lv": {
+                            "label": "piekrisana"
+                        }
+                    },
+                    "type": "form_title",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 2,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "nmk",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "2becd8cf-bf97-4a4a-b263-59606629d9a0",
+                    "translations": {
+                        "lv": {
+                            "label": "nmk"
+                        }
+                    },
+                    "type": "consent_checkbox",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 3,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "mlkm",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "1",
+                            "stable_key": "df507c26-c8e8-41e9-8c38-954958b5a491",
+                            "translations": {
+                                "lv": {
+                                    "label": "1"
+                                }
+                            },
+                            "value": "dad0ad76-e3c9-48ee-99e4-3c009fa69491"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "2",
+                            "stable_key": "e1be81d8-2317-4b32-b14d-fda7133490eb",
+                            "translations": {
+                                "lv": {
+                                    "label": "2"
+                                }
+                            },
+                            "value": "f3660ca5-c8e9-48c8-9f3a-01a6136fe82e"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "3",
+                            "stable_key": "b24198e1-da82-43a7-acf5-77b29c34ee92",
+                            "translations": {
+                                "lv": {
+                                    "label": "3"
+                                }
+                            },
+                            "value": "73188d7c-5adb-439b-abf3-f9415a94c5cc"
+                        }
+                    ],
+                    "scoring_rule": {
+                        "max_points": 0.0,
+                        "rules": [],
+                        "strategy": "single_choice"
+                    },
+                    "settings": [],
+                    "stable_key": "6683d2f5-19af-4b9e-825f-1ac0fecec25a",
+                    "translations": {
+                        "lv": {
+                            "label": "mlkm"
+                        }
+                    },
+                    "type": "dropdown",
+                    "validation_rules": [],
+                    "visible": true
+                }
+            ],
+            "description": null,
+            "display_order": 1,
+            "stable_key": "4d2d8d95-9212-4b5f-861f-f24e2b9206b3",
+            "title": "1sad",
+            "translations": {
+                "lv": {
+                    "title": "1sad"
+                }
+            },
+            "visible": true
+        }
+    ],
+    "version": {
+        "description": null,
+        "settings": {
+            "scoring_enabled": false
+        },
+        "title": "demoank",
+        "translations": {
+            "lv": {
+                "title": "demoank"
+            }
+        }
+    }
+}
