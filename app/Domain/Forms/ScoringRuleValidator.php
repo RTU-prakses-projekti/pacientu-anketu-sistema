@@ -10,6 +10,10 @@ class ScoringRuleValidator
     public function validate(FormComponent $component, string $strategy, array $rules, bool $requireCorrect = false): array
     {
         if ($strategy === 'none' || $strategy === 'manual') return $rules;
+        if ($strategy === 'all_answers_correct') {
+            if (!in_array($component->type, ['single_choice', 'multiple_choice', 'dropdown', 'yes_no', 'short_text', 'long_text', 'number', 'date', 'time'], true)) $this->invalid();
+            return [];
+        }
         if ($strategy === 'single_choice') {
             if (!in_array($component->type, ['single_choice', 'dropdown'], true)) $this->invalid();
             $correct = $rules['correct'] ?? null;

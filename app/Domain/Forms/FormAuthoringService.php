@@ -214,8 +214,32 @@ class FormAuthoringService
         }
         if ($preset === 'patient_questionnaire') {
             $consentText = __('messages.demo_consent_text', [], 'lv');
+            $this->addComponent($version, $section, ['type' => 'explanatory_text', 'label' => __('messages.consent_introduction', [], 'lv'), 'description' => $consentText, 'options' => []]);
+            $this->addComponent($version, $section, ['type' => 'short_text', 'label' => __('messages.first_name', [], 'lv'), 'is_required' => true, 'options' => []]);
+            $this->addComponent($version, $section, ['type' => 'short_text', 'label' => __('messages.last_name', [], 'lv'), 'is_required' => true, 'options' => []]);
+            $this->addComponent($version, $section, ['type' => 'short_text', 'label' => __('messages.email', [], 'lv'), 'is_required' => false, 'options' => []]);
+            $this->addComponent($version, $section, ['type' => 'short_text', 'label' => __('messages.phone_number', [], 'lv'), 'is_required' => false, 'options' => []]);
             $this->addComponent($version, $section, ['type' => 'consent_checkbox', 'label' => __('messages.consent_label', [], 'lv'), 'description' => $consentText, 'is_required' => true, 'settings' => ['consent_text' => $consentText, 'refusal_policy' => 'block'], 'options' => []]);
-            $this->addComponent($version, $section, ['type' => 'long_text', 'label' => __('messages.sample_questionnaire_prompt', [], 'lv'), 'is_required' => false, 'options' => []]);
+
+            $dlqiSection = $this->addSection($version, [
+                'translations' => [
+                    'lv' => ['title' => __('messages.dlqi_section', [], 'lv'), 'description' => __('messages.dlqi_section_description', [], 'lv')],
+                    'en' => ['title' => __('messages.dlqi_section', [], 'en'), 'description' => __('messages.dlqi_section_description', [], 'en')],
+                    'ru' => ['title' => __('messages.dlqi_section', [], 'ru'), 'description' => __('messages.dlqi_section_description', [], 'ru')],
+                ],
+            ]);
+            $this->addComponent($version, $dlqiSection, ['type' => 'explanatory_text', 'label' => __('messages.dlqi_section', [], 'lv'), 'description' => __('messages.dlqi_section_description', [], 'lv'), 'options' => []]);
+            $this->addComponent($version, $dlqiSection, ['type' => 'long_text', 'label' => __('messages.sample_questionnaire_prompt', [], 'lv'), 'is_required' => false, 'options' => []]);
+
+            $surveySection = $this->addSection($version, [
+                'translations' => [
+                    'lv' => ['title' => __('messages.questionnaire_section', [], 'lv'), 'description' => __('messages.questionnaire_section_description', [], 'lv')],
+                    'en' => ['title' => __('messages.questionnaire_section', [], 'en'), 'description' => __('messages.questionnaire_section_description', [], 'en')],
+                    'ru' => ['title' => __('messages.questionnaire_section', [], 'ru'), 'description' => __('messages.questionnaire_section_description', [], 'ru')],
+                ],
+            ]);
+            $this->addComponent($version, $surveySection, ['type' => 'explanatory_text', 'label' => __('messages.questionnaire_section', [], 'lv'), 'description' => __('messages.questionnaire_section_description', [], 'lv'), 'options' => []]);
+            $this->addComponent($version, $surveySection, ['type' => 'long_text', 'label' => __('messages.sample_questionnaire_prompt', [], 'lv'), 'is_required' => false, 'options' => [], 'scoring_strategy' => 'all_answers_correct', 'scoring_rules' => []]);
         }
     }
 

@@ -18,7 +18,7 @@ class StoreComponentRequest extends FormRequest
             'label' => ['nullable', 'string', 'max:500'], 'description' => ['nullable', 'string', 'max:10000'], 'help_text' => ['nullable', 'string', 'max:2000'],
             'is_required' => ['sometimes', 'boolean'], 'visible' => ['sometimes', 'boolean'], 'max_points' => ['nullable', 'numeric', 'min:0', 'max:100000'], 'manual_grading' => ['sometimes', 'boolean'],
             'settings' => ['nullable', 'array'], 'options' => ['nullable', 'array', 'max:100'], 'options.*' => ['nullable', 'array'],
-            'scoring_strategy' => ['nullable', Rule::in(['none', 'single_choice', 'multiple_all_or_nothing', 'multiple_partial', 'yes_no', 'numeric_exact', 'numeric_tolerance', 'manual'])],
+            'scoring_strategy' => ['nullable', Rule::in(['none', 'single_choice', 'multiple_all_or_nothing', 'multiple_partial', 'all_answers_correct', 'yes_no', 'numeric_exact', 'numeric_tolerance', 'manual'])],
             'scoring_rules' => ['nullable', 'array'],
             ...LocalizedContentRules::for('translations', $this->componentFields(), ['label']),
             ...LocalizedContentRules::for('options.*.translations', ['label' => ['string', 'max:500']]),

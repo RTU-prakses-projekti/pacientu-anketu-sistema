@@ -72,7 +72,7 @@ class PatientAccessService
         $packageId = (int) $request->session()->get(self::SESSION_KEY);
         if (!$packageId || !$submission->invitation_id) return null;
         $package = PatientAccessPackage::find($packageId);
-        if (!$package?->isUsable()) return null;
+        if (!$package?->isUsable() || $package->consent_refused_at) return null;
         return $package->assignments()->where('invitation_id', $submission->invitation_id)->exists() ? $package : null;
     }
 }

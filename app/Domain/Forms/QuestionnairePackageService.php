@@ -388,7 +388,7 @@ class QuestionnairePackageService
         $scoring = $component['scoring_rule'];
         if ($scoring === null) return;
         $this->exactKeys($scoring, ['strategy','max_points','rules']);
-        $allowed = ['none','single_choice','multiple_all_or_nothing','multiple_partial','yes_no','numeric_exact','numeric_tolerance','manual'];
+        $allowed = ['none','single_choice','multiple_all_or_nothing','multiple_partial','all_answers_correct','yes_no','numeric_exact','numeric_tolerance','manual'];
         if (!in_array($scoring['strategy'], $allowed, true) || !is_numeric($scoring['max_points']) || !is_array($scoring['rules'])) $this->invalid('scoring_rule');
         if ($scoring['strategy'] === 'single_choice' && !in_array($component['type'], ['single_choice','dropdown'], true)) $this->invalid('scoring_rule');
         if (in_array($scoring['strategy'], ['multiple_all_or_nothing','multiple_partial'], true) && $component['type'] !== 'multiple_choice') $this->invalid('scoring_rule');

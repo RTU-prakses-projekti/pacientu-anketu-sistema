@@ -9,7 +9,7 @@ class PatientAccessPackage extends Model
 {
     protected $guarded = [];
     protected $hidden = ['token_hash'];
-    protected $casts = ['expires_at' => 'datetime', 'revoked_at' => 'datetime'];
+    protected $casts = ['expires_at' => 'datetime', 'revoked_at' => 'datetime', 'consent_refused_at' => 'datetime'];
 
     protected static function booted(): void
     {

@@ -9,6 +9,8 @@ use App\Models\AttemptGrant;
 use App\Models\ConsentRecord;
 use App\Models\FormSubmission;
 use App\Models\Invitation;
+use App\Models\PatientAccessPackage;
+use App\Models\PatientFormAssignment;
 use App\Models\Publication;
 use App\Models\SubmissionAnswer;
 use App\Models\SubmissionMutation;
@@ -159,12 +161,13 @@ class SubmissionService
         foreach ($answers as $componentId => $value) {
             $component = $components->get((int) $componentId);
             $normalized = $this->registry->validateAnswer($component, $value, false);
-            if ($component->type === 'consent_checkbox' && $normalized === false && $locked->publication->consent_required) $refusedConsent = true;
+            $consentAccepted = $component->type === 'consent_checkbox' ? $this->consentAccepted($normalized) : null;
+            if ($component->type === 'consent_checkbox' && !$consentAccepted && $locked->publication->consent_required) $refusedConsent = true;
             SubmissionAnswer::updateOrCreate(
                 ['form_submission_id' => $locked->id, 'form_component_id' => $component->id],
                 ['value' => $normalized, 'display_value' => $this->registry->formatForExport($component, $normalized), 'answer_revision' => $expectedRevision + 1, 'saved_at' => now()]
             );
-            if ($component->type === 'consent_checkbox') $this->recordConsent($locked, $component, (bool) $normalized);
+            if ($component->type === 'consent_checkbox') $this->recordConsent($locked, $component, (bool) $consentAccepted);
         }
         if ($refusedConsent) SubmissionAnswer::where('form_submission_id', $locked->id)->whereHas('component', fn ($q) => $q->where('type', '!=', 'consent_checkbox'))->delete();
         $locked->increment('revision');
@@ -208,6 +211,12 @@ class SubmissionService
         if (!array_key_exists($componentId, $answers)) return false;
         $value = $answers[$componentId];
         return !($value === null || $value === '' || $value === []);
+    }
+
+    private function consentAccepted(mixed $value): bool
+    {
+        if (is_array($value)) return $value !== [];
+        return (bool) $value;
     }
 
     private function notifyCreator(FormSubmission $result, bool $didFinalize): void
@@ -257,6 +266,13 @@ class SubmissionService
 
         if ($existing) $existing->update($evidence);
         else ConsentRecord::create(['form_submission_id' => $submission->id, 'form_component_id' => $component->id, ...$evidence]);
+
+        if ($decision === 'refused') {
+            $assignment = PatientFormAssignment::where('invitation_id', $submission->invitation_id)->first();
+            if ($assignment?->patient_access_package_id) {
+                PatientAccessPackage::whereKey($assignment->patient_access_package_id)->whereNull('consent_refused_at')->update(['consent_refused_at' => now()]);
+            }
+        }
 
         $this->audit->record('consent.recorded', $submission, $submission->organisation_id, ['decision' => $decision, 'component_id' => $component->id, 'requested_locale' => $requestedLocale, 'content_locale' => $contentLocale]);
     }

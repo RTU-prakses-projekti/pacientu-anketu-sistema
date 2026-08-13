@@ -62,8 +62,9 @@ class ComponentRegistry
         return match ($component->type) {
             'short_text', 'long_text', 'date', 'time', 'single_choice', 'dropdown' => is_string($value) ? trim($value) : $value,
             'number', 'rating_scale', 'linear_scale' => is_numeric($value) ? (float) $value : $value,
-            'yes_no', 'consent_checkbox' => filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE),
-            'multiple_choice' => array_values(array_unique(array_map('strval', is_array($value) ? $value : [$value]))),
+            'yes_no' => filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE),
+            'consent_checkbox' => $component->options()->exists() ? $this->normalizeChoices($value) : filter_var($value, FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE),
+            'multiple_choice' => $this->normalizeChoices($value),
             default => $value,
         };
     }
@@ -87,7 +88,8 @@ class ComponentRegistry
             'number' => 'numeric',
             'date' => 'date_format:Y-m-d',
             'time' => 'date_format:H:i',
-            'yes_no', 'consent_checkbox' => 'boolean',
+            'yes_no' => 'boolean',
+            'consent_checkbox' => $component->options()->exists() ? 'array' : 'boolean',
             'multiple_choice' => 'array',
             'rating_scale', 'linear_scale' => 'numeric',
             default => 'string',
@@ -116,6 +118,12 @@ class ComponentRegistry
                 throw ValidationException::withMessages(['value' => __('messages.invalid_option')]);
             }
         }
+        if ($component->type === 'consent_checkbox' && $component->options()->exists()) {
+            $allowed = $component->options->pluck('value')->map(fn ($item) => (string) $item)->all();
+            if (array_diff((array) $value, $allowed)) {
+                throw ValidationException::withMessages(['value' => __('messages.invalid_option')]);
+            }
+        }
 
         return $value;
     }
@@ -131,10 +139,17 @@ class ComponentRegistry
     {
         return match ($type) {
             'number', 'rating_scale', 'linear_scale' => 'number|null',
-            'yes_no', 'consent_checkbox' => 'boolean|null',
+            'yes_no' => 'boolean|null',
+            'consent_checkbox' => 'boolean|null|string[]',
             'multiple_choice' => 'string[]',
             'form_title', 'heading', 'explanatory_text', 'image', 'file_attachment' => 'none',
             default => 'string|null',
         };
+    }
+
+    private function normalizeChoices(mixed $value): array
+    {
+        $items = is_array($value) ? $value : (($value === null || $value === '') ? [] : [$value]);
+        return array_values(array_unique(array_filter(array_map(fn ($item) => trim((string) $item), $items), fn ($item) => $item !== '')));
     }
 }

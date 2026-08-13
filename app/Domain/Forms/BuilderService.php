@@ -17,7 +17,7 @@ class BuilderService
         $translations = $this->localized->normalize($data['translations'] ?? null, ['title', 'description', 'completion_text', 'result_text']);
         $settings = $version->settings ?? [];
         foreach (['completion_text', 'result_text'] as $field) {
-            $value = data_get($translations, 'lv.'.$field);
+            $value = data_get($translations, $defaultLocale.'.'.$field);
             if ($this->localized->isPresent($value)) $settings[$field] = $value;
             else unset($settings[$field]);
         }
@@ -55,11 +55,21 @@ class BuilderService
 
     public function updateComponent(FormComponent $component, array $data): void
     {
+        $defaultLocale = (string) config('form_locales.default', 'lv');
+        $rawTranslations = array_key_exists('translations', $data) && is_array($data['translations']) ? $data['translations'] : [];
         $translations = array_key_exists('translations', $data)
             ? $this->localized->normalize($data['translations'], ['label', 'description', 'help_text', 'placeholder', 'consent_text', 'minimum_label', 'maximum_label', 'image_title', 'image_caption'])
             : $component->translations;
         $settings = array_key_exists('settings', $data) ? ($data['settings'] ?? []) : ($component->settings ?? []);
         foreach (['placeholder', 'consent_text', 'minimum_label', 'maximum_label', 'image_title', 'image_caption'] as $field) {
+            $defaultLocaleValues = $rawTranslations[$defaultLocale] ?? [];
+            $submittedEmpty = is_array($defaultLocaleValues)
+                && array_key_exists($field, $defaultLocaleValues)
+                && !$this->localized->isPresent($defaultLocaleValues[$field]);
+            if ($submittedEmpty) {
+                unset($settings[$field]);
+                continue;
+            }
             $value = data_get($translations, 'lv.'.$field);
             if ($this->localized->isPresent($value)) $settings[$field] = $value;
             elseif (array_key_exists($field, $settings) && !$this->localized->isPresent($settings[$field])) unset($settings[$field]);
@@ -75,7 +85,7 @@ class BuilderService
             'max_points' => (float) ($data['max_points'] ?? 0), 'manual_grading' => (bool) ($data['manual_grading'] ?? false),
             'settings' => $settings, 'translations' => $translations,
         ]);
-        if (array_key_exists('options', $data) && in_array($component->type, ['single_choice','multiple_choice','dropdown'], true)) {
+        if (array_key_exists('options', $data) && in_array($component->type, ['single_choice','multiple_choice','dropdown','consent_checkbox'], true)) {
             $this->syncOptions($component, $data['options']);
         }
         $strategy=$data['scoring_strategy']??'none';

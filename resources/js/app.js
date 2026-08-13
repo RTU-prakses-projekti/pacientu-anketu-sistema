@@ -18,7 +18,7 @@ document.querySelectorAll('[data-component-form]').forEach((form) => {
     const refresh = () => {
         const definition = registry[type.value] || {settings: []};
         form.querySelectorAll('[data-setting]').forEach((field) => field.hidden = !definition.settings.includes(field.dataset.setting));
-        form.querySelector('[data-options]').hidden = !['single_choice', 'multiple_choice', 'dropdown'].includes(type.value);
+        form.querySelector('[data-options]').hidden = !['single_choice', 'multiple_choice', 'dropdown', 'consent_checkbox'].includes(type.value);
     };
     type.addEventListener('change', refresh); refresh();
 });
@@ -40,6 +40,30 @@ document.querySelectorAll('[data-locale-editor]').forEach((editor) => {
     tabs.forEach((tab) => tab.addEventListener('click', () => activate(tab.dataset.localeTab)));
     editor.addEventListener('input', refreshStatus);
     refreshStatus();
+});
+
+document.querySelectorAll('[data-option-manager]').forEach((manager) => {
+    const list = manager.querySelector('[data-option-list]');
+    const template = manager.querySelector('[data-option-template]');
+    const addButton = manager.querySelector('[data-option-add]');
+    if (!list || !template || !addButton) return;
+
+    const nextIndex = () => Number(manager.dataset.nextOptionIndex || list.querySelectorAll('[data-option-row]').length);
+    const setNextIndex = (value) => { manager.dataset.nextOptionIndex = String(value); };
+    const createRow = () => {
+        const index = nextIndex();
+        setNextIndex(index + 1);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = template.innerHTML.replaceAll('__INDEX__', String(index)).trim();
+        const row = wrapper.firstElementChild;
+        row.querySelectorAll('[data-option-remove]').forEach((button) => button.addEventListener('click', () => row.remove()));
+        return row;
+    };
+
+    list.querySelectorAll('[data-option-row]').forEach((row) => {
+        row.querySelectorAll('[data-option-remove]').forEach((button) => button.addEventListener('click', () => row.remove()));
+    });
+    addButton.addEventListener('click', () => list.appendChild(createRow()));
 });
 
 document.querySelectorAll('select[data-move-url]').forEach((select) => select.addEventListener('change', async () => {
@@ -90,6 +114,7 @@ if (runner) {
     const status = runner.querySelector('[data-save-status]');
     const progressBar = runner.querySelector('[data-progress-bar]');
     const progressText = runner.querySelector('[data-progress-text]');
+    const refusalMessage = runner.dataset.consentRefusedMessage || 'Survey ended';
     let page = 0;
     let revision = Number(runner.dataset.revision || 0);
     let timer;
@@ -106,7 +131,8 @@ if (runner) {
             const controls = [...component.querySelectorAll('[data-answer]')];
             if (!controls.length) return;
             const first = controls[0];
-            if (first.type === 'checkbox' && controls.length > 1) result[id] = controls.filter((x) => x.checked).map((x) => x.value);
+            const checkboxGroup = first.type === 'checkbox' && (controls.length > 1 || (first.name || '').endsWith('[]'));
+            if (checkboxGroup) result[id] = controls.filter((x) => x.checked).map((x) => x.value);
             else if (first.type === 'checkbox') result[id] = first.checked;
             else if (first.type === 'radio') { const selected = controls.find((x) => x.checked); if (selected) result[id] = selected.value; }
             else result[id] = first.value === '' ? null : first.value;
@@ -159,6 +185,11 @@ if (runner) {
     };
 
     const showPage = () => {
+        if (runner.dataset.consentRefused === '1') {
+            pages.forEach((item, index) => item.hidden = index !== 0 || item.dataset.conditionVisible !== '1');
+            previous.disabled = true; next.hidden = true; submit.hidden = true; updateProgress();
+            return;
+        }
         conditionalVisibility();
         const visibleIndexes = pages.map((item, index) => item.dataset.conditionVisible === '1' ? index : null).filter((index) => index !== null);
         if (!visibleIndexes.includes(page)) page = visibleIndexes[0] ?? 0;
@@ -184,7 +215,13 @@ if (runner) {
             const data = await response.json();
             if (!response.ok) throw new Error(Object.values(data.errors || {}).flat().join(' ') || data.message || 'Save failed');
             revision = Number(data.revision); runner.dataset.revision = String(revision); dirty = changeSequence !== savedSequence; retryPending = false; setStatus(dirty ? 'saving' : 'saved');
-            if (data.consent_refused) { pages.slice(1).forEach((item) => item.hidden = true); }
+            if (data.consent_refused) {
+                runner.dataset.consentRefused = '1';
+                status.textContent = refusalMessage;
+                status.dataset.state = 'error';
+                pages.forEach((item, index) => item.hidden = index !== 0 || item.dataset.conditionVisible !== '1');
+                previous.disabled = true; next.hidden = true; submit.hidden = true;
+            }
             return true;
         } catch (error) { retryPending = true; setStatus(navigator.onLine ? 'error' : 'offline'); status.title = error.message; return false; }
         })();

@@ -241,6 +241,15 @@ class UniversalFormWorkflowTest extends TestCase
         $this->actingAs($reviewer)->get(route('admin.submissions.show',$final))->assertOk();
     }
 
+    public function test_all_answers_correct_scores_any_response_as_full_credit(): void
+    {
+        [$creator,$organisation]=$this->member('form_creator');[$respondent]=$this->member('respondent',$organisation);$authoring=app(FormAuthoringService::class);$form=$authoring->create($organisation->id,$creator,'Patient scoring','blank');$version=$form->versions()->first();$section=$version->sections()->first();
+        $question=$authoring->addComponent($version,$section,['type'=>'multiple_choice','label'=>'Any response counts','is_required'=>false,'max_points'=>5,'options'=>['One','Two','Three'],'scoring_strategy'=>'all_answers_correct','scoring_rules'=>[]]);
+        $published=$authoring->publish($version);$publication=$this->publication($form,$published,['access_mode'=>'public','identified_required'=>false,'anonymous_allowed'=>true]);$service=app(SubmissionService::class);$submission=$service->start($publication,null,null,null,'browser-any-answer');
+        $service->autosave($submission,0,(string)Str::uuid(),[$question->id=>[$question->options()->first()->value]]);$final=$service->finalize($submission->fresh());
+        $this->assertEquals(5.0,(float)$final->automatic_points);$this->assertEquals(5.0,(float)$final->final_points);
+    }
+
     public function test_repeated_finalization_is_idempotent_and_does_not_duplicate_answers(): void
     {
         [$creator,$organisation]=$this->member('form_creator');[$respondent]=$this->member('respondent',$organisation);$authoring=app(FormAuthoringService::class);$form=$authoring->create($organisation->id,$creator,'Exam','test');$published=$authoring->publish($form->versions()->first());$publication=$this->publication($form,$published,['access_mode'=>'authenticated']);$service=app(SubmissionService::class);$submission=$service->start($publication,$respondent,null,null,'unused');$component=$published->components()->with('options')->first();$service->autosave($submission,0,(string)Str::uuid(),[$component->id=>$component->options->first()->value]);$first=$service->finalize($submission->fresh());$second=$service->finalize($first);$this->assertSame($first->status,$second->status);$this->assertSame(1,SubmissionAnswer::count());$this->assertSame(1,\App\Models\AnswerScore::count());

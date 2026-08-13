@@ -43,7 +43,7 @@
 <aside class="card">
     <h2>{{ __('messages.attachments') }}</h2>
     <form method="POST" enctype="multipart/form-data" action="{{ route('attachments.store',[$form,$version]) }}" class="stack">@csrf<input type="file" name="file" required><button class="btn">{{ __('messages.upload') }}</button></form>
-    @foreach($version->attachments as $attachment)<div class="list-row"><a href="{{ route('attachments.download',$attachment) }}">{{ $attachment->original_name }}</a><form method="POST" action="{{ route('attachments.destroy',$attachment) }}" data-confirm="{{ __('messages.confirm_delete') }}">@csrf @method('DELETE')<button class="icon-btn danger">×</button></form></div>@endforeach
+    @foreach($version->attachments as $attachment)<div class="list-row"><a href="{{ route('attachments.download',$attachment) }}">{{ $attachment->original_name }}</a><form method="POST" action="{{ route('attachments.destroy',$attachment) }}" data-confirm="{{ __('messages.confirm_delete') }}">@csrf @method('DELETE')<button class="icon-btn danger" style="border-color:#fca5a5;background:#fef2f2;color:#b91c1c;">×</button></form></div>@endforeach
 
     <hr><h2>{{ __('messages.add_component') }}</h2>
     <form method="POST" action="{{ route('builder.components.store',$form) }}" class="stack" data-component-form data-registry='@json($registry)'>@csrf
@@ -55,15 +55,23 @@
         <div data-setting="min_length"><label>{{ __('messages.min_length') }}<input type="number" name="settings[min_length]"></label></div>
         <div data-setting="max_length"><label>{{ __('messages.max_length') }}<input type="number" name="settings[max_length]"></label></div>
         <div data-setting="attachment_id"><label>{{ __('messages.attachment') }}<select name="settings[attachment_id]"><option value="">—</option>@foreach($version->attachments as $attachment)<option value="{{ $attachment->id }}">{{ $attachment->original_name }}</option>@endforeach</select></label></div>
-        <fieldset data-options><legend>{{ __('messages.options') }}</legend>
-            @for($i=0;$i<3;$i++)
-                <div class="option-editor"><strong>{{ __('messages.option_number',['number'=>$i+1]) }}</strong>
-                    @include('forms.partials.locale-tabs',['group'=>'new-component-option-'.$i,'prefix'=>'options['.$i.'][translations]','translations'=>null,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>null]]])
+        <fieldset data-options data-option-manager data-next-option-index="1"><legend>{{ __('messages.options') }}</legend>
+            <div data-option-list>
+                <div class="option-editor" data-option-row data-option-kind="creator">
+                    <div class="page-header"><strong>{{ __('messages.new_option') }}</strong></div>
+                    @include('forms.partials.locale-tabs',['group'=>'new-component-option-0','prefix'=>'options[0][translations]','translations'=>null,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>null]]])
                 </div>
-            @endfor
+            </div>
+            <button type="button" class="btn" data-option-add>{{ __('messages.add_option') }}</button>
+            <template data-option-template>
+                <div class="option-editor" data-option-row data-option-kind="draft">
+                    <div class="page-header"><strong>{{ __('messages.new_option') }}</strong><button type="button" class="btn danger" data-option-remove>{{ __('messages.remove_option') }}</button></div>
+                    @include('forms.partials.locale-tabs',['group'=>'new-component-option-__INDEX__','prefix'=>'options[__INDEX__][translations]','translations'=>null,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>null]]])
+                </div>
+            </template>
         </fieldset>
         <label>{{ __('messages.max_points') }}<input type="number" step="0.01" min="0" name="max_points" value="0"></label>
-        <label>{{ __('messages.scoring_strategy') }}<select name="scoring_strategy"><option value="none">—</option>@foreach(['single_choice','multiple_all_or_nothing','multiple_partial','yes_no','numeric_exact','numeric_tolerance','manual'] as $strategy)<option value="{{ $strategy }}">{{ $strategy }}</option>@endforeach</select></label>
+        <label>{{ __('messages.scoring_strategy') }}<select name="scoring_strategy"><option value="none">—</option>@foreach(['single_choice','multiple_all_or_nothing','multiple_partial','all_answers_correct','yes_no','numeric_exact','numeric_tolerance','manual'] as $strategy)<option value="{{ $strategy }}">{{ $strategy === 'all_answers_correct' ? __('messages.all_answers_correct') : $strategy }}</option>@endforeach</select></label>
         <p class="help">{{ __('messages.correct_answer_after_options') }}</p>
         <label class="check"><input type="checkbox" name="is_required" value="1"> {{ __('messages.required') }}</label><label class="check"><input type="checkbox" name="visible" value="1" checked> {{ __('messages.visible') }}</label><label class="check"><input type="checkbox" name="manual_grading" value="1"> {{ __('messages.manual_grading') }}</label>
         <button class="btn primary">{{ __('messages.add_component') }}</button>
@@ -114,8 +122,31 @@
             @if(in_array($component->type,['image','file_attachment']))<label>{{ __('messages.attachment') }}<select name="settings[attachment_id]"><option value="">—</option>@foreach($version->attachments as $attachment)<option value="{{ $attachment->id }}" @selected((int)data_get($component->settings,'attachment_id')===$attachment->id)>{{ $attachment->original_name }}</option>@endforeach</select></label>@endif
             <label>{{ __('messages.max_points') }}<input name="max_points" type="number" step="0.01" value="{{ $component->max_points }}"></label>
         </div>
-        @if(in_array($component->type,['single_choice','multiple_choice','dropdown']))<fieldset><legend>{{ __('messages.options') }}</legend>@foreach($component->options as $option)<div class="option-editor"><strong>{{ __('messages.option_number',['number'=>$loop->iteration]) }}</strong>@include('forms.partials.locale-tabs',['group'=>'option-'.$option->id,'prefix'=>'options[existing]['.$option->id.'][translations]','translations'=>$option->translations,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>$option->label,'required'=>true]]])</div>@endforeach<div class="option-editor"><strong>{{ __('messages.new_option') }}</strong>@include('forms.partials.locale-tabs',['group'=>'new-option-'.$component->id,'prefix'=>'options[new][0][translations]','translations'=>null,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>null]]])</div></fieldset>@endif
-        <label>{{ __('messages.scoring_strategy') }}<select name="scoring_strategy">@foreach(['none','single_choice','multiple_all_or_nothing','multiple_partial','yes_no','numeric_exact','numeric_tolerance','manual'] as $strategy)<option value="{{ $strategy }}" @selected(($component->scoringRule?->strategy??'none')===$strategy)>{{ $strategy }}</option>@endforeach</select></label>
+        @if(in_array($component->type,['single_choice','multiple_choice','dropdown','consent_checkbox']))
+            <fieldset data-options data-option-manager data-next-option-index="{{ $component->options->count() + 1 }}">
+                <legend>{{ __('messages.options') }}</legend>
+                <div data-option-list>
+                    @foreach($component->options as $option)
+                        <div class="option-editor" data-option-row data-option-kind="saved">
+                            <div class="page-header"><strong>{{ __('messages.option_number',['number'=>$loop->iteration]) }}</strong><button type="button" class="btn danger" data-option-remove>{{ __('messages.remove_option') }}</button></div>
+                            @include('forms.partials.locale-tabs',['group'=>'option-'.$option->id,'prefix'=>'options[existing]['.$option->id.'][translations]','translations'=>$option->translations,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>$option->label,'required'=>true]]])
+                        </div>
+                    @endforeach
+                    <div class="option-editor" data-option-row data-option-kind="creator">
+                        <div class="page-header"><strong>{{ __('messages.new_option') }}</strong></div>
+                        @include('forms.partials.locale-tabs',['group'=>'new-option-'.$component->id.'-0','prefix'=>'options[new][0][translations]','translations'=>null,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>null]]])
+                    </div>
+                </div>
+                <button type="button" class="btn" data-option-add>{{ __('messages.add_option') }}</button>
+                <template data-option-template>
+                    <div class="option-editor" data-option-row data-option-kind="draft">
+                        <div class="page-header"><strong>{{ __('messages.new_option') }}</strong><button type="button" class="btn danger" data-option-remove>{{ __('messages.remove_option') }}</button></div>
+                        @include('forms.partials.locale-tabs',['group'=>'new-option-__INDEX__','prefix'=>'options[new][__INDEX__][translations]','translations'=>null,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>null]]])
+                    </div>
+                </template>
+            </fieldset>
+        @endif
+        <label>{{ __('messages.scoring_strategy') }}<select name="scoring_strategy">@foreach(['none','single_choice','multiple_all_or_nothing','multiple_partial','all_answers_correct','yes_no','numeric_exact','numeric_tolerance','manual'] as $strategy)<option value="{{ $strategy }}" @selected(($component->scoringRule?->strategy??'none')===$strategy)>{{ $strategy === 'all_answers_correct' ? __('messages.all_answers_correct') : $strategy }}</option>@endforeach</select></label>
         @if(in_array($component->type,['single_choice','dropdown']))<fieldset><legend>{{ __('messages.correct_answers') }}</legend>@foreach($component->options as $option)<label class="choice"><input type="radio" name="scoring_rules[correct]" value="{{ $option->value }}" @checked(in_array($option->value,$correct,true))> {{ $option->localizedLabel('lv') }}</label>@endforeach</fieldset>
         @elseif($component->type==='multiple_choice')<fieldset><legend>{{ __('messages.correct_answers') }}</legend>@foreach($component->options as $option)<label class="choice"><input type="checkbox" name="scoring_rules[correct][]" value="{{ $option->value }}" @checked(in_array($option->value,$correct,true))> {{ $option->localizedLabel('lv') }}</label>@endforeach</fieldset>
         @elseif($component->type==='yes_no')<fieldset><legend>{{ __('messages.correct_answers') }}</legend>@foreach(['1'=>__('messages.yes'),'0'=>__('messages.no')] as $value=>$label)<label class="choice"><input type="radio" name="scoring_rules[correct]" value="{{ $value }}" @checked((string)data_get($component->scoringRule?->rules,'correct')===$value)> {{ $label }}</label>@endforeach</fieldset>
@@ -128,4 +159,101 @@
 @endforeach
 </div></div>
 @endunless
+@push('scripts')
+<script>
+document.querySelectorAll('[data-component-form]').forEach((form) => {
+    const registry = JSON.parse(form.dataset.registry || '{}');
+    const type = form.querySelector('[data-component-type]');
+    const options = form.querySelector('[data-options]');
+    if (!type || !options) return;
+    const refresh = () => {
+        const definition = registry[type.value] || {settings: []};
+        form.querySelectorAll('[data-setting]').forEach((field) => {
+            field.hidden = !definition.settings.includes(field.dataset.setting);
+        });
+        options.hidden = !['single_choice', 'multiple_choice', 'dropdown', 'consent_checkbox'].includes(type.value);
+    };
+    type.addEventListener('change', refresh);
+    refresh();
+});
+
+document.querySelectorAll('[data-option-manager]').forEach((manager) => {
+    const list = manager.querySelector('[data-option-list]');
+    const template = manager.querySelector('[data-option-template]');
+    const addButton = manager.querySelector('[data-option-add]');
+    if (!list || !template || !addButton) return;
+
+    const refreshRemoveVisibility = () => {
+        const rows = [...list.querySelectorAll('[data-option-row]')];
+        rows.forEach((row) => {
+            const isCreator = row.dataset.optionKind === 'creator';
+            row.querySelectorAll('[data-option-remove]').forEach((button) => {
+                button.hidden = isCreator;
+            });
+        });
+    };
+
+    const creatorRow = () => list.querySelector('[data-option-row][data-option-kind="creator"]');
+
+    const controlValue = (control) => {
+        if (control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement || control instanceof HTMLSelectElement) {
+            if (control.type === 'checkbox' || control.type === 'radio') return control.checked;
+            return control.value;
+        }
+        return null;
+    };
+
+    const setControlValue = (control, value) => {
+        if (!(control instanceof HTMLInputElement || control instanceof HTMLTextAreaElement || control instanceof HTMLSelectElement)) return;
+        if (control.type === 'checkbox' || control.type === 'radio') control.checked = Boolean(value);
+        else control.value = value ?? '';
+    };
+
+    const copyCreatorValuesTo = (row) => {
+        const source = creatorRow();
+        if (!source) return;
+        const sourceControls = [...source.querySelectorAll('input, textarea, select')];
+        const targetControls = [...row.querySelectorAll('input, textarea, select')];
+        const values = sourceControls.map(controlValue);
+        targetControls.forEach((control, index) => setControlValue(control, values[index] ?? ''));
+    };
+
+    const clearCreatorValues = () => {
+        const source = creatorRow();
+        if (!source) return;
+        source.querySelectorAll('input, textarea, select').forEach((control) => setControlValue(control, ''));
+    };
+
+    const bindRemove = (row) => {
+        if (row.dataset.optionKind === 'creator') return;
+        row.querySelectorAll('[data-option-remove]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const rows = list.querySelectorAll('[data-option-row]');
+                if (rows.length <= 1) return;
+                row.remove();
+                refreshRemoveVisibility();
+            });
+        });
+    };
+
+    list.querySelectorAll('[data-option-row]').forEach(bindRemove);
+    refreshRemoveVisibility();
+    addButton.addEventListener('click', () => {
+        const index = Number(manager.dataset.nextOptionIndex || list.querySelectorAll('[data-option-row]').length);
+        manager.dataset.nextOptionIndex = String(index + 1);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = template.innerHTML.replaceAll('__INDEX__', String(index)).trim();
+        const row = wrapper.firstElementChild;
+        if (!row) return;
+        bindRemove(row);
+        copyCreatorValuesTo(row);
+        const anchor = creatorRow();
+        if (anchor) list.insertBefore(row, anchor);
+        else list.appendChild(row);
+        clearCreatorValues();
+        refreshRemoveVisibility();
+    });
+});
+</script>
+@endpush
 @endsection

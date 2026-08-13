@@ -20,20 +20,28 @@ class PatientPortalController extends Controller
     public function portal(Request $request, PatientAccessPackage $patientAccessPackage, PatientAccessService $access)
     {
         $access->assertPackage($request, $patientAccessPackage);
-        $patientAccessPackage->load(['patientCase.assignments.publication.formVersion', 'patientCase.assignments.submissions']);
+        $patientAccessPackage->load(['patientCase.assignments.publication.formVersion', 'patientCase.assignments.submissions', 'patientCase.accessPackages']);
+        $surveyEnded = (bool) $patientAccessPackage->consent_refused_at;
         $previousComplete = true;
-        $parts = $patientAccessPackage->patientCase->assignments->map(function ($assignment) use (&$previousComplete) {
+        $parts = $patientAccessPackage->patientCase->assignments->map(function ($assignment) use (&$previousComplete, $surveyEnded) {
             $status = $assignment->status();
+            if ($assignment->publication->consent_required && $assignment->completedSubmission?->consentRecords()->where('decision', 'refused')->exists()) {
+                $status = 'completed';
+            }
+            if ($surveyEnded && $status !== 'completed') {
+                $previousComplete = false;
+            }
             $part = ['assignment' => $assignment, 'status' => $status, 'unlocked' => $previousComplete];
             $previousComplete = $previousComplete && $status === 'completed';
             return $part;
         });
-        return view('patient.portal', compact('patientAccessPackage', 'parts'));
+        return view('patient.portal', compact('patientAccessPackage', 'parts', 'surveyEnded'));
     }
 
     public function start(Request $request, PatientAccessPackage $patientAccessPackage, PatientFormAssignment $assignment, PatientAccessService $access, SubmissionService $submissions)
     {
         $access->assertPackage($request, $patientAccessPackage);
+        abort_if($patientAccessPackage->consent_refused_at, 409, __('messages.survey_ended_no_consent'));
         abort_unless($assignment->patient_case_id === $patientAccessPackage->patient_case_id && $assignment->patient_access_package_id === $patientAccessPackage->id, 404);
         $previousIncomplete = $assignment->patientCase->assignments()->where(function ($query) use ($assignment) {
             $query->where('display_order', '<', $assignment->display_order)

@@ -72,6 +72,7 @@ class FormComponent extends Model
 
     private function consentTextBaseValue(): ?string
     {
-        return data_get($this->settings, 'consent_text') ?: $this->description ?: $this->label;
+        $value = data_get($this->settings, 'consent_text');
+        return is_string($value) && trim($value) !== '' ? $value : null;
     }
 }

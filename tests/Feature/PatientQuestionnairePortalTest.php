@@ -130,6 +130,18 @@ class PatientQuestionnairePortalTest extends TestCase
         $this->get(route('patient.portal', $package))->assertSee(__('messages.all_parts_completed'));
     }
 
+    public function test_refusing_consent_ends_the_patient_flow_and_blocks_later_parts(): void
+    {
+        [$doctor, $patient, $first, $organisation] = $this->base(); $second = $this->publication($organisation, 'Second');
+        $firstAssignment = $this->assign($patient, $first, 'Consent', 1); $secondAssignment = $this->assign($patient, $second, 'Follow-up', 2);
+        [$package, $token] = $this->actingAs($doctor)->issue($patient); $this->flushSession(); $this->get(route('patient.access', $token));
+        $this->post(route('patient.assignments.start', [$package, $firstAssignment])); $submission = FormSubmission::firstOrFail(); $consent = $submission->formVersion->components()->where('type', 'consent_checkbox')->firstOrFail();
+        $this->postJson(route('submissions.autosave', $submission), ['expected_revision' => 0, 'client_mutation_id' => (string) Str::uuid(), 'answers' => [$consent->id => false]])->assertOk()->assertJsonPath('consent_refused', true);
+        $this->assertNotNull($package->fresh()->consent_refused_at);
+        $this->get(route('patient.portal', $package))->assertSee(__('messages.survey_ended_no_consent'));
+        $this->post(route('patient.assignments.start', [$package, $secondAssignment]))->assertStatus(409);
+    }
+
     public function test_doctor_dashboard_keeps_completed_green_and_in_progress_grey(): void
     {
         [$doctor, $patient, $first, $organisation] = $this->base(); $second = $this->publication($organisation, 'Second');

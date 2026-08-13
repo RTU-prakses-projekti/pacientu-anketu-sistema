@@ -35,6 +35,7 @@ class ScoringService
     {
         $value = $answer->value;
         return match ($strategy) {
+            'all_answers_correct' => $this->hasAnswer($value) ? $max : 0.0,
             'single_choice', 'yes_no' => (string) $value === (string) ($rules['correct'] ?? '') ? $max : 0.0,
             'multiple_all_or_nothing' => $this->setEquals((array) $value, (array) ($rules['correct'] ?? [])) ? $max : 0.0,
             'multiple_partial' => $this->partial((array) $value, (array) ($rules['correct'] ?? []), $max),
@@ -42,6 +43,13 @@ class ScoringService
             'numeric_tolerance' => is_numeric($value) && abs((float) $value - (float) ($rules['correct'] ?? NAN)) <= (float) ($rules['tolerance'] ?? 0) ? $max : 0.0,
             default => 0.0,
         };
+    }
+
+    private function hasAnswer(mixed $value): bool
+    {
+        if (is_array($value)) return $value !== [];
+        if (is_bool($value)) return $value;
+        return $value !== null && $value !== '';
     }
 
     private function setEquals(array $a, array $b): bool
