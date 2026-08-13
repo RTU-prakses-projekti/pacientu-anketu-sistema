@@ -17,11 +17,11 @@ class StoreComponentRequest extends FormRequest
             'type' => ['required', Rule::in(array_keys(app(ComponentRegistry::class)->all()))],
             'label' => ['nullable', 'string', 'max:500'], 'description' => ['nullable', 'string', 'max:10000'], 'help_text' => ['nullable', 'string', 'max:2000'],
             'is_required' => ['sometimes', 'boolean'], 'visible' => ['sometimes', 'boolean'], 'max_points' => ['nullable', 'numeric', 'min:0', 'max:100000'], 'manual_grading' => ['sometimes', 'boolean'],
-            'settings' => ['nullable', 'array'], 'options' => ['nullable', 'array', 'max:100'], 'options.*' => ['nullable', 'array'],
+            'settings' => ['nullable', 'array'], 'options' => ['nullable', 'array', 'max:100'], 'options.*' => ['nullable', 'array:translations'],
             'scoring_strategy' => ['nullable', Rule::in(['none', 'single_choice', 'multiple_all_or_nothing', 'multiple_partial', 'yes_no', 'numeric_exact', 'numeric_tolerance', 'manual'])],
             'scoring_rules' => ['nullable', 'array'],
             ...LocalizedContentRules::for('translations', $this->componentFields(), ['label']),
-            ...LocalizedContentRules::for('options.*.translations', ['label' => ['string', 'max:500']]),
+            ...LocalizedContentRules::for('options.*.translations', ['label' => ['string', 'max:255']]),
         ];
     }
 

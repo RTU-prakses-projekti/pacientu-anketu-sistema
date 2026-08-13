@@ -66,6 +66,7 @@ class FormAuthoringService
     {
         $this->ensureDraft($version);
         if ($section->form_version_id !== $version->id) throw ValidationException::withMessages(['section' => __('messages.invalid_section')]);
+        if (count($data['options'] ?? []) > 100) throw ValidationException::withMessages(['options' => __('validation.max.array', ['max' => 100])]);
         $definition = $this->registry->definition($data['type']);
         $translations = $this->componentTranslations($data);
         $settings = $this->componentSettings($data['type'], $data['settings'] ?? [], $translations);
@@ -121,6 +122,9 @@ class FormAuthoringService
             }
         }
         foreach ($version->components as $component) {
+            if (in_array($component->type, ['single_choice', 'multiple_choice', 'dropdown'], true) && $component->options->count() < 2) {
+                throw ValidationException::withMessages(['options' => __('messages.minimum_choice_options_required')]);
+            }
             if ($component->scoringRule) $this->scoringRules->validate($component, $component->scoringRule->strategy, $component->scoringRule->rules ?? [], true);
         }
 

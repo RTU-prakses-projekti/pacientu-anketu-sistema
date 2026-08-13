@@ -53,6 +53,7 @@ class QuestionnairePackageExchangeTest extends TestCase
         $this->assertSame($version->sections()->count(), count($manifest['sections']));
         $portableChoice = collect($manifest['sections'])->flatMap(fn ($section) => $section['components'])->firstWhere('stable_key', $choice->stable_key);
         $this->assertSame($choice->stable_key, $portableChoice['stable_key']);
+        $this->assertCount(5, $portableChoice['options']);
         $this->assertSame($choice->options()->orderBy('display_order')->pluck('stable_key')->all(), array_column($portableChoice['options'], 'stable_key'));
         $this->assertSame($choice->options()->orderBy('display_order')->pluck('value')->all(), array_column($portableChoice['options'], 'value'));
         $this->assertSame($choice->scoringRule->rules, $portableChoice['scoring_rule']['rules']);
@@ -148,6 +149,7 @@ class QuestionnairePackageExchangeTest extends TestCase
             'uploaded_by' => $creator->id, 'disk' => 'local', 'storage_path' => 'attachments/source.txt', 'original_name' => 'safe.txt', 'mime_type' => 'text/plain', 'size' => 4, 'sha256' => hash('sha256', 'safe'), 'status' => 'ready']);
         app(FormAuthoringService::class)->addComponent($version, $version->sections()->first(), ['type' => 'file_attachment', 'label' => 'File', 'settings' => ['attachment_id' => $attachment->id], 'options' => []]);
         $export = $this->actingAs($creator)->packages()->export($form, $version->fresh()); $manifest = $this->manifest($export['package_name']);
+        $validManifest = $manifest;
         $manifest['attachments'][0]['asset_path'] = '../outside.txt'; $manifest['content_hash'] = $this->hash($manifest);
         File::put($this->packageRoot.DIRECTORY_SEPARATOR.$export['package_name'].DIRECTORY_SEPARATOR.'manifest.json', json_encode($manifest));
         $target = $this->organisation(); $before = Form::count();
@@ -220,7 +222,7 @@ class QuestionnairePackageExchangeTest extends TestCase
         $section = $version->sections()->firstOrFail(); $section->update(['translations' => ['lv' => ['title' => 'LV sadaļa'], 'en' => ['title' => 'EN section'], 'ru' => ['title' => 'RU раздел']]]);
         $choice = $authoring->addComponent($version, $section, ['type' => 'single_choice', 'is_required' => true, 'max_points' => 2,
             'translations' => ['lv' => ['label' => 'LV izvēle'], 'en' => ['label' => 'EN choice'], 'ru' => ['label' => 'RU выбор']],
-            'options' => [['translations' => ['lv' => ['label' => 'Jā'], 'en' => ['label' => 'Yes'], 'ru' => ['label' => 'Да']]], ['translations' => ['lv' => ['label' => 'Nē'], 'en' => ['label' => 'No'], 'ru' => ['label' => 'Нет']]]],
+            'options' => [['translations' => ['lv' => ['label' => 'Jā'], 'en' => ['label' => 'Yes'], 'ru' => ['label' => 'Да']]], ['translations' => ['lv' => ['label' => 'Nē'], 'en' => ['label' => 'No'], 'ru' => ['label' => 'Нет']]], ['translations' => ['lv' => ['label' => 'Varbūt'], 'en' => ['label' => 'Maybe'], 'ru' => ['label' => 'Возможно']]], ['translations' => ['lv' => ['label' => 'Nezinu'], 'en' => ['label' => 'Unknown'], 'ru' => ['label' => 'Не знаю']]], ['translations' => ['lv' => ['label' => 'Cits'], 'en' => ['label' => 'Other'], 'ru' => ['label' => 'Другое']]]],
             'scoring_strategy' => 'single_choice', 'scoring_rules' => []]);
         $choice->scoringRule()->update(['rules' => ['correct' => $choice->options()->first()->value]]);
         $choice->validationRules()->create(['rule_type' => 'required', 'display_order' => 1, 'parameters' => ['strict' => true], 'message_translations' => ['lv' => ['message' => 'Obligāts'], 'en' => ['message' => 'Required'], 'ru' => ['message' => 'Обязательно']]]);

@@ -55,12 +55,22 @@
         <div data-setting="min_length"><label>{{ __('messages.min_length') }}<input type="number" name="settings[min_length]"></label></div>
         <div data-setting="max_length"><label>{{ __('messages.max_length') }}<input type="number" name="settings[max_length]"></label></div>
         <div data-setting="attachment_id"><label>{{ __('messages.attachment') }}<select name="settings[attachment_id]"><option value="">—</option>@foreach($version->attachments as $attachment)<option value="{{ $attachment->id }}">{{ $attachment->original_name }}</option>@endforeach</select></label></div>
-        <fieldset data-options><legend>{{ __('messages.options') }}</legend>
-            @for($i=0;$i<3;$i++)
-                <div class="option-editor"><strong>{{ __('messages.option_number',['number'=>$i+1]) }}</strong>
+        <fieldset data-options data-option-manager data-option-manager-key="new-component" data-next-option-index="2" data-max-options="100"><legend>{{ __('messages.options') }}</legend>
+            <div data-option-list>
+            @for($i=0;$i<2;$i++)
+                <div class="option-editor" data-option-row>
+                    <div class="page-header"><strong>{{ __('messages.option_number',['number'=>$i+1]) }}</strong><button type="button" class="btn danger" data-option-remove>{{ __('messages.remove_option') }}</button></div>
                     @include('forms.partials.locale-tabs',['group'=>'new-component-option-'.$i,'prefix'=>'options['.$i.'][translations]','translations'=>null,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>null]]])
                 </div>
             @endfor
+            </div>
+            <button type="button" class="btn" data-option-add>{{ __('messages.add_option') }}</button>
+            <template data-option-template>
+                <div class="option-editor" data-option-row>
+                    <div class="page-header"><strong>{{ __('messages.new_option') }}</strong><button type="button" class="btn danger" data-option-remove>{{ __('messages.remove_option') }}</button></div>
+                    @include('forms.partials.locale-tabs',['group'=>'new-component-option-template','prefix'=>'options[__INDEX__][translations]','translations'=>null,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>null]]])
+                </div>
+            </template>
         </fieldset>
         <label>{{ __('messages.max_points') }}<input type="number" step="0.01" min="0" name="max_points" value="0"></label>
         <label>{{ __('messages.scoring_strategy') }}<select name="scoring_strategy"><option value="none">—</option>@foreach(['single_choice','multiple_all_or_nothing','multiple_partial','yes_no','numeric_exact','numeric_tolerance','manual'] as $strategy)<option value="{{ $strategy }}">{{ $strategy }}</option>@endforeach</select></label>
@@ -114,7 +124,26 @@
             @if(in_array($component->type,['image','file_attachment']))<label>{{ __('messages.attachment') }}<select name="settings[attachment_id]"><option value="">—</option>@foreach($version->attachments as $attachment)<option value="{{ $attachment->id }}" @selected((int)data_get($component->settings,'attachment_id')===$attachment->id)>{{ $attachment->original_name }}</option>@endforeach</select></label>@endif
             <label>{{ __('messages.max_points') }}<input name="max_points" type="number" step="0.01" value="{{ $component->max_points }}"></label>
         </div>
-        @if(in_array($component->type,['single_choice','multiple_choice','dropdown']))<fieldset><legend>{{ __('messages.options') }}</legend>@foreach($component->options as $option)<div class="option-editor"><strong>{{ __('messages.option_number',['number'=>$loop->iteration]) }}</strong>@include('forms.partials.locale-tabs',['group'=>'option-'.$option->id,'prefix'=>'options[existing]['.$option->id.'][translations]','translations'=>$option->translations,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>$option->label,'required'=>true]]])</div>@endforeach<div class="option-editor"><strong>{{ __('messages.new_option') }}</strong>@include('forms.partials.locale-tabs',['group'=>'new-option-'.$component->id,'prefix'=>'options[new][0][translations]','translations'=>null,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>null]]])</div></fieldset>@endif
+        @if(in_array($component->type,['single_choice','multiple_choice','dropdown']))
+            <fieldset data-option-manager data-option-manager-key="component-{{ $component->id }}" data-next-option-index="0" data-max-options="100">
+                <legend>{{ __('messages.options') }}</legend>
+                <div data-option-list>
+                    @foreach($component->options as $option)
+                        <div class="option-editor" data-option-row data-option-value="{{ $option->value }}">
+                            <div class="page-header"><strong>{{ __('messages.option_number',['number'=>$loop->iteration]) }}</strong><button type="button" class="btn danger" data-option-remove>{{ __('messages.remove_option') }}</button></div>
+                            @include('forms.partials.locale-tabs',['group'=>'component-'.$component->id.'-option-'.$option->id,'prefix'=>'options[existing]['.$option->id.'][translations]','translations'=>$option->translations,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>$option->label,'required'=>true]]])
+                        </div>
+                    @endforeach
+                </div>
+                <button type="button" class="btn" data-option-add>{{ __('messages.add_option') }}</button>
+                <template data-option-template>
+                    <div class="option-editor" data-option-row>
+                        <div class="page-header"><strong>{{ __('messages.new_option') }}</strong><button type="button" class="btn danger" data-option-remove>{{ __('messages.remove_option') }}</button></div>
+                        @include('forms.partials.locale-tabs',['group'=>'component-'.$component->id.'-new-option-template','prefix'=>'options[new][__INDEX__][translations]','translations'=>null,'fields'=>[['name'=>'label','label'=>__('messages.label'),'base'=>null]]])
+                    </div>
+                </template>
+            </fieldset>
+        @endif
         <label>{{ __('messages.scoring_strategy') }}<select name="scoring_strategy">@foreach(['none','single_choice','multiple_all_or_nothing','multiple_partial','yes_no','numeric_exact','numeric_tolerance','manual'] as $strategy)<option value="{{ $strategy }}" @selected(($component->scoringRule?->strategy??'none')===$strategy)>{{ $strategy }}</option>@endforeach</select></label>
         @if(in_array($component->type,['single_choice','dropdown']))<fieldset><legend>{{ __('messages.correct_answers') }}</legend>@foreach($component->options as $option)<label class="choice"><input type="radio" name="scoring_rules[correct]" value="{{ $option->value }}" @checked(in_array($option->value,$correct,true))> {{ $option->localizedLabel('lv') }}</label>@endforeach</fieldset>
         @elseif($component->type==='multiple_choice')<fieldset><legend>{{ __('messages.correct_answers') }}</legend>@foreach($component->options as $option)<label class="choice"><input type="checkbox" name="scoring_rules[correct][]" value="{{ $option->value }}" @checked(in_array($option->value,$correct,true))> {{ $option->localizedLabel('lv') }}</label>@endforeach</fieldset>

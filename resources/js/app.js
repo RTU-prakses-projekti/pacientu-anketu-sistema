@@ -12,6 +12,15 @@ document.querySelectorAll('[data-copy-target]').forEach((button) => button.addEv
     button.textContent = button.dataset.copiedLabel || '✓';
 }));
 
+document.querySelectorAll('[data-range-control]').forEach((control) => {
+    const input = control.querySelector('[data-range-input]');
+    const output = control.querySelector('[data-range-output]');
+    if (!input || !output) return;
+    const syncValue = () => { output.value = input.value; output.textContent = input.value; };
+    input.addEventListener('input', syncValue);
+    syncValue();
+});
+
 document.querySelectorAll('[data-component-form]').forEach((form) => {
     const registry = JSON.parse(form.dataset.registry || '{}');
     const type = form.querySelector('[data-component-type]');
@@ -23,7 +32,9 @@ document.querySelectorAll('[data-component-form]').forEach((form) => {
     type.addEventListener('change', refresh); refresh();
 });
 
-document.querySelectorAll('[data-locale-editor]').forEach((editor) => {
+const initializeLocaleEditor = (editor) => {
+    if (editor.dataset.localeEditorInitialized === '1') return;
+    editor.dataset.localeEditorInitialized = '1';
     const tabs = [...editor.querySelectorAll('[data-locale-tab]')];
     const panels = [...editor.querySelectorAll('[data-locale-panel]')];
     const activate = (locale) => {
@@ -40,6 +51,72 @@ document.querySelectorAll('[data-locale-editor]').forEach((editor) => {
     tabs.forEach((tab) => tab.addEventListener('click', () => activate(tab.dataset.localeTab)));
     editor.addEventListener('input', refreshStatus);
     refreshStatus();
+};
+
+document.querySelectorAll('[data-locale-editor]').forEach(initializeLocaleEditor);
+
+document.querySelectorAll('[data-option-manager]').forEach((manager) => {
+    if (manager.dataset.optionManagerInitialized === '1') return;
+    manager.dataset.optionManagerInitialized = '1';
+    const list = manager.querySelector('[data-option-list]');
+    const template = manager.querySelector('[data-option-template]');
+    const addButton = manager.querySelector('[data-option-add]');
+    if (!list || !template || !addButton) return;
+
+    const maximum = Number.parseInt(manager.dataset.maxOptions || '100', 10);
+    const refresh = () => { addButton.disabled = list.querySelectorAll('[data-option-row]').length >= maximum; };
+    const removeScoringReference = (row) => {
+        if (!row.dataset.optionValue) return;
+        const form = manager.closest('form');
+        form?.querySelectorAll('input[name^="scoring_rules[correct]"]').forEach((input) => {
+            if (input.value !== row.dataset.optionValue) return;
+            const label = input.closest('label');
+            if (label) label.remove();
+            else input.remove();
+        });
+    };
+    const bindRemove = (row) => {
+        if (row.dataset.optionRemoveInitialized === '1') return;
+        row.dataset.optionRemoveInitialized = '1';
+        row.querySelector('[data-option-remove]')?.addEventListener('click', () => {
+            removeScoringReference(row);
+            row.remove();
+            refresh();
+        });
+    };
+    const makeLocaleIdsUnique = (row, index) => {
+        const suffix = `${manager.dataset.optionManagerKey || 'options'}-${index}`.replace(/[^a-zA-Z0-9_-]/g, '-');
+        const ids = new Map();
+        row.querySelectorAll('[id]').forEach((element) => {
+            const oldId = element.id;
+            const newId = `${oldId}-${suffix}`;
+            ids.set(oldId, newId);
+            element.id = newId;
+        });
+        row.querySelectorAll('[aria-controls]').forEach((element) => {
+            const target = ids.get(element.getAttribute('aria-controls'));
+            if (target) element.setAttribute('aria-controls', target);
+        });
+    };
+
+    list.querySelectorAll('[data-option-row]').forEach(bindRemove);
+    addButton.addEventListener('click', () => {
+        if (list.querySelectorAll('[data-option-row]').length >= maximum) return;
+        const fallback = list.querySelectorAll('[data-option-row]').length;
+        const current = Number.parseInt(manager.dataset.nextOptionIndex || String(fallback), 10);
+        const index = Number.isInteger(current) && current >= 0 ? current : fallback;
+        manager.dataset.nextOptionIndex = String(index + 1);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = template.innerHTML.replaceAll('__INDEX__', String(index)).trim();
+        const row = wrapper.firstElementChild;
+        if (!row) return;
+        makeLocaleIdsUnique(row, index);
+        bindRemove(row);
+        row.querySelectorAll('[data-locale-editor]').forEach(initializeLocaleEditor);
+        list.appendChild(row);
+        refresh();
+    });
+    refresh();
 });
 
 document.querySelectorAll('select[data-move-url]').forEach((select) => select.addEventListener('change', async () => {

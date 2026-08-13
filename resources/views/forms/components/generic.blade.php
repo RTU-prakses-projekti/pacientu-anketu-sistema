@@ -30,7 +30,18 @@
 @case('single_choice')@foreach($component->options as $option)<label class="choice"><input data-answer type="radio" name="{{ $name }}" value="{{ $option->value }}" @checked((string)$value===(string)$option->value)> {{ $option->localizedLabel($contentLocale) }}</label>@endforeach @break
 @case('multiple_choice')@foreach($component->options as $option)<label class="choice"><input data-answer type="checkbox" name="{{ $name }}[]" value="{{ $option->value }}" @checked(in_array($option->value,(array)$value,true))> {{ $option->localizedLabel($contentLocale) }}</label>@endforeach @break
 @case('dropdown')<select data-answer name="{{ $name }}" @required($component->is_required)><option value="">—</option>@foreach($component->options as $option)<option value="{{ $option->value }}" @selected((string)$value===(string)$option->value)>{{ $option->localizedLabel($contentLocale) }}</option>@endforeach</select>@break
-@case('rating_scale') @case('linear_scale')<div class="scale-labels"><span>{{ $component->localizedMinimumLabel($contentLocale) }}</span><span>{{ $component->localizedMaximumLabel($contentLocale) }}</span></div><input data-answer type="range" name="{{ $name }}" value="{{ $value??data_get($component->settings,'minimum',1) }}" min="{{ data_get($component->settings,'minimum',1) }}" max="{{ data_get($component->settings,'maximum',5) }}"><output>{{ $value??data_get($component->settings,'minimum',1) }}</output>@break
+@case('rating_scale') @case('linear_scale')
+@php($minimum=data_get($component->settings,'minimum',1))
+@php($maximum=data_get($component->settings,'maximum',5))
+@php($rangeValue=$value??$minimum)
+@php($rangeId='range-'.$component->id)
+@php($rangeOutputId=$rangeId.'-value')
+<div class="scale-control" data-range-control>
+    <div class="scale-labels"><span>@if($component->localizedMinimumLabel($contentLocale))<span>{{ $component->localizedMinimumLabel($contentLocale) }}</span>@endif<strong>{{ $minimum }}</strong></span><span>@if($component->localizedMaximumLabel($contentLocale))<span>{{ $component->localizedMaximumLabel($contentLocale) }}</span>@endif<strong>{{ $maximum }}</strong></span></div>
+    <input data-answer data-range-input class="scale-range" id="{{ $rangeId }}" type="range" name="{{ $name }}" value="{{ $rangeValue }}" min="{{ $minimum }}" max="{{ $maximum }}" step="1" aria-describedby="{{ $rangeOutputId }}">
+    <p class="scale-current" id="{{ $rangeOutputId }}">{{ __('messages.selected_value', [], $contentLocale) }}: <output data-range-output for="{{ $rangeId }}">{{ $rangeValue }}</output></p>
+</div>
+@break
 @case('consent_checkbox')<label class="choice consent"><input data-answer type="checkbox" name="{{ $name }}" value="1" @checked((bool)$value) @required($component->is_required)> {{ $component->localizedConsentText($contentLocale) }}</label>@break
 @endswitch</fieldset>
 @endif
