@@ -1,2 +1,38 @@
 @extends('layouts.app')
-@section('content')<div class="page-header"><div><a href="{{ route('dashboard') }}">{{ __('messages.back') }}</a><h1>{{ $organisation->name }} · {{ __('messages.forms') }}</h1></div><div class="actions">@can('create',[\App\Models\Form::class,$organisation->id])<a class="btn" href="{{ route('questionnaires.index',$organisation) }}">{{ __('messages.import_questionnaire_from_git') }}</a><a class="btn primary" href="{{ route('forms.create',$organisation) }}">{{ __('messages.new_form') }}</a>@endcan</div></div><div class="grid-cards">@forelse($forms as $form)<article class="card"><div class="badge">{{ $form->status }}</div><h2>{{ $form->name }}</h2><p>{{ $form->preset_key }} · {{ $form->versions_count }} {{ __('messages.versions') }} · {{ $form->publications_count }} {{ __('messages.publications') }}</p><div class="actions"><a class="btn" href="{{ route('forms.show',$form) }}">{{ __('messages.view') }}</a><a class="btn" href="{{ route('forms.builder',$form) }}">{{ __('messages.builder') }}</a></div></article>@empty<p>{{ __('messages.no_records') }}</p>@endforelse</div>@endsection
+@section('content')
+<div class="page-header">
+    <div><a href="{{ route('dashboard') }}">{{ __('messages.back') }}</a><h1>{{ $organisation->name }} · {{ __('messages.forms') }}</h1></div>
+    <div class="actions">
+        @can('create', [\App\Models\Form::class, $organisation->id])
+            <a class="btn" href="{{ route('questionnaires.index', $organisation) }}">{{ __('messages.import_questionnaire_from_git') }}</a>
+            <a class="btn primary" href="{{ route('forms.create', $organisation) }}">{{ __('messages.new_form') }}</a>
+        @endcan
+    </div>
+</div>
+<div class="grid-cards">
+@forelse($forms as $form)
+    <article class="card">
+        <div class="badge">{{ $form->status }}</div>
+        <h2>{{ $form->name }}</h2>
+        <p>{{ $form->preset_key }} · {{ $form->versions_count }} {{ __('messages.versions') }} · {{ $form->publications_count }} {{ __('messages.publications') }}</p>
+        <div class="actions">
+            <a class="btn" href="{{ route('forms.show', $form) }}">{{ __('messages.view') }}</a>
+            <a class="btn" href="{{ route('forms.builder', $form) }}">{{ __('messages.builder') }}</a>
+            @can('update', $form)
+                @if($deleteEligibility[$form->id]['allowed'])
+                    <form method="POST" action="{{ route('forms.destroy', $form) }}" onsubmit="return confirm(@js(__('messages.confirm_permanent_delete')))" >
+                        @csrf @method('DELETE')
+                        <button class="btn danger" type="submit">{{ __('messages.delete_permanently') }}</button>
+                    </form>
+                @else
+                    <span title="{{ $deleteEligibility[$form->id]['reason'] }}">{{ __('messages.delete_not_allowed') }}</span>
+                @endif
+            @endcan
+        </div>
+        @if(!$deleteEligibility[$form->id]['allowed'])<p><small>{{ $deleteEligibility[$form->id]['reason'] }}</small></p>@endif
+    </article>
+@empty
+    <p>{{ __('messages.no_records') }}</p>
+@endforelse
+</div>
+@endsection

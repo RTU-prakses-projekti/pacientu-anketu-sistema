@@ -66,6 +66,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/organisations', [OrganisationController::class, 'store'])->name('organisations.store');
     Route::get('/organisations/{organisation}/edit', [OrganisationController::class, 'edit'])->name('organisations.edit');
     Route::put('/organisations/{organisation}', [OrganisationController::class, 'update'])->name('organisations.update');
+    Route::delete('/organisations/{organisation}', [OrganisationController::class, 'destroy'])->name('organisations.destroy');
     Route::get('/system/audit', [AuditLogController::class, 'index'])->name('audit.system');
     Route::get('/system/users', [SystemAdministrationController::class, 'users'])->name('system.users');
     Route::post('/system/users', [SystemAdministrationController::class, 'storeUser'])->name('system.users.store');
@@ -74,6 +75,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/system/roles', [SystemAdministrationController::class, 'roles'])->name('system.roles');
     Route::put('/system/roles/{role}', [SystemAdministrationController::class, 'updateRole'])->name('system.roles.update');
     Route::post('/users/{user}/toggle', [UserAdministrationController::class, 'toggleUser'])->name('users.toggle');
+    Route::delete('/system/users/{user}', [UserAdministrationController::class, 'destroyUser'])->name('system.users.destroy');
 
     Route::get('/organisations/{organisation}/forms', [FormController::class, 'index'])->name('forms.index');
     Route::get('/organisations/{organisation}/questionnaires/import', [QuestionnairePackageController::class, 'index'])->name('questionnaires.index');
@@ -82,6 +84,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/forms', [FormController::class, 'store'])->name('forms.store');
     Route::get('/forms/{form}', [FormController::class, 'show'])->name('forms.show');
     Route::put('/forms/{form}', [FormController::class, 'update'])->name('forms.update');
+    Route::delete('/forms/{form}', [FormController::class, 'destroy'])->name('forms.destroy');
     Route::get('/forms/{form}/builder', [BuilderController::class, 'edit'])->name('forms.builder');
     Route::get('/forms/{form}/preview', [BuilderController::class, 'preview'])->name('forms.preview');
     Route::put('/forms/{form}/versions/{version}', [BuilderController::class, 'updateVersion'])->name('builder.versions.update');

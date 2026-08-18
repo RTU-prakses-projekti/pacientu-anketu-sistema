@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Audit\AuditService;
+use App\Domain\Administration\CleanupService;
 use App\Models\Organisation;
 use App\Models\OrganisationMembership;
 use App\Models\Permission;
@@ -17,14 +18,48 @@ use Illuminate\Validation\Rules\Password;
 
 class SystemAdministrationController extends Controller
 {
-    public function users(Request $request)
+    public function users(Request $request, CleanupService $cleanup)
     {
         abort_unless($request->user()->isPlatformAdmin(), 403);
 
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:255'],
+            'organisation' => ['nullable', 'integer', 'exists:organisations,id'],
+            'role' => ['nullable', 'integer', 'exists:roles,id'],
+            'status' => ['nullable', Rule::in(['active', 'inactive'])],
+        ]);
+        $selectedRole = isset($filters['role'])
+            ? Role::findOrFail($filters['role'])
+            : null;
+        $users = User::query()
+            ->with(['globalRoles', 'memberships.organisation', 'memberships.roles'])
+            ->when(filled($filters['q'] ?? null), function ($query) use ($filters): void {
+                $search = addcslashes(trim($filters['q']), '%_\\');
+                $query->where(function ($query) use ($search): void {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                    if (ctype_digit($search)) $query->orWhere('users.id', (int) $search);
+                });
+            })
+            ->when(isset($filters['organisation']) && (!$selectedRole || $selectedRole->scope !== 'organisation'),
+                fn ($query) => $query->whereHas('memberships', fn ($membership) => $membership
+                    ->where('organisation_id', $filters['organisation'])->where('is_active', true)))
+            ->when($selectedRole?->scope === 'global',
+                fn ($query) => $query->whereHas('globalRoles', fn ($role) => $role->whereKey($selectedRole->id)))
+            ->when($selectedRole?->scope === 'organisation',
+                fn ($query) => $query->whereHas('memberships', fn ($membership) => $membership
+                    ->where('is_active', true)
+                    ->when(isset($filters['organisation']), fn ($membership) => $membership->where('organisation_id', $filters['organisation']))
+                    ->whereHas('roles', fn ($role) => $role->whereKey($selectedRole->id))))
+            ->when(isset($filters['status']), fn ($query) => $query->where('is_active', $filters['status'] === 'active'))
+            ->orderBy('name')->paginate(50)->withQueryString();
+
         return view('system.users', [
-            'users' => User::with(['globalRoles', 'memberships.organisation', 'memberships.roles'])
-                ->orderBy('name')
-                ->paginate(50),
+            'users' => $users,
+            'organisations' => Organisation::orderBy('name')->get(),
+            'roles' => Role::orderBy('scope')->orderBy('display_name')->get(),
+            'filters' => $filters,
+            'deleteEligibility' => $cleanup->userEligibilityMap($users->getCollection()),
         ]);
     }
 

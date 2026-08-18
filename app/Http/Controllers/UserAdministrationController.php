@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Audit\AuditService;
+use App\Domain\Administration\CleanupService;
 use App\Models\Organisation;
 use App\Models\OrganisationMembership;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class UserAdministrationController extends Controller
 {
@@ -56,12 +58,24 @@ class UserAdministrationController extends Controller
         return back()->with('success', __('messages.saved'));
     }
 
-    public function toggleUser(Request $request, User $user, AuditService $audit)
+    public function toggleUser(Request $request, User $user, AuditService $audit, CleanupService $cleanup)
     {
         abort_unless($request->user()->isPlatformAdmin(), 403);
         abort_if($request->user()->is($user), 422, __('messages.cannot_disable_self'));
-        $user->update(['is_active' => !$user->is_active]);
-        $audit->record('user.status_changed', $user, null, ['is_active' => $user->is_active]);
+        DB::transaction(function () use ($user, $cleanup, $audit): void {
+            $user = User::lockForUpdate()->findOrFail($user->id);
+            $cleanup->ensureCanDeactivate($user);
+            $user->update(['is_active' => !$user->is_active]);
+            $audit->record('user.status_changed', $user, null, ['is_active' => $user->is_active]);
+        });
         return back();
+    }
+
+    public function destroyUser(Request $request, User $user, CleanupService $cleanup)
+    {
+        abort_unless($request->user()->isPlatformAdmin(), 403);
+        abort_if($request->user()->is($user), 422, __('messages.cannot_delete_self'));
+        $cleanup->deleteUser($user);
+        return redirect()->route('system.users')->with('success', __('messages.user_deleted'));
     }
 }
