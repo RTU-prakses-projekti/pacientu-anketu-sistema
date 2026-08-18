@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\Password;
@@ -81,6 +82,58 @@ class SystemAdministrationController extends Controller
         $audit->record('role.permissions_updated', $role, null, ['permission_ids' => $data['permissions'] ?? []]);
 
         return back()->with('success', __('messages.saved'));
+    }
+
+    public function storeRole(Request $request, AuditService $audit)
+    {
+        abort_unless($request->user()->isPlatformAdmin(), 403);
+        $data = $request->validate([
+            'display_name' => ['required', 'string', 'max:255'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['integer', 'distinct', 'exists:permissions,id'],
+        ]);
+        $name = Str::slug(trim($data['display_name']), '_');
+        if ($name === '' || in_array($name, Role::SYSTEM_NAMES, true)) {
+            throw ValidationException::withMessages(['display_name' => __('messages.reserved_role_name')]);
+        }
+
+        $role = DB::transaction(function () use ($data, $name, $audit): Role {
+            if (Role::where('name', $name)->lockForUpdate()->exists()) {
+                throw ValidationException::withMessages(['display_name' => __('messages.role_name_already_exists')]);
+            }
+            $role = Role::create([
+                'name' => $name,
+                'display_name' => trim($data['display_name']),
+                'scope' => 'organisation',
+                'is_system' => false,
+            ]);
+            $permissionIds = collect($data['permissions'] ?? [])->map(fn ($id) => (int) $id)->unique()->values();
+            $role->permissions()->sync($permissionIds);
+            $audit->record('role.created', $role, null, ['permission_ids' => $permissionIds->all(), 'scope' => 'organisation']);
+            return $role;
+        });
+
+        return redirect()->route('system.roles')->with('success', __('messages.role_created', ['role' => $role->display_name]));
+    }
+
+    public function destroyRole(Request $request, Role $role, AuditService $audit)
+    {
+        abort_unless($request->user()->isPlatformAdmin(), 403);
+        DB::transaction(function () use ($role, $audit): void {
+            $role = Role::lockForUpdate()->findOrFail($role->id);
+            if ($role->is_system || in_array($role->name, Role::SYSTEM_NAMES, true)) {
+                throw ValidationException::withMessages(['role' => __('messages.system_role_delete_denied')]);
+            }
+            if (DB::table('user_roles')->where('role_id', $role->id)->exists()
+                || DB::table('membership_roles')->where('role_id', $role->id)->exists()) {
+                throw ValidationException::withMessages(['role' => __('messages.assigned_role_delete_denied')]);
+            }
+            $role->permissions()->detach();
+            $audit->record('role.deleted', $role, null, ['name' => $role->name, 'scope' => $role->scope]);
+            $role->delete();
+        });
+
+        return redirect()->route('system.roles')->with('success', __('messages.role_deleted'));
     }
 
     public function storeUser(Request $request, AuditService $audit)

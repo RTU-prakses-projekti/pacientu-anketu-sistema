@@ -73,7 +73,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/system/users/{user}/roles', [SystemAdministrationController::class, 'editUserRoles'])->name('system.users.roles.edit');
     Route::put('/system/users/{user}/roles', [SystemAdministrationController::class, 'updateUserRoles'])->name('system.users.roles.update');
     Route::get('/system/roles', [SystemAdministrationController::class, 'roles'])->name('system.roles');
+    Route::post('/system/roles', [SystemAdministrationController::class, 'storeRole'])->name('system.roles.store');
     Route::put('/system/roles/{role}', [SystemAdministrationController::class, 'updateRole'])->name('system.roles.update');
+    Route::delete('/system/roles/{role}', [SystemAdministrationController::class, 'destroyRole'])->name('system.roles.destroy');
     Route::post('/users/{user}/toggle', [UserAdministrationController::class, 'toggleUser'])->name('users.toggle');
     Route::delete('/system/users/{user}', [UserAdministrationController::class, 'destroyUser'])->name('system.users.destroy');
 
