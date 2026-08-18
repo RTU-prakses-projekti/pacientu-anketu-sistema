@@ -1,0 +1,3257 @@
+{
+    "attachments": [],
+    "conditional_rules": [],
+    "content_hash": "d3cec4398ff337c940e1efbe1b26f41c5b3d961f16660985f40d6e1a248073ae",
+    "form": {
+        "name": "Aptauja",
+        "preset_key": "patient_questionnaire",
+        "translations": {
+            "lv": {
+                "name": "Aptauja"
+            }
+        }
+    },
+    "package_type": "universal_form_questionnaire",
+    "schema_version": 1,
+    "sections": [
+        {
+            "components": [
+                {
+                    "attachment_ref": null,
+                    "description": "Pētījuma nosaukums: Smagas hroniskas psoriāzes pacientu dzīves kvalitāte, terapijas pieredze un gatavība apsvērt jaunas ārstēšanas iespējas Latvijā\r\n\r\nAicinām Jūs piedalīties pētījumā, ko Ulda Bērziņa promocijas darba ietvarā īsteno Uldis Bērziņš sadarbībā ar aptaujas veicēju Ilonu Radionovu, pašnodarbinātu personu; ārsti, dermatoloģi/veneroloģi (sertifikāta Nr. A-66415), BioPhoT programmas grants “Pieejamas šķirošanas validēšana cilmes šūnu terapijai par pieņemamu cenu” (DEPCELL), granta Nr. OSI_PIP_BioPhoT-2025/2-0096 ietvarā. Pirms šī dokumenta parakstīšanas, lūdzu, rūpīgi izlasiet informāciju. Jums ir tiesības uzdot jautājumus un saņemt atbildes saprotamā veidā.\r\n\r\nPētījuma mērķis\r\n\r\nPētījuma mērķis ir noskaidrot, kā vidēji smaga vai smaga hroniska psoriāze ietekmē pacientu dzīves kvalitāti, kā pacienti vērtē esošās terapijas efektu, pieejamību un organizāciju, kā arī vai pacienti vēlas saņemt informāciju par jaunām terapijas iespējām vai iespējamu dalību klīniskos pētījumos. Rezultāti tiks izmantoti Ulda Bērziņa promocijas darbā un zinātniskā publikācijā apkopotā, anonimizētā veidā.\r\n\r\nPētījuma norise\r\n\r\nAptauja tiek īstenota BioPhoT/DEPCELL projekta pakalpojuma ietvarā. Pakalpojuma tehniskā specifikācija paredz 125-175 psoriāzes pacientu aptauju, DLQI anketas administrēšanu un anonimizētu nodevumu sagatavošanu līdz 2026. gada 31. oktobrim.\r\n\r\nJa piekritīsiet piedalīties, Jums būs jāaizpilda aptaujas anketa latviešu vai krievu valodā. Aptauja ietver jautājumus par demogrāfisku informāciju, psoriāzes ārstēšanas pieredzi Latvijā, dzīves kvalitāti, pašreizējās vai iepriekšējās terapijas ietekmi, apmierinātību ar ārstēšanu un interesi saņemt informāciju par citām ārstēšanas iespējām vai klīniskajiem pētījumiem. Aptaujas aizpildīšana aizņems aptuveni 15-25 minūtes.\r\n\r\nPētījumā netiks veiktas medicīniskas procedūras, izmeklējumi vai ārstēšanas maiņa. Aptaujas atbildes nav medicīnisks lēmums, nosūtījums, informētā piekrišana ārstēšanai vai piekrišana dalībai klīniskā pētījumā.\r\nIeguvumi un riski\r\n\r\nTiešs medicīnisks ieguvums no dalības pētījumā nav garantēts. Jūsu sniegtā informācija palīdzēs labāk izprast pacientu ar vidēji smagu vai smagu hronisku psoriāzi vajadzības Latvijā. Fiziski riski nav paredzami. Iespējams neliels psiholoģisks diskomforts, atbildot uz jautājumiem par slimības ietekmi, dzīves kvalitāti, privāto dzīvi vai ārstēšanas pieredzi. Jūs varat pārtraukt aptauju vai neatbildēt uz jautājumu, ja tas rada diskomfortu.\r\nKonfidencialitāte un personas datu aizsardzība\r\n\r\nPrimārās informētās piekrišanas veidlapas un aptaujas primārie dati tiks glabāti pie aptaujas veicējas/Izpildītāja Ilonas Radionovas drošā veidā. Jūsu atbildēm tiks piešķirts kods. Vārds, uzvārds, paraksts, kontaktinformācija un kodēšanas atslēga tiks glabāta atsevišķi no anketas atbildēm. Uldis Bērziņš saņems tikai anonimizētus datus, no kuriem Jūs nebūs iespējams identificēt.\r\n\r\nApstrādājamie dati: vārds, uzvārds, un datums informētās piekrišanas apliecināšanai; vecums, dzimums, valoda, veselības un ārstēšanas pieredzes dati, dzīves kvalitātes atbildes; pēc izvēles kontaktinformācija, ja piekrītat saņemt papildinformāciju. Kontaktinformācija, ja tā tiek sniegta, tiks izmantota tikai saziņai par papildinformāciju/konsultācijas vai turpmākas izvērtēšanas iespējām un netiks iekļauta Ulda Bērziņa saņemtajā anonimizētajā datu kopā.\r\n\r\nPersonas datu pārzinis primāro datu un piekrišanas glabāšanai: [precizēt saskaņā ar BioPhoT/DEPCELL projekta un pakalpojuma līguma gala redakciju]. Anonimizēto pētījuma datu akadēmiskai analīzei kontaktpersona: Uldis Bērziņš, e-pasts: Uldis.Berzins@turiba.lv. Identificējošie dati tiks glabāti tikai tik ilgi, cik nepieciešams pētījuma organizēšanai un dokumentēšanai, bet ne ilgāk kā noteikts līgumā un piemērojamajos normatīvajos aktos. Anonimizētie analīzes dati var tikt glabāti līdz 5 gadiem pēc pētījuma/promocijas darba posma pabeigšanas.\r\n\r\nPētījuma rezultāti tiks publicēti tikai apkopotā vai anonimizētā veidā. Individuāli pacienti publikācijās vai promocijas darbā netiks identificēti.\r\n\r\nBrīvprātīga piedalīšanās un dalības pārtraukšana\r\n\r\nDalība pētījumā ir brīvprātīga. Jums ir tiesības atteikties piedalīties vai pārtraukt dalību jebkurā laikā līdz datu anonimizācijai. Atteikšanās vai dalības pārtraukšana neietekmēs Jums sniegtās aprūpes kvalitāti. Ja atsauksiet piekrišanu pirms datu anonimizācijas, Jūsu dati tiks dzēsti/izslēgti, ja tas būs tehniski iespējams. Pēc neatgriezeniskas anonimizācijas individuāla datu izņemšana var nebūt iespējama, jo dati vairs nebūs sasaistāmi ar konkrētu personu.\r\nAnketas satura adaptācija\r\n\r\nAptaujas jautājumu formulējumi var tikt precizēti vai adaptēti, lai nodrošinātu labāku saprotamību latviešu un krievu valodā. Šādas izmaiņas nemainīs pētījuma mērķi un netiks izmantotas, lai paplašinātu datu apjomu vai paaugstinātu dalībnieku risku bez PĒK saskaņojuma.\r\n\r\nKontakti jautājumu gadījumā\r\n\r\nKontaktpersona pētījumā: Uldis Bērziņš (Dr.biol., MD, docents), e-pasts: Uldis.Berzins@turiba.lv, tālrunis: +371 29252975. Aptaujas norises kontaktpersona: Ilona Radionova, e-pasts: dr.i.radionova@gmail.com, tālrunis: +371 26288707.\r\n\r\nPētījums tiks īstenots pēc Biznesa augstskolas “Turība” Pētījumu ētikas komitejas pozitīva atzinuma saņemšanas.\r\n\r\nPiekrišana dalībai pētījumā\r\nAr savu parakstu apstiprinu, ka:\r\n1.esmu iepazinies/-usies ar informāciju par pētījumu un saprotu pētījuma mērķi, norisi, riskus un ieguvumus;\r\n2.man bija iespēja uzdot jautājumus un esmu saņēmis/-usi atbildes;\r\n3.saprotu, ka mana dalība ir brīvprātīga un atteikšanās neizraisīs nelabvēlīgas sekas;\r\n4.piekrītu savu aptaujas datu izmantošanai pētījumā apkopotā un anonimizētā veidā;\r\n5.saprotu, ka interese par jaunām terapijām vai klīniskajiem pētījumiem nav piekrišana ārstēšanai vai dalībai klīniskā pētījumā.",
+                    "display_order": 1,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "INFORMĒTĀ PIEKRIŠANA DALĪBAI PĒTĪJUMĀ",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "567f33e2-9003-485c-959e-8b22e2d0958b",
+                    "translations": {
+                        "lv": {
+                            "description": "Pētījuma nosaukums: Smagas hroniskas psoriāzes pacientu dzīves kvalitāte, terapijas pieredze un gatavība apsvērt jaunas ārstēšanas iespējas Latvijā\r\n\r\nAicinām Jūs piedalīties pētījumā, ko Ulda Bērziņa promocijas darba ietvarā īsteno Uldis Bērziņš sadarbībā ar aptaujas veicēju Ilonu Radionovu, pašnodarbinātu personu; ārsti, dermatoloģi/veneroloģi (sertifikāta Nr. A-66415), BioPhoT programmas grants “Pieejamas šķirošanas validēšana cilmes šūnu terapijai par pieņemamu cenu” (DEPCELL), granta Nr. OSI_PIP_BioPhoT-2025/2-0096 ietvarā. Pirms šī dokumenta parakstīšanas, lūdzu, rūpīgi izlasiet informāciju. Jums ir tiesības uzdot jautājumus un saņemt atbildes saprotamā veidā.\r\n\r\nPētījuma mērķis\r\n\r\nPētījuma mērķis ir noskaidrot, kā vidēji smaga vai smaga hroniska psoriāze ietekmē pacientu dzīves kvalitāti, kā pacienti vērtē esošās terapijas efektu, pieejamību un organizāciju, kā arī vai pacienti vēlas saņemt informāciju par jaunām terapijas iespējām vai iespējamu dalību klīniskos pētījumos. Rezultāti tiks izmantoti Ulda Bērziņa promocijas darbā un zinātniskā publikācijā apkopotā, anonimizētā veidā.\r\n\r\nPētījuma norise\r\n\r\nAptauja tiek īstenota BioPhoT/DEPCELL projekta pakalpojuma ietvarā. Pakalpojuma tehniskā specifikācija paredz 125-175 psoriāzes pacientu aptauju, DLQI anketas administrēšanu un anonimizētu nodevumu sagatavošanu līdz 2026. gada 31. oktobrim.\r\n\r\nJa piekritīsiet piedalīties, Jums būs jāaizpilda aptaujas anketa latviešu vai krievu valodā. Aptauja ietver jautājumus par demogrāfisku informāciju, psoriāzes ārstēšanas pieredzi Latvijā, dzīves kvalitāti, pašreizējās vai iepriekšējās terapijas ietekmi, apmierinātību ar ārstēšanu un interesi saņemt informāciju par citām ārstēšanas iespējām vai klīniskajiem pētījumiem. Aptaujas aizpildīšana aizņems aptuveni 15-25 minūtes.\r\n\r\nPētījumā netiks veiktas medicīniskas procedūras, izmeklējumi vai ārstēšanas maiņa. Aptaujas atbildes nav medicīnisks lēmums, nosūtījums, informētā piekrišana ārstēšanai vai piekrišana dalībai klīniskā pētījumā.\r\nIeguvumi un riski\r\n\r\nTiešs medicīnisks ieguvums no dalības pētījumā nav garantēts. Jūsu sniegtā informācija palīdzēs labāk izprast pacientu ar vidēji smagu vai smagu hronisku psoriāzi vajadzības Latvijā. Fiziski riski nav paredzami. Iespējams neliels psiholoģisks diskomforts, atbildot uz jautājumiem par slimības ietekmi, dzīves kvalitāti, privāto dzīvi vai ārstēšanas pieredzi. Jūs varat pārtraukt aptauju vai neatbildēt uz jautājumu, ja tas rada diskomfortu.\r\nKonfidencialitāte un personas datu aizsardzība\r\n\r\nPrimārās informētās piekrišanas veidlapas un aptaujas primārie dati tiks glabāti pie aptaujas veicējas/Izpildītāja Ilonas Radionovas drošā veidā. Jūsu atbildēm tiks piešķirts kods. Vārds, uzvārds, paraksts, kontaktinformācija un kodēšanas atslēga tiks glabāta atsevišķi no anketas atbildēm. Uldis Bērziņš saņems tikai anonimizētus datus, no kuriem Jūs nebūs iespējams identificēt.\r\n\r\nApstrādājamie dati: vārds, uzvārds, un datums informētās piekrišanas apliecināšanai; vecums, dzimums, valoda, veselības un ārstēšanas pieredzes dati, dzīves kvalitātes atbildes; pēc izvēles kontaktinformācija, ja piekrītat saņemt papildinformāciju. Kontaktinformācija, ja tā tiek sniegta, tiks izmantota tikai saziņai par papildinformāciju/konsultācijas vai turpmākas izvērtēšanas iespējām un netiks iekļauta Ulda Bērziņa saņemtajā anonimizētajā datu kopā.\r\n\r\nPersonas datu pārzinis primāro datu un piekrišanas glabāšanai: [precizēt saskaņā ar BioPhoT/DEPCELL projekta un pakalpojuma līguma gala redakciju]. Anonimizēto pētījuma datu akadēmiskai analīzei kontaktpersona: Uldis Bērziņš, e-pasts: Uldis.Berzins@turiba.lv. Identificējošie dati tiks glabāti tikai tik ilgi, cik nepieciešams pētījuma organizēšanai un dokumentēšanai, bet ne ilgāk kā noteikts līgumā un piemērojamajos normatīvajos aktos. Anonimizētie analīzes dati var tikt glabāti līdz 5 gadiem pēc pētījuma/promocijas darba posma pabeigšanas.\r\n\r\nPētījuma rezultāti tiks publicēti tikai apkopotā vai anonimizētā veidā. Individuāli pacienti publikācijās vai promocijas darbā netiks identificēti.\r\n\r\nBrīvprātīga piedalīšanās un dalības pārtraukšana\r\n\r\nDalība pētījumā ir brīvprātīga. Jums ir tiesības atteikties piedalīties vai pārtraukt dalību jebkurā laikā līdz datu anonimizācijai. Atteikšanās vai dalības pārtraukšana neietekmēs Jums sniegtās aprūpes kvalitāti. Ja atsauksiet piekrišanu pirms datu anonimizācijas, Jūsu dati tiks dzēsti/izslēgti, ja tas būs tehniski iespējams. Pēc neatgriezeniskas anonimizācijas individuāla datu izņemšana var nebūt iespējama, jo dati vairs nebūs sasaistāmi ar konkrētu personu.\r\nAnketas satura adaptācija\r\n\r\nAptaujas jautājumu formulējumi var tikt precizēti vai adaptēti, lai nodrošinātu labāku saprotamību latviešu un krievu valodā. Šādas izmaiņas nemainīs pētījuma mērķi un netiks izmantotas, lai paplašinātu datu apjomu vai paaugstinātu dalībnieku risku bez PĒK saskaņojuma.\r\n\r\nKontakti jautājumu gadījumā\r\n\r\nKontaktpersona pētījumā: Uldis Bērziņš (Dr.biol., MD, docents), e-pasts: Uldis.Berzins@turiba.lv, tālrunis: +371 29252975. Aptaujas norises kontaktpersona: Ilona Radionova, e-pasts: dr.i.radionova@gmail.com, tālrunis: +371 26288707.\r\n\r\nPētījums tiks īstenots pēc Biznesa augstskolas “Turība” Pētījumu ētikas komitejas pozitīva atzinuma saņemšanas.\r\n\r\nPiekrišana dalībai pētījumā\r\nAr savu parakstu apstiprinu, ka:\r\n1.esmu iepazinies/-usies ar informāciju par pētījumu un saprotu pētījuma mērķi, norisi, riskus un ieguvumus;\r\n2.man bija iespēja uzdot jautājumus un esmu saņēmis/-usi atbildes;\r\n3.saprotu, ka mana dalība ir brīvprātīga un atteikšanās neizraisīs nelabvēlīgas sekas;\r\n4.piekrītu savu aptaujas datu izmantošanai pētījumā apkopotā un anonimizētā veidā;\r\n5.saprotu, ka interese par jaunām terapijām vai klīniskajiem pētījumiem nav piekrišana ārstēšanai vai dalībai klīniskā pētījumā.",
+                            "label": "INFORMĒTĀ PIEKRIŠANA DALĪBAI PĒTĪJUMĀ"
+                        }
+                    },
+                    "type": "explanatory_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 2,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Vārds",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "0b15e70f-8ea6-4109-a371-4365b69313f3",
+                    "translations": {
+                        "lv": {
+                            "label": "Vārds"
+                        }
+                    },
+                    "type": "short_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 3,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Uzvārds",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "196516e5-6b3a-4507-9545-6ef72e4e437b",
+                    "translations": {
+                        "lv": {
+                            "label": "Uzvārds"
+                        }
+                    },
+                    "type": "short_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Piekrišana saziņai par papildinformāciju / iespējamu konsultāciju vai turpmāku izvērtēšanu.",
+                    "display_order": 6,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Piekrišana saziņai",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Piekrītu, ka ar mani sazinās",
+                            "stable_key": "c198fd8f-1b32-4ed7-987f-d29c5e43a1fc",
+                            "translations": {
+                                "lv": {
+                                    "label": "Piekrītu, ka ar mani sazinās"
+                                }
+                            },
+                            "value": "bf398e17-262e-493a-a969-ed7dfb4a0312"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Nepiekrītu, ka ar mani sazinās",
+                            "stable_key": "c196078d-11c0-4190-9f7a-70f2d64638c3",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nepiekrītu, ka ar mani sazinās"
+                                }
+                            },
+                            "value": "0dbf7949-83a3-4a24-8acd-85f2df521259"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "b5ab167d-4f11-458b-850c-fae3fe68e67e",
+                    "translations": {
+                        "lv": {
+                            "description": "Piekrišana saziņai par papildinformāciju / iespējamu konsultāciju vai turpmāku izvērtēšanu.",
+                            "label": "Piekrišana saziņai"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "E-pasts, ja piekrītat saziņai.",
+                    "display_order": 7,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "E-pasts",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "47d26380-ec22-4687-9717-d04805baa230",
+                    "translations": {
+                        "lv": {
+                            "description": "E-pasts, ja piekrītat saziņai.",
+                            "label": "E-pasts"
+                        }
+                    },
+                    "type": "short_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Tālruņa numurs, ja piekrītat saziņai.",
+                    "display_order": 8,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Tālruņa numurs",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "3c21257f-a715-4ef1-9b0a-0393ccde402a",
+                    "translations": {
+                        "lv": {
+                            "description": "Tālruņa numurs, ja piekrītat saziņai.",
+                            "label": "Tālruņa numurs"
+                        }
+                    },
+                    "type": "short_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 9,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Kādi ir galvenie iemesli, kādēļ Jūs vēlētos pārrunāt citu terapiju? Varat atzīmēt vairākas atbildes",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Nepietiekama simptomu mazināšanās",
+                            "stable_key": "f67c2802-d576-4367-b966-9f66b051fd42",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nepietiekama simptomu mazināšanās"
+                                }
+                            },
+                            "value": "aa956889-adcc-4266-940a-2590dae147e9"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Blakusparādības vai bažas par tām",
+                            "stable_key": "3f93aa4d-1548-4d18-be48-3abf33494545",
+                            "translations": {
+                                "lv": {
+                                    "label": "Blakusparādības vai bažas par tām"
+                                }
+                            },
+                            "value": "d0a9e35e-e4b2-4f7e-9892-78d82dc17ba8"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Ārstēšana ierobežo ikdienu",
+                            "stable_key": "00a4969d-72ef-41d4-a657-32733a489c50",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ārstēšana ierobežo ikdienu"
+                                }
+                            },
+                            "value": "a126ddca-2b08-40cf-bac3-d4016c6408e8"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Pašlaik nevēlos mainīt terapiju",
+                            "stable_key": "4dc20710-12b2-4430-8a83-521a72dbce9e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pašlaik nevēlos mainīt terapiju"
+                                }
+                            },
+                            "value": "6674bb25-2758-4e9e-a0cb-0d7746ee5caa"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Efekts laika gaitā mazinājies",
+                            "stable_key": "c7af82e8-3117-4993-a1c0-762cc68c4539",
+                            "translations": {
+                                "lv": {
+                                    "label": "Efekts laika gaitā mazinājies"
+                                }
+                            },
+                            "value": "99849a46-f07b-4edf-b2f8-7de217d96fcd"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Terapijas lietošana ir apgrūtinoša",
+                            "stable_key": "8e3a28ea-c79a-4e68-add8-af6b3fe6ca93",
+                            "translations": {
+                                "lv": {
+                                    "label": "Terapijas lietošana ir apgrūtinoša"
+                                }
+                            },
+                            "value": "ada2c139-9fb7-44f7-84f9-cacf864963dd"
+                        },
+                        {
+                            "display_order": 6,
+                            "label": "Vēlos uzzināt par jaunām iespējām",
+                            "stable_key": "57fba010-2cd4-4cc5-a883-c289cb3e25c0",
+                            "translations": {
+                                "lv": {
+                                    "label": "Vēlos uzzināt par jaunām iespējām"
+                                }
+                            },
+                            "value": "3c32f1cb-5f57-474f-9f5d-7ef441c2fd57"
+                        },
+                        {
+                            "display_order": 7,
+                            "label": "Cits iemesls",
+                            "stable_key": "88eb5fe4-c58e-43e0-9a45-e0e96a871a11",
+                            "translations": {
+                                "lv": {
+                                    "label": "Cits iemesls"
+                                }
+                            },
+                            "value": "1f012ae3-1f08-4711-9f3c-506838a07d79"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "cfa1a272-a3d3-44ad-90d2-63578c26eee2",
+                    "translations": {
+                        "lv": {
+                            "label": "Kādi ir galvenie iemesli, kādēļ Jūs vēlētos pārrunāt citu terapiju? Varat atzīmēt vairākas atbildes"
+                        }
+                    },
+                    "type": "multiple_choice",
+                    "validation_rules": [],
+                    "visible": true
+                }
+            ],
+            "description": null,
+            "display_order": 0,
+            "stable_key": "9889c480-400e-4abb-90df-5869faccdb76",
+            "title": "INFORMĒTĀ PIEKRIŠANA",
+            "translations": {
+                "lv": {
+                    "title": "INFORMĒTĀ PIEKRIŠANA"
+                }
+            },
+            "visible": true
+        },
+        {
+            "components": [
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 4,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Cik ļoti iepriekšējo 7 dienu laikā jūsu āda ir bijusi: niezoša, sūrstoša, sāpoša vai dedzinoša?",
+                    "manual_grading": true,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Ļoti lielā mērā",
+                            "stable_key": "7bdc5c30-f311-46f3-8b76-2a702ac61a58",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ļoti lielā mērā"
+                                }
+                            },
+                            "value": "3ceb8794-7079-463a-ad4d-7b49312e0124"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Lielā mērā",
+                            "stable_key": "b18fc0da-630f-430d-8478-6de07db11548",
+                            "translations": {
+                                "lv": {
+                                    "label": "Lielā mērā"
+                                }
+                            },
+                            "value": "7d13db83-5b81-45f3-a3c5-0ae699136d4f"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Mazliet",
+                            "stable_key": "124d6951-7c75-4f0e-ac9a-3b248b5b6f44",
+                            "translations": {
+                                "lv": {
+                                    "label": "Mazliet"
+                                }
+                            },
+                            "value": "2920e01c-9d7c-4c94-b78b-8625eceae91b"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Nemaz",
+                            "stable_key": "9679bbee-3edc-449b-8d28-c16e3444c0a9",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nemaz"
+                                }
+                            },
+                            "value": "eaf4d23f-f12e-42fc-94fe-66e96e99dc8f"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "4e1c3aae-1ef5-4359-b224-c95d6459eecd",
+                    "translations": {
+                        "lv": {
+                            "label": "Cik ļoti iepriekšējo 7 dienu laikā jūsu āda ir bijusi: niezoša, sūrstoša, sāpoša vai dedzinoša?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 5,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Cik ļoti iepriekšējo 7 dienu laikā jūs jutāties  apmulsis(-usi) vai kautrīgs(-a) ādas stāvokļa dēļ?",
+                    "manual_grading": true,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Ļoti lielā mērā",
+                            "stable_key": "64fd28c4-23a0-4ef9-9e2c-b3351c2a46e8",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ļoti lielā mērā"
+                                }
+                            },
+                            "value": "d8302e01-2de0-4d5e-9422-0eb5fe0a4ede"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Lielā mērā",
+                            "stable_key": "a183b250-0606-46f4-9ecf-30ef2f574e75",
+                            "translations": {
+                                "lv": {
+                                    "label": "Lielā mērā"
+                                }
+                            },
+                            "value": "840ed1ab-a8d1-4524-a473-38aa91d1129c"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Mazliet",
+                            "stable_key": "ce0bdfff-56d7-49a7-9fe3-c049c26c62ba",
+                            "translations": {
+                                "lv": {
+                                    "label": "Mazliet"
+                                }
+                            },
+                            "value": "ee5249d5-eac3-492e-b62e-a722ac98a5f5"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Nemaz",
+                            "stable_key": "758a3b62-02d5-47da-a217-c740e468fc68",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nemaz"
+                                }
+                            },
+                            "value": "9b14c1ef-841b-4b6f-aa05-f7664de06f04"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "fa866048-d577-4b65-b0da-4a542d4a91c6",
+                    "translations": {
+                        "lv": {
+                            "label": "Cik ļoti iepriekšējo 7 dienu laikā jūs jutāties  apmulsis(-usi) vai kautrīgs(-a) ādas stāvokļa dēļ?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 6,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Cik ļoti iepriekšējo 7 dienu laikā ādas stāvoklis  jums traucēja, kad devāties iepirkties vai  rūpējāties par savām mājām vai dārzu?",
+                    "manual_grading": true,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Ļoti lielā mērā",
+                            "stable_key": "5cd8caf6-17a3-422d-b86f-44da9381ee96",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ļoti lielā mērā"
+                                }
+                            },
+                            "value": "21aa4fba-4ca9-47b0-ac99-bc3a35bb9c4b"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Lielā mērā",
+                            "stable_key": "f199f99c-ab2d-4eca-9d31-0ef999822eb4",
+                            "translations": {
+                                "lv": {
+                                    "label": "Lielā mērā"
+                                }
+                            },
+                            "value": "94a1dce8-a17b-476e-bfe2-ae1abcb9afe0"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Mazliet",
+                            "stable_key": "24e1c5fe-ca0f-48c7-86ac-f57855bc02f5",
+                            "translations": {
+                                "lv": {
+                                    "label": "Mazliet"
+                                }
+                            },
+                            "value": "845b6710-b17e-46d3-8943-4b4eb31b6289"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Nemaz",
+                            "stable_key": "74d3ff03-d9a7-4c96-a9e9-1d65234cd99f",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nemaz"
+                                }
+                            },
+                            "value": "2ed23f67-ae74-403c-96b2-ac5f0d619612"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Jautājums nav saistošs",
+                            "stable_key": "fe8e6198-2076-4270-a5c8-daaf0e88448a",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jautājums nav saistošs"
+                                }
+                            },
+                            "value": "a5548f42-5e5f-486c-aa02-79aa7af6fa1f"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "f691c23b-cf96-4332-bdf2-6da8d0708842",
+                    "translations": {
+                        "lv": {
+                            "label": "Cik ļoti iepriekšējo 7 dienu laikā ādas stāvoklis  jums traucēja, kad devāties iepirkties vai  rūpējāties par savām mājām vai dārzu?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 7,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Cik ļoti iepriekšējo 7 dienu laikā jūsu ādas  stāvoklis ietekmēja apģērba izvēli?",
+                    "manual_grading": true,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Ļoti lielā mērā",
+                            "stable_key": "1e2d0e36-d33e-4c5f-b59f-a2e557590097",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ļoti lielā mērā"
+                                }
+                            },
+                            "value": "fe623c4c-0e4b-4e4f-b3f2-c6b35123d91e"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Lielā mērā",
+                            "stable_key": "7dea9528-2af0-4a0d-8620-3a16331a2dbf",
+                            "translations": {
+                                "lv": {
+                                    "label": "Lielā mērā"
+                                }
+                            },
+                            "value": "6fc4d1a4-be3f-473a-948d-01ee28c4285d"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Mazliet",
+                            "stable_key": "955526e2-7902-4c58-915b-52f19c589dc2",
+                            "translations": {
+                                "lv": {
+                                    "label": "Mazliet"
+                                }
+                            },
+                            "value": "4d555a1d-20c1-44f9-b364-2f09f8165a1c"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Nemaz",
+                            "stable_key": "a8fdb166-eae2-4249-9787-5b4dec1713ce",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nemaz"
+                                }
+                            },
+                            "value": "0cb17210-6cd2-4520-b11f-17c2ee65c5df"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Jautājums nav saistošs",
+                            "stable_key": "6678c678-a0f5-42ef-9141-a7f7a193f988",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jautājums nav saistošs"
+                                }
+                            },
+                            "value": "2391ec80-0f26-43c7-b1a0-61ef1efe4209"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "e92879ce-393e-44d4-a452-6c34970aa11a",
+                    "translations": {
+                        "lv": {
+                            "label": "Cik ļoti iepriekšējo 7 dienu laikā jūsu ādas  stāvoklis ietekmēja apģērba izvēli?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 8,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Cik ļoti iepriekšējo 7 dienu laikā jūsu ādas  stāvoklis ietekmēja jebkādas sabiedriskās vai  atpūtas aktivitātes?",
+                    "manual_grading": true,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Ļoti lielā mērā",
+                            "stable_key": "391c6d41-260a-419c-827e-7965f5c7e165",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ļoti lielā mērā"
+                                }
+                            },
+                            "value": "d3afbd1f-edb2-41c0-9603-962d4da858ba"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Lielā mērā",
+                            "stable_key": "d04a51aa-f12a-493e-936e-0f57c4b98ff6",
+                            "translations": {
+                                "lv": {
+                                    "label": "Lielā mērā"
+                                }
+                            },
+                            "value": "9adb87de-5fd4-49e4-ad78-f620d0c8d726"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Mazliet",
+                            "stable_key": "815163e6-4d33-486a-84cd-6fd8648a8270",
+                            "translations": {
+                                "lv": {
+                                    "label": "Mazliet"
+                                }
+                            },
+                            "value": "b336952f-b688-4a43-bb29-2bef54362afd"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Nemaz",
+                            "stable_key": "50afbc27-8d8a-4f37-8f32-4a0f2900c26a",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nemaz"
+                                }
+                            },
+                            "value": "30cc8979-d52b-495c-b972-c870b8af0fb1"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Jautājums nav saistošs",
+                            "stable_key": "09607764-0849-4d47-9a65-b897d3bc8dd8",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jautājums nav saistošs"
+                                }
+                            },
+                            "value": "dd2d0eb9-5d16-408c-ba08-c5c095c61934"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "b77166ef-40d4-4021-adae-4b971b5c2f5e",
+                    "translations": {
+                        "lv": {
+                            "label": "Cik ļoti iepriekšējo 7 dienu laikā jūsu ādas  stāvoklis ietekmēja jebkādas sabiedriskās vai  atpūtas aktivitātes?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 9,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Cik ļoti iepriekšējo 7 dienu laikā ādas stāvoklis traucēja jebkādas jūsu sporta aktivitātes?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Ļoti lielā mērā",
+                            "stable_key": "fcac4998-2e32-455e-8e46-016c5ed84ee6",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ļoti lielā mērā"
+                                }
+                            },
+                            "value": "0b264a48-4618-45bf-9174-795b26fc3b6c"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Lielā mērā",
+                            "stable_key": "b72ccd6e-6f48-45f8-938c-a51fdfa358c6",
+                            "translations": {
+                                "lv": {
+                                    "label": "Lielā mērā"
+                                }
+                            },
+                            "value": "9a888439-3788-46cc-aa12-a67b87d0e1f7"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Mazliet",
+                            "stable_key": "574596e0-1fb4-4828-9b21-f6d566f4a781",
+                            "translations": {
+                                "lv": {
+                                    "label": "Mazliet"
+                                }
+                            },
+                            "value": "e3714407-a5ae-416e-81bc-6fde901cac68"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Nemaz",
+                            "stable_key": "04eb041f-c402-4ec9-a8f5-5b4bc3ecb385",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nemaz"
+                                }
+                            },
+                            "value": "a1ce7e8e-1ffd-4d33-9b80-0267bda47dfb"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Jautājums nav saistošs",
+                            "stable_key": "d737c5ea-db4d-4aa0-82d1-e62d972ac3cc",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jautājums nav saistošs"
+                                }
+                            },
+                            "value": "2cab3f69-901d-4e99-b0e3-a542e7aca40d"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "8bc0124b-f5ab-4131-9c78-2effd762043d",
+                    "translations": {
+                        "lv": {
+                            "label": "Cik ļoti iepriekšējo 7 dienu laikā ādas stāvoklis traucēja jebkādas jūsu sporta aktivitātes?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 10,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Vai iepriekšējo 7 dienu laikā ādas stāvoklis  jums liedza strādāt vai mācīties?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Jā",
+                            "stable_key": "7867f5aa-8e31-4390-bad3-2565a372d21e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jā"
+                                }
+                            },
+                            "value": "acb6f3cd-ca78-4064-a217-42cd486f24ae"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Nē",
+                            "stable_key": "577c8228-2d4d-4db1-843c-44d07698667c",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nē"
+                                }
+                            },
+                            "value": "e0116fbe-32dd-4a9c-ad77-937a0501796a"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Jautājums nav saistošs",
+                            "stable_key": "a8c717a4-3cf6-49b4-b917-f41f685ec5f6",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jautājums nav saistošs"
+                                }
+                            },
+                            "value": "b0bbd67a-e370-4f3e-a15a-a5f7854d9fb5"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "dcc05ffc-5dd1-488f-8fac-bedafc58eb92",
+                    "translations": {
+                        "lv": {
+                            "label": "Vai iepriekšējo 7 dienu laikā ādas stāvoklis  jums liedza strādāt vai mācīties?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 11,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Ja \"Nē\", tad cik ļoti iepriekšējo 7 dienu laikā jūsu ādas stāvoklis radīja problēmas darbā vai  mācībās?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Lielā mērā",
+                            "stable_key": "b3583948-2485-4309-82f1-680f0b8d1e08",
+                            "translations": {
+                                "lv": {
+                                    "label": "Lielā mērā"
+                                }
+                            },
+                            "value": "a4d2b1c3-8635-4e09-93ff-d9a58b278079"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Mazliet",
+                            "stable_key": "e710f4f6-4c6a-4ef2-a1de-8e0c10eacd68",
+                            "translations": {
+                                "lv": {
+                                    "label": "Mazliet"
+                                }
+                            },
+                            "value": "3aa5b8dd-681a-446b-aab6-e8f9ae8638e3"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Nemaz",
+                            "stable_key": "234db3ec-a953-4ce5-9a8a-f6a49e5f468c",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nemaz"
+                                }
+                            },
+                            "value": "6f155d8b-92d5-42aa-94da-9f7dd1d141e9"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "aa163fda-0c94-45cd-91f4-bac6a9009cc8",
+                    "translations": {
+                        "lv": {
+                            "label": "Ja \"Nē\", tad cik ļoti iepriekšējo 7 dienu laikā jūsu ādas stāvoklis radīja problēmas darbā vai  mācībās?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 12,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Cik ļoti iepriekšējo 7 dienu laikā jūsu ādas  stāvoklis radīja problēmas saistībā ar jūsu  partneri vai jebkuru jūsu tuvu draugu vai radinieku?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Ļoti lielā mērā",
+                            "stable_key": "dc9cb449-03a5-4f35-97b0-45b70652a643",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ļoti lielā mērā"
+                                }
+                            },
+                            "value": "7eb8543e-1989-42ff-be25-2a4facc43225"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Lielā mērā",
+                            "stable_key": "be870b55-1a00-4249-bcbd-5d687bec0ab1",
+                            "translations": {
+                                "lv": {
+                                    "label": "Lielā mērā"
+                                }
+                            },
+                            "value": "25662102-bbd7-425c-a739-46cc010ac4b7"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Mazliet",
+                            "stable_key": "c779cca3-e791-4e42-a2f2-3f0f165d79e7",
+                            "translations": {
+                                "lv": {
+                                    "label": "Mazliet"
+                                }
+                            },
+                            "value": "1cb96947-88c3-4fb2-be40-33b0dc9bc5c1"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Nemaz",
+                            "stable_key": "a1100fa6-b453-42fb-9835-dfba2bc550d5",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nemaz"
+                                }
+                            },
+                            "value": "b260f6c6-4aa7-4fd1-8f00-231831ebc190"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Jautājums nav saistošs",
+                            "stable_key": "f31cbffa-b4d1-4570-875a-f53291d26ba4",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jautājums nav saistošs"
+                                }
+                            },
+                            "value": "8e7c10db-5b8f-497a-9494-0968bd5c7a94"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "a254ee40-278c-43af-8109-5f656f3e8339",
+                    "translations": {
+                        "lv": {
+                            "label": "Cik ļoti iepriekšējo 7 dienu laikā jūsu ādas  stāvoklis radīja problēmas saistībā ar jūsu  partneri vai jebkuru jūsu tuvu draugu vai radinieku?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 13,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Cik ļoti iepriekšējo 7 dienu laikā jūsu ādas  stāvoklis jums radīja jebkādas seksuālas  problēmas?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Ļoti lielā mērā",
+                            "stable_key": "f1f4b944-8d28-400b-8f42-8ce5c145b04e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ļoti lielā mērā"
+                                }
+                            },
+                            "value": "bf0be81c-5c4e-4b2c-981e-aee806d2eef5"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Lielā mērā",
+                            "stable_key": "65b9a9fe-941c-474d-9b6c-300f5665488b",
+                            "translations": {
+                                "lv": {
+                                    "label": "Lielā mērā"
+                                }
+                            },
+                            "value": "c50f878d-a2c9-4584-b33e-c85d4e9f32ff"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Mazliet",
+                            "stable_key": "99d15c49-a5b5-4f62-9dd8-d93c0bb317a2",
+                            "translations": {
+                                "lv": {
+                                    "label": "Mazliet"
+                                }
+                            },
+                            "value": "50cbe564-e814-4f1e-b40b-213ca64cd9ce"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Nemaz",
+                            "stable_key": "de98637d-df0e-4f22-a09d-dbc706e364dc",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nemaz"
+                                }
+                            },
+                            "value": "d8486b21-8c48-43b4-a0a3-520ce4df84ed"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Jautājums nav saistošs",
+                            "stable_key": "03777260-8f18-46f9-9b87-ae72bdf0742d",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jautājums nav saistošs"
+                                }
+                            },
+                            "value": "47db4c3c-66ac-427c-a853-edadbb065adc"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "08e6b2c2-8d45-40cb-ba76-a191b2aa2eb8",
+                    "translations": {
+                        "lv": {
+                            "label": "Cik ļoti iepriekšējo 7 dienu laikā jūsu ādas  stāvoklis jums radīja jebkādas seksuālas  problēmas?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 14,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Cik ļoti iepriekšējo 7 dienu laikā ādas  ārstēšana jums sagādāja problēmas,  piemēram, aizņemot daudz laika vai radot  nekārtību mājās?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Ļoti lielā mērā",
+                            "stable_key": "25a96227-9e4c-433b-bbde-93103570a398",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ļoti lielā mērā"
+                                }
+                            },
+                            "value": "0df55e46-c2b4-4319-b804-3a47841a33a4"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Lielā mērā",
+                            "stable_key": "5b20c8a5-f8f2-4fab-b34d-c07429fc417a",
+                            "translations": {
+                                "lv": {
+                                    "label": "Lielā mērā"
+                                }
+                            },
+                            "value": "333ef776-8a39-43b9-9acb-0e65592ca2f5"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Mazliet",
+                            "stable_key": "3ae2ee29-5023-433e-989c-a7c6f805a5f1",
+                            "translations": {
+                                "lv": {
+                                    "label": "Mazliet"
+                                }
+                            },
+                            "value": "2df62e21-31e0-4f2b-9c1c-2d8e06e6b00a"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Nemaz",
+                            "stable_key": "8c92ea92-2f0f-494f-b1a8-39a744e191b8",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nemaz"
+                                }
+                            },
+                            "value": "82986d49-666e-4e70-a0da-f2839bd873c2"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Jautājums nav saistošs",
+                            "stable_key": "28640f00-6fb0-4354-99d2-bfc8f2ff6cc8",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jautājums nav saistošs"
+                                }
+                            },
+                            "value": "a34939cf-d2a3-436e-9e06-d5e842634052"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "3d9bd080-5a47-444e-85fb-901ae982f539",
+                    "translations": {
+                        "lv": {
+                            "label": "Cik ļoti iepriekšējo 7 dienu laikā ādas  ārstēšana jums sagādāja problēmas,  piemēram, aizņemot daudz laika vai radot  nekārtību mājās?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                }
+            ],
+            "description": "Turpiniet ar dermatoloģiskās dzīves kvalitātes daļu.",
+            "display_order": 1,
+            "stable_key": "55b8e2f3-35a5-4dc0-bfe5-7c763eff5991",
+            "title": "DLQI daļa",
+            "translations": {
+                "en": {
+                    "description": "Continue to the dermatology quality-of-life part.",
+                    "title": "DLQI section"
+                },
+                "lv": {
+                    "description": "Turpiniet ar dermatoloģiskās dzīves kvalitātes daļu.",
+                    "title": "DLQI daļa"
+                },
+                "ru": {
+                    "description": "Продолжите к части о качестве жизни при дерматологическом заболевании.",
+                    "title": "Раздел DLQI"
+                }
+            },
+            "visible": true
+        },
+        {
+            "components": [
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 1,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "A. Respondenta profils",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "21fce19e-b20f-42f7-bd9c-e00431b68769",
+                    "translations": {
+                        "lv": {
+                            "label": "A. Respondenta profils"
+                        }
+                    },
+                    "type": "form_title",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 2,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Bioloģiskais dzimums",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Sieviete",
+                            "stable_key": "ce06bcfa-ec4a-4f11-9772-34fa59249560",
+                            "translations": {
+                                "lv": {
+                                    "label": "Sieviete"
+                                }
+                            },
+                            "value": "dc774291-de65-4fdf-bb5f-026d6a6b5e69"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Vīrietis",
+                            "stable_key": "b92d054c-7d0c-46b5-bc6b-3920bc7d6df7",
+                            "translations": {
+                                "lv": {
+                                    "label": "Vīrietis"
+                                }
+                            },
+                            "value": "86202edb-4596-46ee-8274-41aa92b55999"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Nevēlos norādīt",
+                            "stable_key": "dbd0f35a-616f-4c84-acdc-e1634b921b43",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nevēlos norādīt"
+                                }
+                            },
+                            "value": "f161d73e-751c-4d74-adef-cfea0b7da32b"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "2e08762a-df9c-4552-bf2f-fccb55ecc24f",
+                    "translations": {
+                        "lv": {
+                            "label": "Bioloģiskais dzimums"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 3,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Vecums",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "maximum": "118",
+                        "maximum_label": "118",
+                        "minimum": "1",
+                        "minimum_label": "1"
+                    },
+                    "stable_key": "35272bc4-548a-4644-8a98-237b2687b12d",
+                    "translations": {
+                        "lv": {
+                            "label": "Vecums",
+                            "maximum_label": "118",
+                            "minimum_label": "1"
+                        }
+                    },
+                    "type": "linear_scale",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 4,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Pašreizējā terapija",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 1,
+                            "label": "Lokāla terapija",
+                            "stable_key": "4fa2655f-2b27-4cf8-9407-e64c3d853004",
+                            "translations": {
+                                "lv": {
+                                    "label": "Lokāla terapija"
+                                }
+                            },
+                            "value": "cdff6188-f6bc-4304-b397-7eff25c5980b"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Fototerapija",
+                            "stable_key": "ac0008cc-5cc0-4e3d-816c-8f56f3f2956b",
+                            "translations": {
+                                "lv": {
+                                    "label": "Fototerapija"
+                                }
+                            },
+                            "value": "8e76ff1e-211c-4065-b025-a577712cf214"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Sistēmiskā terapija tabletēs",
+                            "stable_key": "1c0b9224-c166-4b2f-80a2-a2d6c525967e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Sistēmiskā terapija tabletēs"
+                                }
+                            },
+                            "value": "ef006358-d39e-469d-86d5-b8e5d702af67"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Bioloģiskā terapija/injekcijas",
+                            "stable_key": "cb0f65b7-a83e-4a0c-a743-9c709be14629",
+                            "translations": {
+                                "lv": {
+                                    "label": "Bioloģiskā terapija/injekcijas"
+                                }
+                            },
+                            "value": "c40b6747-d87b-4e8a-a5db-a2f0f13e35a1"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Pašlaik terapiju nesaņemu",
+                            "stable_key": "e9e99ad0-72ee-4865-b00d-19aeb39f75f8",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pašlaik terapiju nesaņemu"
+                                }
+                            },
+                            "value": "ac24c741-b4fc-45e5-abd9-4d58904c560b"
+                        },
+                        {
+                            "display_order": 6,
+                            "label": "Cits",
+                            "stable_key": "e745cd8f-bf49-40ff-b4e3-61e3574dc51b",
+                            "translations": {
+                                "lv": {
+                                    "label": "Cits"
+                                }
+                            },
+                            "value": "92d53baf-028a-431b-a2b0-bd93a81f40c6"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "6baaf013-9566-4027-95f9-9c53625ae673",
+                    "translations": {
+                        "lv": {
+                            "label": "Pašreizējā terapija"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 5,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Ja \"Cits\" kāds terapijas variants tas būtu",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "max_length": null,
+                        "min_length": null
+                    },
+                    "stable_key": "40a468a0-05f4-4700-8766-68b32d972f61",
+                    "translations": {
+                        "lv": {
+                            "label": "Ja \"Cits\" kāds terapijas variants tas būtu"
+                        }
+                    },
+                    "type": "long_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 7,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "B. Pieredze psoriāzes ārstēšanā Latvijā",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "1961a4f1-fbe9-4386-85e9-b93802405d5e",
+                    "translations": {
+                        "lv": {
+                            "label": "B. Pieredze psoriāzes ārstēšanā Latvijā"
+                        }
+                    },
+                    "type": "form_title",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 8,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Es varēju saņemt ar psoriāzi saistītu medicīnisko aprūpi tad, kad man tā bija nepieciešama.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Pilnīgi nepiekrītu",
+                            "stable_key": "55002b9d-0b40-41c2-ad93-de44957b0cdd",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi nepiekrītu"
+                                }
+                            },
+                            "value": "6d64dccf-6047-41e4-8589-a204023263b8"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Drīzāk nepiekrītu",
+                            "stable_key": "efcdc1f7-aab3-483a-bc77-d708ddd50b06",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk nepiekrītu"
+                                }
+                            },
+                            "value": "fcdba8e3-f486-4853-8cfb-9fc3ae556336"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Ne piekrītu, ne nepiekrītu",
+                            "stable_key": "1157059f-27cc-49f1-b4a7-88e6fc9e9721",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ne piekrītu, ne nepiekrītu"
+                                }
+                            },
+                            "value": "c63141ab-778d-4ed6-bdd8-eff1a3854047"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Drīzāk piekrītu",
+                            "stable_key": "c0e1641c-aad2-4b66-9120-4412a96e3044",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk piekrītu"
+                                }
+                            },
+                            "value": "7ea8151b-ec25-4f57-a186-53f67e994385"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Pilnīgi piekrītu",
+                            "stable_key": "30b7fb87-e3c5-42eb-9835-c650fc61f10a",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi piekrītu"
+                                }
+                            },
+                            "value": "87977f29-7a18-4758-ad09-9aa690a27063"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "40121bf1-8cdc-491c-8a2a-e570a691a72d",
+                    "translations": {
+                        "lv": {
+                            "label": "Es varēju saņemt ar psoriāzi saistītu medicīnisko aprūpi tad, kad man tā bija nepieciešama."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 9,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Latvijā man pieejamās psoriāzes ārstēšanas iespējas atbilda manām ārstēšanas vajadzībām.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Pilnīgi nepiekrītu",
+                            "stable_key": "d47cd453-b524-4452-8f9a-2adf020c5ddb",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi nepiekrītu"
+                                }
+                            },
+                            "value": "0bf5763b-238d-4eee-8365-6e6b49c8a533"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Drīzāk nepiekrītu",
+                            "stable_key": "02c04b82-5823-4c84-a2ea-dc0273e9b1f4",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk nepiekrītu"
+                                }
+                            },
+                            "value": "627db8f1-ef24-4d45-8840-9098eb62fca2"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Ne piekrītu, ne nepiekrītu",
+                            "stable_key": "36eadebc-3b6a-4a92-a42d-42330dcb6c1e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ne piekrītu, ne nepiekrītu"
+                                }
+                            },
+                            "value": "d77ec4c3-effe-4b2e-88c3-8946acf39354"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Drīzāk piekrītu",
+                            "stable_key": "d21cad7f-49c6-4c84-9029-8f030b259eef",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk piekrītu"
+                                }
+                            },
+                            "value": "7b98aeed-4600-410a-b167-8d654bf073ee"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Pilnīgi piekrītu",
+                            "stable_key": "9738d4e5-050b-4269-9c81-73ef92611db1",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi piekrītu"
+                                }
+                            },
+                            "value": "cfffc92c-55bb-4a30-93a3-db29cfee7d07"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "b4a4d8ff-cd10-46e2-8f36-c98b6a44ecc0",
+                    "translations": {
+                        "lv": {
+                            "label": "Latvijā man pieejamās psoriāzes ārstēšanas iespējas atbilda manām ārstēšanas vajadzībām."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 10,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Psoriāzes ārstēšanas saņemšanas process (piemēram, nosūtījumi, apstiprinājumi vai gaidīšanas laiks) apgrūtināja man piekļuvi piemērotai ārstēšanai.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Pilnīgi nepiekrītu",
+                            "stable_key": "6ab73f19-3e84-43af-9308-99ac3c4f3d8c",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi nepiekrītu"
+                                }
+                            },
+                            "value": "33a6d92c-c944-4a89-888d-0a12c0cc0581"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Drīzāk nepiekrītu",
+                            "stable_key": "c1dfd5db-f12a-430c-a407-4fbe5bd31b82",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk nepiekrītu"
+                                }
+                            },
+                            "value": "dcc60af1-c8f8-4812-b789-17e69692663b"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Ne piekrītu, ne nepiekrītu",
+                            "stable_key": "36a3edff-a5c3-48be-87cb-b2e09d02032a",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ne piekrītu, ne nepiekrītu"
+                                }
+                            },
+                            "value": "032348ce-499a-4e34-acac-990346c4bca0"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Drīzāk piekrītu",
+                            "stable_key": "c36dd473-c204-4c88-8d28-9c3deb8574d6",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk piekrītu"
+                                }
+                            },
+                            "value": "8f515487-755a-4ada-b072-0fe2c4741cab"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Pilnīgi piekrītu",
+                            "stable_key": "31464711-b4ad-40d0-bddb-bd3a0b372954",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi piekrītu"
+                                }
+                            },
+                            "value": "41d9bd58-4e64-4275-88f1-0e2dd7c5d7fb"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "516b53ab-d883-469a-9c05-a572f3704d45",
+                    "translations": {
+                        "lv": {
+                            "label": "Psoriāzes ārstēšanas saņemšanas process (piemēram, nosūtījumi, apstiprinājumi vai gaidīšanas laiks) apgrūtināja man piekļuvi piemērotai ārstēšanai."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 11,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Finansiāli faktori (tostarp kompensācijas ierobežojumi vai personīgie izdevumi) apgrūtināja piekļuvi man piemērotai psoriāzes ārstēšanai.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Pilnīgi nepiekrītu",
+                            "stable_key": "8bb7b225-1d62-4b1b-b97c-cb2db5d98767",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi nepiekrītu"
+                                }
+                            },
+                            "value": "244808aa-c3a3-4987-b327-ecaf3c56619f"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Drīzāk nepiekrītu",
+                            "stable_key": "a0c1947d-5609-4773-85f2-2c27ee468e92",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk nepiekrītu"
+                                }
+                            },
+                            "value": "f4306624-2e3a-4d11-a6c2-d3329a777586"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Ne piekrītu, ne nepiekrītu",
+                            "stable_key": "3273db41-b235-4013-8dc3-72e19e4094b0",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ne piekrītu, ne nepiekrītu"
+                                }
+                            },
+                            "value": "ac4b8d8c-ad32-4482-abd9-2cde8f68b7eb"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Drīzāk piekrītu",
+                            "stable_key": "9d33a4d2-ea9f-48f4-b88f-ee32949d29fa",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk piekrītu"
+                                }
+                            },
+                            "value": "c72bb172-f6ee-411b-983d-833c979d3432"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Pilnīgi piekrītu",
+                            "stable_key": "38b56f9d-ff36-41c1-a2c7-890cb07557a8",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi piekrītu"
+                                }
+                            },
+                            "value": "724696b1-37eb-446a-8792-b872b34d133a"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "7e03d798-ee37-46f5-82cb-7395af775fa5",
+                    "translations": {
+                        "lv": {
+                            "label": "Finansiāli faktori (tostarp kompensācijas ierobežojumi vai personīgie izdevumi) apgrūtināja piekļuvi man piemērotai psoriāzes ārstēšanai."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 12,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Es jutos pietiekami informēts(-a) par Latvijā pieejamajām psoriāzes ārstēšanas iespējām.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Pilnīgi nepiekrītu",
+                            "stable_key": "b00e1856-9192-41c4-ba8b-0134accac66d",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi nepiekrītu"
+                                }
+                            },
+                            "value": "c0646aff-8147-404f-818b-7b697d983214"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Drīzāk nepiekrītu",
+                            "stable_key": "04dd52a4-f442-4e69-929e-7d5e81c8a597",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk nepiekrītu"
+                                }
+                            },
+                            "value": "03ac3e4a-a907-43f1-856f-91367ea53284"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Ne piekrītu, ne nepiekrītu",
+                            "stable_key": "1b9f80bb-650f-4e5e-8824-62bd49f267a3",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ne piekrītu, ne nepiekrītu"
+                                }
+                            },
+                            "value": "70f97bad-ce3d-4f8d-a38c-b3b99df15346"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Drīzāk piekrītu",
+                            "stable_key": "9c22b3e3-8edb-46a3-8e41-845b91c4722e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk piekrītu"
+                                }
+                            },
+                            "value": "6883bd71-d296-47f9-a050-1ccd4c541a46"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Pilnīgi piekrītu",
+                            "stable_key": "74b88f5d-3018-4ec9-8c6d-1ad862a6372e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi piekrītu"
+                                }
+                            },
+                            "value": "eb666cec-ae09-43bf-9d98-69c7bd797d93"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "dae6820f-91d0-4c31-b3ab-5dd236da2d39",
+                    "translations": {
+                        "lv": {
+                            "label": "Es jutos pietiekami informēts(-a) par Latvijā pieejamajām psoriāzes ārstēšanas iespējām."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 13,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Mana iepriekšējā psoriāzes ārstēšana efektīvi kontrolēja slimības simptomus.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Pilnīgi nepiekrītu",
+                            "stable_key": "4817b577-2175-4417-a800-205e6ab1237e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi nepiekrītu"
+                                }
+                            },
+                            "value": "0050872f-c29c-44a6-a31c-66629bd95c89"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Drīzāk nepiekrītu",
+                            "stable_key": "93eefc24-8271-46b6-979f-e74d6cc2a275",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk nepiekrītu"
+                                }
+                            },
+                            "value": "2f640e8b-c861-4d98-834f-8fc27f4347e8"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Ne piekrītu, ne nepiekrītu",
+                            "stable_key": "9115db5a-b54a-40c8-9ec0-8650b7324674",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ne piekrītu, ne nepiekrītu"
+                                }
+                            },
+                            "value": "37b90766-1486-41ea-bc0b-fb0436952de9"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Drīzāk piekrītu",
+                            "stable_key": "8362894c-59c1-491c-a064-54cdde89ceb6",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk piekrītu"
+                                }
+                            },
+                            "value": "2db0b871-91fa-4b0e-8ce8-176103bfe252"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Pilnīgi piekrītu",
+                            "stable_key": "83b9c3a1-5e66-4a17-ad21-0fec9c7dc6f6",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi piekrītu"
+                                }
+                            },
+                            "value": "39cdf291-9c75-4bd2-8eaa-e32066e104d8"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "1ddd8b7e-34b5-4818-8a36-29400a024ec2",
+                    "translations": {
+                        "lv": {
+                            "label": "Mana iepriekšējā psoriāzes ārstēšana efektīvi kontrolēja slimības simptomus."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 14,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Es jutu, ka mana psoriāzes ārstēšana un novērošana bija labi organizēta un koordinēta.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Pilnīgi nepiekrītu",
+                            "stable_key": "b7fb00da-d3cf-4f42-9a4b-2d809b3854e3",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi nepiekrītu"
+                                }
+                            },
+                            "value": "fcfc02e8-72bf-4ab8-9c2f-62366775fda5"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Drīzāk nepiekrītu",
+                            "stable_key": "ca7daca4-f8ec-458a-ac5c-d83a9253e6a6",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk nepiekrītu"
+                                }
+                            },
+                            "value": "71d41129-c26b-4a35-be00-d877196e0a74"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Ne piekrītu, ne nepiekrītu",
+                            "stable_key": "4dd02468-0011-4fcf-9ad2-39141294f087",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ne piekrītu, ne nepiekrītu"
+                                }
+                            },
+                            "value": "2f1a8838-3072-41ce-8eae-27481926754e"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Drīzāk piekrītu",
+                            "stable_key": "82536499-07a4-4b3e-b7e0-de2361630cc5",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk piekrītu"
+                                }
+                            },
+                            "value": "df11c7c4-fea6-4bcc-8a69-17496a38f354"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Pilnīgi piekrītu",
+                            "stable_key": "d3223986-8213-444c-84bd-223bd39ecca4",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi piekrītu"
+                                }
+                            },
+                            "value": "d6b47d08-5e4d-47f1-ba66-6ebc81cb72c3"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "fc0f7708-729b-4814-ad0e-16d3b9284b31",
+                    "translations": {
+                        "lv": {
+                            "label": "Es jutu, ka mana psoriāzes ārstēšana un novērošana bija labi organizēta un koordinēta."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 15,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Ja man bija nepieciešama spēcīgāka psoriāzes ārstēšana (piemēram, tabletes, injekcijas vai bioloģiskā terapija), es uzskatīju, ka piekļuve šādai ārstēšanai Latvijā bija pietiekama.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Nav attiecināms / Man nekad netika apsvērta spēcīgāka vai bioloģiskā terapija",
+                            "stable_key": "980f2b60-4389-401e-a7b9-c295e5954441",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nav attiecināms / Man nekad netika apsvērta spēcīgāka vai bioloģiskā terapija"
+                                }
+                            },
+                            "value": "d530cb43-690f-422b-8462-4299c90c8e0c"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Pilnīgi nepiekrītu",
+                            "stable_key": "d1b67eac-dd45-4f78-baaf-ab8ab33d4b7c",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi nepiekrītu"
+                                }
+                            },
+                            "value": "f0dde25a-24e3-4053-9900-99ea9bdb1149"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Drīzāk nepiekrītu",
+                            "stable_key": "3d05baf6-6441-4927-a132-4787bc4cbae8",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk nepiekrītu"
+                                }
+                            },
+                            "value": "0099cfc7-febf-4559-b44c-5984611836a2"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Ne piekrītu, ne nepiekrītu",
+                            "stable_key": "9b361ee8-e8bf-4010-bce1-88450c1bf53e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ne piekrītu, ne nepiekrītu"
+                                }
+                            },
+                            "value": "8b1076e8-7ee8-4ac6-837e-6c61c03675ec"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Drīzāk piekrītu",
+                            "stable_key": "56d3d881-17f6-4ff3-be77-b9801e985ddd",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk piekrītu"
+                                }
+                            },
+                            "value": "f135cc66-ce12-465e-96b6-cb9ae9fd16d5"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Pilnīgi piekrītu",
+                            "stable_key": "6ca7c6e4-6893-47c7-b1be-129a64ecdcf4",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi piekrītu"
+                                }
+                            },
+                            "value": "336dd1e7-659c-4c5b-9421-12d1755b1b6e"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "98eb2f5b-6b4e-484d-a749-63d74988fc2f",
+                    "translations": {
+                        "lv": {
+                            "label": "Ja man bija nepieciešama spēcīgāka psoriāzes ārstēšana (piemēram, tabletes, injekcijas vai bioloģiskā terapija), es uzskatīju, ka piekļuve šādai ārstēšanai Latvijā bija pietiekama."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 16,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Kopumā es biju apmierināts(-a) ar savu pieredzi psoriāzes ārstēšanā Latvijā.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Pilnīgi nepiekrītu",
+                            "stable_key": "b6dc8880-e53d-4620-b08d-bfd91fe4adcd",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi nepiekrītu"
+                                }
+                            },
+                            "value": "3d8701d2-9d6c-441d-97ca-cdafa4f91864"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Drīzāk nepiekrītu",
+                            "stable_key": "c418eb7f-c4df-4214-8f25-914c9c1f7935",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk nepiekrītu"
+                                }
+                            },
+                            "value": "1934bbdb-5a99-4cd4-a6fa-d2964b72d275"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Ne piekrītu, ne nepiekrītu",
+                            "stable_key": "bef184bf-de04-4b48-a29e-9c4413bd6fde",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ne piekrītu, ne nepiekrītu"
+                                }
+                            },
+                            "value": "3319c70d-db57-4f01-a291-09bf9d590b35"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Drīzāk piekrītu",
+                            "stable_key": "0c813e8c-6f19-40e1-bcd4-11cbd096afbd",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk piekrītu"
+                                }
+                            },
+                            "value": "ab7f6416-72f3-445d-806c-4e567fb8c4a5"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Pilnīgi piekrītu",
+                            "stable_key": "e1001927-0638-482c-949b-51f1532619f0",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pilnīgi piekrītu"
+                                }
+                            },
+                            "value": "ac54b498-1360-4509-aa27-0d5a32aa1c13"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "6a2e9131-ca3f-4790-bb4f-52e1400c5fc5",
+                    "translations": {
+                        "lv": {
+                            "label": "Kopumā es biju apmierināts(-a) ar savu pieredzi psoriāzes ārstēšanā Latvijā."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 17,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "C. Dzīves kvalitāte",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "a11ec595-a776-4774-b7bf-731901e26de4",
+                    "translations": {
+                        "lv": {
+                            "label": "C. Dzīves kvalitāte"
+                        }
+                    },
+                    "type": "form_title",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Šajā sadaļā tiek izmantots Dermatoloģijas dzīves kvalitātes indekss (DLQI) latviešu valodā. DLQI forma tiek pievienota kā atsevišķs pielikums/veidlapa un jāizmanto, ievērojot instrumenta autoru un licences nosacījumus. Skoringa norādījumi pievienoti atsevišķi, un punktu vērtības nedrīkst drukāt uz pacienta aizpildāmās DLQI anketas.",
+                    "display_order": 18,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "DLQI instruments",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "c69f889c-f0cb-4d53-9ecd-f3344d994706",
+                    "translations": {
+                        "lv": {
+                            "description": "Šajā sadaļā tiek izmantots Dermatoloģijas dzīves kvalitātes indekss (DLQI) latviešu valodā. DLQI forma tiek pievienota kā atsevišķs pielikums/veidlapa un jāizmanto, ievērojot instrumenta autoru un licences nosacījumus. Skoringa norādījumi pievienoti atsevišķi, un punktu vērtības nedrīkst drukāt uz pacienta aizpildāmās DLQI anketas.",
+                            "label": "DLQI instruments"
+                        }
+                    },
+                    "type": "explanatory_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 19,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "D. Interese par citām ārstēšanas iespējām, klīniskajiem pētījumiem un ATMP/HE",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "625ce1e2-426e-43d3-9a3c-fb11b0f24a2b",
+                    "translations": {
+                        "lv": {
+                            "label": "D. Interese par citām ārstēšanas iespējām, klīniskajiem pētījumiem un ATMP/HE"
+                        }
+                    },
+                    "type": "form_title",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Šī sadaļa palīdz noskaidrot Jūsu viedokli par turpmākām ārstēšanas iespējām. Atbildes neapstiprina, ka konkrēta terapija Jums ir pieejama vai piemērota. Tās nav informētā piekrišana dalībai klīniskā pētījumā vai ārstēšanai. Pirms jebkāda lēmuma nepieciešama atsevišķa ārsta konsultācija, medicīniska izvērtēšana un atbilstoša informētās piekrišanas procedūra.",
+                    "display_order": 20,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Svarīga informācija",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "975d6416-433f-40c6-988a-0e9ebfddb5bf",
+                    "translations": {
+                        "lv": {
+                            "description": "Šī sadaļa palīdz noskaidrot Jūsu viedokli par turpmākām ārstēšanas iespējām. Atbildes neapstiprina, ka konkrēta terapija Jums ir pieejama vai piemērota. Tās nav informētā piekrišana dalībai klīniskā pētījumā vai ārstēšanai. Pirms jebkāda lēmuma nepieciešama atsevišķa ārsta konsultācija, medicīniska izvērtēšana un atbilstoša informētās piekrišanas procedūra.",
+                            "label": "Svarīga informācija"
+                        }
+                    },
+                    "type": "explanatory_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 21,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Vai Jūs vēlētos kopā ar ārstējošo ārstu izvērtēt citas ārstēšanas iespējas, jo pašreizējās terapijas rezultāts Jums nav pietiekams vai terapija Jums rada grūtības?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Jā",
+                            "stable_key": "58217afe-1715-4e94-8f61-254f292c4b67",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jā"
+                                }
+                            },
+                            "value": "306e4fb8-f12e-482d-b005-539fed892744"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Drīzāk jā / iespējams",
+                            "stable_key": "056a2eab-dc14-4dff-8630-be4088cf3552",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk jā / iespējams"
+                                }
+                            },
+                            "value": "ff7f47fe-5f2d-499a-b080-f7757620ed40"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Neesmu pārliecināts/-a",
+                            "stable_key": "e90c520b-8abd-49c2-af95-7c6861ae1133",
+                            "translations": {
+                                "lv": {
+                                    "label": "Neesmu pārliecināts/-a"
+                                }
+                            },
+                            "value": "c050401e-7db1-4530-a61d-6bbc2d3b5213"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Drīzāk nē",
+                            "stable_key": "5843554b-3b4f-4de8-92c9-a940b6984d51",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk nē"
+                                }
+                            },
+                            "value": "a4725044-a64c-491e-95ae-fb4604cafffb"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Nē",
+                            "stable_key": "038a4dc8-5c3f-4dbc-b008-8d648ea1e356",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nē"
+                                }
+                            },
+                            "value": "f72f92d2-4b69-49da-8536-b3e2717604f9"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Pašlaik terapiju nesaņemu",
+                            "stable_key": "6cd5513d-2ef2-4bbf-ba8e-c5a16a8d8de5",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pašlaik terapiju nesaņemu"
+                                }
+                            },
+                            "value": "5036b151-95bd-432d-83ab-4dfde3b126da"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "4f64db4e-9095-45ae-9a79-f7354852f232",
+                    "translations": {
+                        "lv": {
+                            "label": "Vai Jūs vēlētos kopā ar ārstējošo ārstu izvērtēt citas ārstēšanas iespējas, jo pašreizējās terapijas rezultāts Jums nav pietiekams vai terapija Jums rada grūtības?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 22,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Kādi ir galvenie iemesli, kādēļ Jūs vēlētos pārrunāt citu terapiju? Varat atzīmēt vairākas atbildes.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Nepietiekama simptomu mazināšanās",
+                            "stable_key": "b5352e21-14c7-4011-a592-d9c4be4da2ae",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nepietiekama simptomu mazināšanās"
+                                }
+                            },
+                            "value": "505b1ff5-7c15-4731-84bc-cab45cd29865"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Blakusparādības vai bažas par tām",
+                            "stable_key": "f2a3f382-d19e-4313-a7b8-4171ea8ae786",
+                            "translations": {
+                                "lv": {
+                                    "label": "Blakusparādības vai bažas par tām"
+                                }
+                            },
+                            "value": "a54e9257-4cca-4c47-9af2-b12a7cc68887"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Ārstēšana ierobežo ikdienu",
+                            "stable_key": "894c1838-fead-4491-a8dd-739919d95733",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ārstēšana ierobežo ikdienu"
+                                }
+                            },
+                            "value": "8c134a81-e6d8-46d6-adb5-fe593628a748"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Pašlaik nevēlos mainīt terapiju",
+                            "stable_key": "01e74d8f-e516-4c36-a4f5-300abb685cdb",
+                            "translations": {
+                                "lv": {
+                                    "label": "Pašlaik nevēlos mainīt terapiju"
+                                }
+                            },
+                            "value": "9bbd7261-4133-414e-b1dc-e8b0ad64a26b"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Efekts laika gaitā mazinājies",
+                            "stable_key": "79186fd6-1e8e-4075-bf9c-725493e88af9",
+                            "translations": {
+                                "lv": {
+                                    "label": "Efekts laika gaitā mazinājies"
+                                }
+                            },
+                            "value": "26622dc0-c7b5-48ec-b489-ec3471043f1e"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Terapijas lietošana ir apgrūtinoša",
+                            "stable_key": "7c793300-c8ee-46d3-944c-537f2401580f",
+                            "translations": {
+                                "lv": {
+                                    "label": "Terapijas lietošana ir apgrūtinoša"
+                                }
+                            },
+                            "value": "2ec33229-0bf7-45ae-868e-7fa46a7bde26"
+                        },
+                        {
+                            "display_order": 6,
+                            "label": "Vēlos uzzināt par jaunām iespējām",
+                            "stable_key": "19986f5d-e1e6-4d02-bdca-ea08491fc6cd",
+                            "translations": {
+                                "lv": {
+                                    "label": "Vēlos uzzināt par jaunām iespējām"
+                                }
+                            },
+                            "value": "933ce804-f9fa-4428-8db3-3163ab51f858"
+                        },
+                        {
+                            "display_order": 7,
+                            "label": "Cits iemesls.",
+                            "stable_key": "6076972a-1331-4129-8caf-180003773992",
+                            "translations": {
+                                "lv": {
+                                    "label": "Cits iemesls."
+                                }
+                            },
+                            "value": "866d46c6-e57f-463e-9ff8-a236f4ce57b9"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "8719f68d-673d-4a0a-bd96-209369903ab1",
+                    "translations": {
+                        "lv": {
+                            "label": "Kādi ir galvenie iemesli, kādēļ Jūs vēlētos pārrunāt citu terapiju? Varat atzīmēt vairākas atbildes."
+                        }
+                    },
+                    "type": "multiple_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 23,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Ja \"Cits\" kas tas būtu",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "max_length": null,
+                        "min_length": null
+                    },
+                    "stable_key": "0c8d4d92-76f9-46aa-988d-84802245c39b",
+                    "translations": {
+                        "lv": {
+                            "label": "Ja \"Cits\" kas tas būtu"
+                        }
+                    },
+                    "type": "long_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 24,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Vai Jūs iepriekš esat piedalījies/-usies kādā klīniskā pētījumā?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Jā",
+                            "stable_key": "cd4fa7d4-1f14-4d12-8a17-33f935a63d95",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jā"
+                                }
+                            },
+                            "value": "7e13637b-5e63-4ac3-a59e-58568e6e5122"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Nē",
+                            "stable_key": "e86e0752-15ae-4f70-a8a9-f89f5083fa83",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nē"
+                                }
+                            },
+                            "value": "3b41181d-3eb3-4094-b7b8-96a86646b460"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Neatceros / nezinu",
+                            "stable_key": "d9651d11-18fb-430a-b0eb-0a8f20d5693a",
+                            "translations": {
+                                "lv": {
+                                    "label": "Neatceros / nezinu"
+                                }
+                            },
+                            "value": "4d3afb19-6ab9-4395-b206-34fc995792fd"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Nevēlos atbildēt",
+                            "stable_key": "575883f4-9c36-4beb-8d78-b56063b7862c",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nevēlos atbildēt"
+                                }
+                            },
+                            "value": "5bd58595-777e-4668-91a3-7c6cfc982b8b"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "8c1874f1-845f-4ec3-a6f8-caa5dd234c5b",
+                    "translations": {
+                        "lv": {
+                            "label": "Vai Jūs iepriekš esat piedalījies/-usies kādā klīniskā pētījumā?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Par ATMP klīniskajiem pētījumiem\r\nATMP ir jaunieviestās jeb uzlabotas terapijas zāles. Atsevišķos klīniskajos pētījumos tiek vērtētas šūnu terapijas zāles, tostarp produkti, kuru sastāvā ir cilmes šūnas. Tā kā tās ir pētāmas zāles, iespējamie ieguvumi, riski un piemērotība konkrētam pacientam var nebūt pilnībā zināmi. Interese piedalīties nenozīmē, ka pacients tiks iekļauts pētījumā.",
+                    "display_order": 25,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Ja atbildējāt “Jā”, kāda bija Jūsu pieredze?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Kopumā pozitīva",
+                            "stable_key": "a2c05bd6-5176-4a67-b8a8-69e25a14fcfe",
+                            "translations": {
+                                "lv": {
+                                    "label": "Kopumā pozitīva"
+                                }
+                            },
+                            "value": "aaa8cc92-e8db-4868-b196-213879887e38"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Drīzāk pozitīva",
+                            "stable_key": "da24127b-d7b1-4eaf-a1ea-d152f02b9f1e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk pozitīva"
+                                }
+                            },
+                            "value": "fdb81dd5-6413-4e76-8246-20f9a5da1c6d"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Neitrāla",
+                            "stable_key": "262e0f76-ab24-4e67-abc7-01fd46c5cf5e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Neitrāla"
+                                }
+                            },
+                            "value": "c75c4203-bce7-43d0-8c05-83f84c35063e"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Drīzāk negatīva",
+                            "stable_key": "7aeb8f19-6cd3-4832-a98c-66c501acba50",
+                            "translations": {
+                                "lv": {
+                                    "label": "Drīzāk negatīva"
+                                }
+                            },
+                            "value": "1ec7a8b6-b196-426a-a9f8-d2d5edbc939a"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Kopumā negatīva",
+                            "stable_key": "06f04abf-e30e-4e47-b8e1-dd312f6bdb8b",
+                            "translations": {
+                                "lv": {
+                                    "label": "Kopumā negatīva"
+                                }
+                            },
+                            "value": "0e812343-e3af-453a-bcdc-e27dac79b8e2"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Nevēlos precizēt",
+                            "stable_key": "f5d9a93d-55b7-40ce-ba0e-16354da84a1d",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nevēlos precizēt"
+                                }
+                            },
+                            "value": "a77ff984-cdab-475a-a9ef-4feaf86cd139"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "c7a4c019-ae39-4890-801e-bc72f3af51d8",
+                    "translations": {
+                        "lv": {
+                            "description": "Par ATMP klīniskajiem pētījumiem\r\nATMP ir jaunieviestās jeb uzlabotas terapijas zāles. Atsevišķos klīniskajos pētījumos tiek vērtētas šūnu terapijas zāles, tostarp produkti, kuru sastāvā ir cilmes šūnas. Tā kā tās ir pētāmas zāles, iespējamie ieguvumi, riski un piemērotība konkrētam pacientam var nebūt pilnībā zināmi. Interese piedalīties nenozīmē, ka pacients tiks iekļauts pētījumā.",
+                            "label": "Ja atbildējāt “Jā”, kāda bija Jūsu pieredze?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 26,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Vai Jūs vēlētos saņemt saprotamu papildinformāciju par iespējamu klīnisko pētījumu, kurā tiktu vērtētas ATMP šūnu terapijas zāles, tostarp cilmes šūnas saturošs produkts?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Jā",
+                            "stable_key": "1e36ed2a-a008-4cb5-a6a8-600f94d59965",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jā"
+                                }
+                            },
+                            "value": "efd0ae4b-dd78-4cbe-9200-abdd1126639d"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Iespējams",
+                            "stable_key": "9af411e4-19ca-437a-8a69-f5765d0e4d08",
+                            "translations": {
+                                "lv": {
+                                    "label": "Iespējams"
+                                }
+                            },
+                            "value": "c1962b37-2d68-4061-ac39-90f29c129370"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Neesmu pārliecināts/-a",
+                            "stable_key": "f3117316-2dbe-4ba8-b6d1-f9fe83470876",
+                            "translations": {
+                                "lv": {
+                                    "label": "Neesmu pārliecināts/-a"
+                                }
+                            },
+                            "value": "4e15ef2d-5c16-4042-96e4-f3682ce44904"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Nē",
+                            "stable_key": "313a6140-f693-40e2-a704-884409f77964",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nē"
+                                }
+                            },
+                            "value": "c5efe65e-52f0-4933-806d-93a105ae1ffe"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "0aaece80-eb15-4caf-b6f7-1de9fb90f842",
+                    "translations": {
+                        "lv": {
+                            "label": "Vai Jūs vēlētos saņemt saprotamu papildinformāciju par iespējamu klīnisko pētījumu, kurā tiktu vērtētas ATMP šūnu terapijas zāles, tostarp cilmes šūnas saturošs produkts?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Par ATMP HE\r\nATMP HE jeb izņēmuma jaunieviestās terapijas zāļu lietošana ārstniecībā ir jānodala no klīniskā pētījuma. Tā var tikt apsvērta tikai tad, ja konkrētā iespēja ir tiesiski pieļaujama, faktiski pieejama un medicīniski pamatota. Atbildes šajā sadaļā atspoguļo tikai gatavību pārrunāt vai apsvērt iespēju; tās nav piekrišana ārstēšanai.",
+                    "display_order": 27,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Ja pēc papildinformācijas saņemšanas pētījums Jums šķistu pieņemams, vai Jūs būtu gatavs/-a iziet sākotnēju medicīnisku izvērtēšanu, lai noskaidrotu iespējamo piemērotību dalībai?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Jā",
+                            "stable_key": "772788a6-8c6a-4bfc-bfb3-1e28b097b47a",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jā"
+                                }
+                            },
+                            "value": "d05dd368-8693-4298-b1d3-9a1d42764fc3"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Iespējams",
+                            "stable_key": "3ed632a1-2461-4ae6-84b2-02e03c6c5e99",
+                            "translations": {
+                                "lv": {
+                                    "label": "Iespējams"
+                                }
+                            },
+                            "value": "ea95accf-eb2d-4476-83aa-05234476ad16"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Neesmu pārliecināts/-a",
+                            "stable_key": "bce46d2f-058b-411e-86a1-28f2885fef58",
+                            "translations": {
+                                "lv": {
+                                    "label": "Neesmu pārliecināts/-a"
+                                }
+                            },
+                            "value": "3633fdc5-d428-4e19-8bf9-5457f199e118"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Nē",
+                            "stable_key": "353ba0aa-a29b-4b3b-8a56-d230555afac6",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nē"
+                                }
+                            },
+                            "value": "685ec153-5d2f-4d67-9967-f1f2f029d239"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "eeb80df7-4f98-433e-b005-58db61db1e6f",
+                    "translations": {
+                        "lv": {
+                            "description": "Par ATMP HE\r\nATMP HE jeb izņēmuma jaunieviestās terapijas zāļu lietošana ārstniecībā ir jānodala no klīniskā pētījuma. Tā var tikt apsvērta tikai tad, ja konkrētā iespēja ir tiesiski pieļaujama, faktiski pieejama un medicīniski pamatota. Atbildes šajā sadaļā atspoguļo tikai gatavību pārrunāt vai apsvērt iespēju; tās nav piekrišana ārstēšanai.",
+                            "label": "Ja pēc papildinformācijas saņemšanas pētījums Jums šķistu pieņemams, vai Jūs būtu gatavs/-a iziet sākotnēju medicīnisku izvērtēšanu, lai noskaidrotu iespējamo piemērotību dalībai?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 28,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Ja speciālists pēc individuālas izvērtēšanas uzskatītu, ka tas varētu būt medicīniski pamatoti, vai Jūs būtu gatavs/-a apsvērt ATMP HE ārstēšanu ar autologām šūnām - no Jūsu paša organisma iegūtām cilmes šūnām?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Jā",
+                            "stable_key": "3a7f8d42-f9a2-4778-a1d4-e02a6609e0bb",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jā"
+                                }
+                            },
+                            "value": "a0831903-2bbf-45c1-ae38-65e4449d8c00"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Iespējams, pēc papildinformācijas",
+                            "stable_key": "469f0cdb-0679-4a36-86c3-4f3bd5fdb87d",
+                            "translations": {
+                                "lv": {
+                                    "label": "Iespējams, pēc papildinformācijas"
+                                }
+                            },
+                            "value": "a9d6867a-6ea1-491a-9d44-a08026ab4c3b"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Neesmu pārliecināts/-a",
+                            "stable_key": "2735995c-7ef5-4fba-bf50-46452439d59d",
+                            "translations": {
+                                "lv": {
+                                    "label": "Neesmu pārliecināts/-a"
+                                }
+                            },
+                            "value": "d9b7408f-63e8-45ad-ba41-ae597d2f8eda"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Nē",
+                            "stable_key": "4edcddfc-c4a2-4219-a29c-bc15666530a6",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nē"
+                                }
+                            },
+                            "value": "27a18db5-74f5-474c-9c17-ce8a6c818974"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "432c9372-0f46-4081-9e4b-fe3f41b199b7",
+                    "translations": {
+                        "lv": {
+                            "label": "Ja speciālists pēc individuālas izvērtēšanas uzskatītu, ka tas varētu būt medicīniski pamatoti, vai Jūs būtu gatavs/-a apsvērt ATMP HE ārstēšanu ar autologām šūnām - no Jūsu paša organisma iegūtām cilmes šūnām?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 29,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "a speciālists pēc individuālas izvērtēšanas uzskatītu, ka tas varētu būt medicīniski pamatoti, vai Jūs būtu gatavs/-a apsvērt ATMP HE ārstēšanu ar alogēnām nabassaites izcelsmes šūnām - no cita donora ziedota nabassaites materiāla iegūtām cilmes šūnām?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Jā",
+                            "stable_key": "522773e1-12bf-4a22-b132-aa77dacb90a4",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jā"
+                                }
+                            },
+                            "value": "15f7e63f-f63c-4dd4-bbb8-6180eb226bd2"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Iespējams, pēc papildinformācijas",
+                            "stable_key": "e3034c96-eb3d-4200-ab06-e594cb71e5a2",
+                            "translations": {
+                                "lv": {
+                                    "label": "Iespējams, pēc papildinformācijas"
+                                }
+                            },
+                            "value": "472d3ae2-8800-430f-852d-045d6298ebc1"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Neesmu pārliecināts/-a",
+                            "stable_key": "41631b31-8694-46b6-af62-b9266326a2c6",
+                            "translations": {
+                                "lv": {
+                                    "label": "Neesmu pārliecināts/-a"
+                                }
+                            },
+                            "value": "4a4cfb2a-c31a-4ce6-8e6b-57f464c697ec"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Nē",
+                            "stable_key": "ae65135b-0056-4703-b4f8-a3b0ff0bb107",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nē"
+                                }
+                            },
+                            "value": "dc6c5c23-68db-46b3-98af-af3b4074c171"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "72fee05f-4c97-4966-bf0c-1bfa5a805930",
+                    "translations": {
+                        "lv": {
+                            "label": "a speciālists pēc individuālas izvērtēšanas uzskatītu, ka tas varētu būt medicīniski pamatoti, vai Jūs būtu gatavs/-a apsvērt ATMP HE ārstēšanu ar alogēnām nabassaites izcelsmes šūnām - no cita donora ziedota nabassaites materiāla iegūtām cilmes šūnām?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 30,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Kas Jūs visvairāk atturētu no šādas iespējas apsvēršanas? Varat atzīmēt vairākas atbildes.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Bažas par drošumu",
+                            "stable_key": "7ea6b81e-37ec-487a-97ce-11ef964d895e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Bažas par drošumu"
+                                }
+                            },
+                            "value": "842063d1-f365-4304-9251-80f21caeb6b3"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Nepieciešami bieži braucien",
+                            "stable_key": "42bac57f-df42-4b46-a199-4ebc4024a82c",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nepieciešami bieži braucien"
+                                }
+                            },
+                            "value": "428ef4d3-989d-4a46-985e-1db474869201"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Nevēlēšanās piedalīties pētījumos",
+                            "stable_key": "4735e0e2-5036-4f63-b996-d21b2a222f72",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nevēlēšanās piedalīties pētījumos"
+                                }
+                            },
+                            "value": "86e955f2-27e9-4d2f-b9ee-fa00a418978d"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Nepietiekama informācija",
+                            "stable_key": "bb4403b9-f5e8-4e11-a49c-a1fc214602ac",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nepietiekama informācija"
+                                }
+                            },
+                            "value": "14a5434d-869f-4564-a687-58bf3630a95a"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Izmaksas",
+                            "stable_key": "6f197cd3-8c4e-435f-ac71-c3634cf3a86b",
+                            "translations": {
+                                "lv": {
+                                    "label": "Izmaksas"
+                                }
+                            },
+                            "value": "67ef7c39-87d3-4740-ac00-dcae51c2e483"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Bailes no medicīniskām procedūrām",
+                            "stable_key": "08d3e78d-83bf-4793-b34f-feec3cfa148b",
+                            "translations": {
+                                "lv": {
+                                    "label": "Bailes no medicīniskām procedūrām"
+                                }
+                            },
+                            "value": "ad1e559f-f9a6-4776-8603-b2d8cbfc683c"
+                        },
+                        {
+                            "display_order": 6,
+                            "label": "Cits.",
+                            "stable_key": "7e6db808-a763-4449-b770-b6d66d655a8e",
+                            "translations": {
+                                "lv": {
+                                    "label": "Cits."
+                                }
+                            },
+                            "value": "2fb8f90c-0346-4265-9f0e-e8773c42d95b"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "312cb44a-6b65-4daf-b1fd-1d3e6a31567f",
+                    "translations": {
+                        "lv": {
+                            "label": "Kas Jūs visvairāk atturētu no šādas iespējas apsvēršanas? Varat atzīmēt vairākas atbildes."
+                        }
+                    },
+                    "type": "multiple_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 31,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Ja \"Cits\" kas tas būtu",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "max_length": null,
+                        "min_length": null
+                    },
+                    "stable_key": "b209ad77-3128-403b-939c-9345f35b2b3e",
+                    "translations": {
+                        "lv": {
+                            "label": "Ja \"Cits\" kas tas būtu"
+                        }
+                    },
+                    "type": "long_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 32,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Kāda informācija Jums būtu īpaši svarīga pirms lēmuma pieņemšanas? Varat atzīmēt vairākas atbildes.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Iespējamais ieguvums un tā nenoteiktība",
+                            "stable_key": "68a442ce-fcf4-4235-bcc0-b38e8f3fbd8d",
+                            "translations": {
+                                "lv": {
+                                    "label": "Iespējamais ieguvums un tā nenoteiktība"
+                                }
+                            },
+                            "value": "20486224-9286-4fd0-aa67-80c8f290487d"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Šūnu izcelsme un iegūšanas veids",
+                            "stable_key": "734494a5-db97-432e-91f0-c52856899565",
+                            "translations": {
+                                "lv": {
+                                    "label": "Šūnu izcelsme un iegūšanas veids"
+                                }
+                            },
+                            "value": "1598cd21-f90f-4e29-a837-14af941701df"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Ievadīšanas reižu skaits un intervāli",
+                            "stable_key": "4bb10063-f123-45d9-9d78-fbb2ddd6dbff",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ievadīšanas reižu skaits un intervāli"
+                                }
+                            },
+                            "value": "49a514f3-45c5-49f8-a4a0-31325bac6873"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Alternatīvas ārstēšanas iespējas",
+                            "stable_key": "5bc77466-963d-4daa-bf16-bdd77054620f",
+                            "translations": {
+                                "lv": {
+                                    "label": "Alternatīvas ārstēšanas iespējas"
+                                }
+                            },
+                            "value": "efa9c585-a84d-477c-82f1-25b33bbda899"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Ceļš uz ārstniecības iestādi un laika patēriņš",
+                            "stable_key": "4ad9e16f-7997-4e7c-94ee-c4c4cc254923",
+                            "translations": {
+                                "lv": {
+                                    "label": "Ceļš uz ārstniecības iestādi un laika patēriņš"
+                                }
+                            },
+                            "value": "6f2d93e8-9026-4e20-9d8a-0336f92a6e55"
+                        },
+                        {
+                            "display_order": 5,
+                            "label": "Iespēja jebkurā brīdī atteikties",
+                            "stable_key": "d0e48a77-2c6b-43c5-bc0c-b96ba2424411",
+                            "translations": {
+                                "lv": {
+                                    "label": "Iespēja jebkurā brīdī atteikties"
+                                }
+                            },
+                            "value": "2aca9496-4908-40f9-a90d-491796a41f08"
+                        },
+                        {
+                            "display_order": 6,
+                            "label": "Iespējamie riski un blakusparādības",
+                            "stable_key": "b6d92d62-9c24-40e6-8963-0f64dd703602",
+                            "translations": {
+                                "lv": {
+                                    "label": "Iespējamie riski un blakusparādības"
+                                }
+                            },
+                            "value": "bc8a1803-0448-4b3b-b2a4-c67ff353d35b"
+                        },
+                        {
+                            "display_order": 7,
+                            "label": "Nepieciešamie izmeklējumi pirms ārstēšanas",
+                            "stable_key": "8d0f3d8a-93b2-4a5a-936f-62be8e4d3591",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nepieciešamie izmeklējumi pirms ārstēšanas"
+                                }
+                            },
+                            "value": "63c78c38-ba90-42ed-acdb-3736593473b2"
+                        },
+                        {
+                            "display_order": 8,
+                            "label": "Novērošanas ilgums pēc ārstēšanas",
+                            "stable_key": "6baa5294-1e34-4e2a-8144-b68bc613cf91",
+                            "translations": {
+                                "lv": {
+                                    "label": "Novērošanas ilgums pēc ārstēšanas"
+                                }
+                            },
+                            "value": "5e715a51-3fa1-4738-be04-f3ae8676b997"
+                        },
+                        {
+                            "display_order": 9,
+                            "label": "Izmaksas un iespējamā kompensācija",
+                            "stable_key": "b47f1449-2ab2-4544-aafc-f550fd7e5583",
+                            "translations": {
+                                "lv": {
+                                    "label": "Izmaksas un iespējamā kompensācija"
+                                }
+                            },
+                            "value": "e58e4dd3-3311-4ef5-85ff-c88d09aef947"
+                        },
+                        {
+                            "display_order": 10,
+                            "label": "Datu aizsardzība un paraugu izmantošana",
+                            "stable_key": "e125f02c-ac89-4634-b8bf-34d310c4865a",
+                            "translations": {
+                                "lv": {
+                                    "label": "Datu aizsardzība un paraugu izmantošana"
+                                }
+                            },
+                            "value": "3e3e6605-76ea-490f-86b4-3f858f35292a"
+                        },
+                        {
+                            "display_order": 11,
+                            "label": "Cits.",
+                            "stable_key": "86e03a06-f6d9-49e7-ab26-6a9d42c64867",
+                            "translations": {
+                                "lv": {
+                                    "label": "Cits."
+                                }
+                            },
+                            "value": "b509878b-21c4-46f2-a6e0-dfb34cdab772"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "20b52a3c-f6cc-4a6d-ad53-ab0d276f2196",
+                    "translations": {
+                        "lv": {
+                            "label": "Kāda informācija Jums būtu īpaši svarīga pirms lēmuma pieņemšanas? Varat atzīmēt vairākas atbildes."
+                        }
+                    },
+                    "type": "multiple_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 33,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Ja \"Cits\" kas tas būtu",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "max_length": null,
+                        "min_length": null
+                    },
+                    "stable_key": "48e7caf6-2636-4209-9c0a-e36c20a4909b",
+                    "translations": {
+                        "lv": {
+                            "label": "Ja \"Cits\" kas tas būtu"
+                        }
+                    },
+                    "type": "long_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 34,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Vai Jūs piekristu, ka ārstniecības iestādes/projekta pārstāvis ar Jums sazinās, lai sniegtu papildinformāciju par piemērotu konsultāciju vai iespējamu turpmāku izvērtēšanu?",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Jā",
+                            "stable_key": "3b968dbb-ce17-49a8-8b7a-72bc8f0e153a",
+                            "translations": {
+                                "lv": {
+                                    "label": "Jā"
+                                }
+                            },
+                            "value": "019ce2bc-06b8-4cdd-9098-066477b566de"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Nē",
+                            "stable_key": "99a58b73-0f93-43de-9ca0-e3ffcf63d240",
+                            "translations": {
+                                "lv": {
+                                    "label": "Nē"
+                                }
+                            },
+                            "value": "41a40059-3ece-41ca-b0a1-ef77af1d0e53"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Vēlos vispirms pārrunāt ar savu ārstu",
+                            "stable_key": "bb896890-4d1c-4718-8ab8-31432d2b6cd3",
+                            "translations": {
+                                "lv": {
+                                    "label": "Vēlos vispirms pārrunāt ar savu ārstu"
+                                }
+                            },
+                            "value": "078334ea-9f6c-48d9-9ba4-ba63ff690608"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "bb47f42d-3fc4-4cd2-81ca-23071515dc5b",
+                    "translations": {
+                        "lv": {
+                            "label": "Vai Jūs piekristu, ka ārstniecības iestādes/projekta pārstāvis ar Jums sazinās, lai sniegtu papildinformāciju par piemērotu konsultāciju vai iespējamu turpmāku izvērtēšanu?"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 35,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Ja atbildējāt “Jā”, norādiet vēlamo saziņas veidu atsevišķā kontaktinformācijas lapā. Kontaktinformācija netiek iekļauta Uldim Bērziņam nododamajā anonimizētajā datu kopā.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "dbbb9e3a-ed42-4cfb-93c7-731bc4996661",
+                    "translations": {
+                        "lv": {
+                            "label": "Ja atbildējāt “Jā”, norādiet vēlamo saziņas veidu atsevišķā kontaktinformācijas lapā. Kontaktinformācija netiek iekļauta Uldim Bērziņam nododamajā anonimizētajā datu kopā."
+                        }
+                    },
+                    "type": "explanatory_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 36,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Paldies par atbildēm!",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "40b58122-cd3f-41e8-8bfd-b2b574290198",
+                    "translations": {
+                        "lv": {
+                            "label": "Paldies par atbildēm!"
+                        }
+                    },
+                    "type": "heading",
+                    "validation_rules": [],
+                    "visible": true
+                }
+            ],
+            "description": null,
+            "display_order": 2,
+            "stable_key": "4a50a391-bca6-441b-95cb-309455e697cc",
+            "title": "Aptaujas daļa",
+            "translations": {
+                "en": {
+                    "description": "Complete the final questionnaire part.",
+                    "title": "Questionnaire section"
+                },
+                "lv": {
+                    "title": "Aptaujas daļa"
+                },
+                "ru": {
+                    "description": "Завершите последнюю часть анкеты.",
+                    "title": "Раздел анкеты"
+                }
+            },
+            "visible": true
+        }
+    ],
+    "version": {
+        "description": "Aptauja ir par smagas hroniskas psoriāzes pacientu dzīves kvalitāte, terapijas pieredze un gatavība apsvērt jaunas ārstēšanas iespējas Latvijā.",
+        "settings": {
+            "anonymous_allowed": true,
+            "consent_required": true,
+            "result_visibility": "completion",
+            "scoring_enabled": false
+        },
+        "title": "Aptauja",
+        "translations": {
+            "lv": {
+                "description": "Aptauja ir par smagas hroniskas psoriāzes pacientu dzīves kvalitāte, terapijas pieredze un gatavība apsvērt jaunas ārstēšanas iespējas Latvijā.",
+                "title": "Aptauja"
+            }
+        }
+    }
+}
