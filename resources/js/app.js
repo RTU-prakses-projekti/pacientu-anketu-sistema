@@ -125,36 +125,19 @@ document.querySelectorAll('select[data-move-url]').forEach((select) => select.ad
     await fetch(select.dataset.moveUrl, {method: 'POST', body}); window.location.reload();
 }));
 
-document.querySelectorAll('[data-doctor-scroll-container]').forEach((container) => {
-    const top = container.querySelector('[data-doctor-scroll-top]');
-    const bottom = container.querySelector('[data-doctor-scroll-bottom]');
-    const table = bottom?.querySelector('table');
-    const spacer = top?.querySelector('[data-doctor-scroll-spacer]');
-    if (!top || !bottom || !table || !spacer) return;
-
-    let syncing = false;
-    const mirror = (source, target) => {
-        if (syncing) return;
-        syncing = true;
-        target.scrollLeft = source.scrollLeft;
-        syncing = false;
+document.querySelectorAll('[data-patient-select-all]').forEach((selectAll) => {
+    const patients = [...document.querySelectorAll('[data-patient-select]')];
+    const refresh = () => {
+        const selected = patients.filter((checkbox) => checkbox.checked).length;
+        selectAll.checked = patients.length > 0 && selected === patients.length;
+        selectAll.indeterminate = selected > 0 && selected < patients.length;
     };
-    const refreshWidth = () => {
-        spacer.style.width = `${table.scrollWidth}px`;
-        top.scrollLeft = bottom.scrollLeft;
-    };
-
-    top.addEventListener('scroll', () => mirror(top, bottom), {passive: true});
-    bottom.addEventListener('scroll', () => mirror(bottom, top), {passive: true});
-    if ('ResizeObserver' in window) {
-        const observer = new ResizeObserver(refreshWidth);
-        observer.observe(table);
-        observer.observe(bottom);
-    }
-    window.addEventListener('resize', refreshWidth, {passive: true});
-    window.addEventListener('load', refreshWidth, {once: true});
-    document.fonts?.ready.then(refreshWidth);
-    requestAnimationFrame(refreshWidth);
+    selectAll.addEventListener('change', () => {
+        patients.forEach((checkbox) => { checkbox.checked = selectAll.checked; });
+        refresh();
+    });
+    patients.forEach((checkbox) => checkbox.addEventListener('change', refresh));
+    refresh();
 });
 
 const runner = document.querySelector('#form-runner');

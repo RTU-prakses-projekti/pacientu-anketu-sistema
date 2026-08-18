@@ -17,30 +17,55 @@
 </form>
 @endif
 <div class="mb-4 text-sm text-slate-600"><strong>{{ $selectedMembership->organisation->name }}</strong> · {{ $selectedMembership->user->name }}</div>
-<div data-doctor-scroll-container>
-<p class="doctor-scroll-hint">{{ __('messages.horizontal_scroll_hint') }}</p>
-<div class="doctor-table-top-scroll" data-doctor-scroll-top role="region" aria-label="{{ __('messages.horizontal_scroll_hint') }}" tabindex="0"><div class="doctor-table-top-scroll-spacer" data-doctor-scroll-spacer></div></div>
-<div class="table-wrap doctor-table" data-horizontal-scroll="true" data-doctor-scroll-bottom><table><thead><tr>
-    <th class="slot-column">{{ __('messages.slot_number') }}</th><th class="name-column">{{ __('messages.first_name') }}</th><th class="name-column">{{ __('messages.last_name') }}</th><th class="patient-id-column">{{ __('messages.patient_id') }}</th><th class="research-id-column">{{ __('messages.research_id') }}</th><th class="note-column">{{ __('messages.patient_note') }}</th><th class="actions-column">{{ __('messages.actions') }}</th>
-    @foreach($columns as $column)<th class="status-column">{{ $column->label ?: $column->publication->formVersion->title }}</th>@endforeach
+
+<details class="card mb-6" @if($errors->any()) open @endif>
+    <summary class="cursor-pointer font-semibold">{{ __('messages.add_patient') }}</summary>
+    <form method="POST" action="{{ route('doctor.patients.store', $selectedMembership->organisation) }}" class="form-grid mt-4">@csrf
+        <label>{{ __('messages.first_name') }}<input name="first_name" maxlength="100" value="{{ old('first_name') }}"></label>
+        <label>{{ __('messages.last_name') }}<input name="last_name" maxlength="100" value="{{ old('last_name') }}"></label>
+        <label>{{ __('messages.external_patient_code') }}<input name="external_patient_code" maxlength="100" value="{{ old('external_patient_code') }}"></label>
+        <label>{{ __('messages.patient_note') }}<textarea name="note" rows="2" maxlength="10000">{{ old('note') }}</textarea></label>
+        <p class="text-sm text-slate-600">{{ __('messages.research_id_generated') }}</p>
+        <button class="btn primary" type="submit">{{ __('messages.create_patient') }}</button>
+    </form>
+</details>
+
+<form id="bulk-selection-form" method="POST" action="{{ route('doctor.questionnaires.bulk.create') }}" class="actions mb-3">@csrf
+    <label class="check"><input type="checkbox" data-patient-select-all> {{ __('messages.select_all_visible') }}</label>
+    <button class="btn primary" type="submit">{{ __('messages.assign_questionnaire') }}</button>
+</form>
+
+<div class="table-wrap doctor-overview-table"><table><thead><tr>
+    <th class="selection-column"><span class="sr-only">{{ __('messages.select_patient') }}</span></th>
+    <th>{{ __('messages.slot_number') }}</th><th>{{ __('messages.patient') }}</th><th>{{ __('messages.patient_id') }}</th><th>{{ __('messages.research_id') }}</th><th>{{ __('messages.questionnaires') }}</th><th>{{ __('messages.status') }}</th><th>{{ __('messages.actions') }}</th>
 </tr></thead><tbody>
-@foreach($slots as $slot)
-@php($patientCase = $patientCases->get($slot))
-<tr data-slot="{{ $slot }}"><td class="slot-column">{{ $slot }}</td>
-<td class="name-column"><input class="name-input" form="patient-slot-{{ $slot }}" name="first_name" value="{{ $patientCase?->first_name }}" aria-label="{{ __('messages.first_name') }} {{ $slot }}"></td>
-<td class="name-column"><input class="name-input" form="patient-slot-{{ $slot }}" name="last_name" value="{{ $patientCase?->last_name }}" aria-label="{{ __('messages.last_name') }} {{ $slot }}"></td>
-<td class="patient-id-column"><input class="patient-id-input" form="patient-slot-{{ $slot }}" name="external_patient_code" value="{{ $patientCase?->external_patient_code }}" aria-label="{{ __('messages.patient_id') }} {{ $slot }}"></td>
-<td class="research-id-column"><code>{{ $patientCase?->patient_code ?? '—' }}</code></td>
-<td class="note-column"><textarea class="patient-note-input" form="patient-slot-{{ $slot }}" name="note" rows="2" aria-label="{{ __('messages.patient_note') }} {{ $slot }}">{{ $patientCase?->note }}</textarea></td>
-<td class="actions-column"><form id="patient-slot-{{ $slot }}" method="POST" action="{{ route('doctor.patients.slots.update', [$selectedMembership->organisation, $selectedMembership->user, $slot]) }}">@csrf @method('PUT')<button class="btn" type="submit">{{ $patientCase ? __('messages.save_note') : __('messages.create_patient') }}</button></form>@if($patientCase)<a class="btn mt-2" href="{{ route('doctor.questionnaires.index',$patientCase) }}">{{ __('messages.questionnaires') }}</a>@endif</td>
-@foreach($columns as $column)
-@php($assignment = $patientCase?->assignments->firstWhere('publication_id', $column->publication_id))
-@php($completedSubmission = $assignment?->completedSubmission)
-<td class="status-column">@if($completedSubmission)<a class="status-square completed" data-status="completed" href="{{ route('doctor.results.show', [$patientCase, $assignment]) }}" title="{{ __('messages.completed_status') }}" aria-label="{{ __('messages.completed_status') }}: {{ $column->label }}">✓</a>@else<span class="status-square not-completed" data-status="not-completed" title="{{ __('messages.not_completed_status') }}" aria-label="{{ __('messages.not_completed_status') }}: {{ $column->label }}">—</span>@endif</td>
-@endforeach
+@forelse($patientCases as $patientCase)
+@php($notStarted = max(0, $patientCase->assignments_count - $patientCase->completed_assignments_count - $patientCase->in_progress_assignments_count))
+<tr data-patient-row="{{ $patientCase->public_id }}">
+    <td class="selection-column"><input type="checkbox" form="bulk-selection-form" name="patient_case_ids[]" value="{{ $patientCase->id }}" data-patient-select aria-label="{{ __('messages.select_patient') }} {{ $patientCase->slot_number }}"></td>
+    <td>{{ $patientCase->slot_number }}</td>
+    <td><strong>{{ trim($patientCase->first_name.' '.$patientCase->last_name) ?: '—' }}</strong></td>
+    <td>{{ $patientCase->external_patient_code ?: '—' }}</td>
+    <td><code>{{ $patientCase->patient_code }}</code></td>
+    <td>{{ trans_choice('messages.assigned_count', $patientCase->assignments_count, ['count' => $patientCase->assignments_count]) }}</td>
+    <td><span class="patient-summary-status">{{ __('messages.completed_count', ['count' => $patientCase->completed_assignments_count]) }}</span><br><span class="text-sm text-slate-600">{{ __('messages.in_progress_count', ['count' => $patientCase->in_progress_assignments_count]) }} · {{ __('messages.not_started_count', ['count' => $notStarted]) }}</span></td>
+    <td class="doctor-row-actions">
+        <details class="relative"><summary class="btn">{{ __('messages.edit') }}</summary>
+            <form method="POST" action="{{ route('doctor.patients.slots.update', [$selectedMembership->organisation, $selectedMembership->user, $patientCase->slot_number]) }}" class="stack doctor-inline-edit">@csrf @method('PUT')
+                <label>{{ __('messages.first_name') }}<input name="first_name" maxlength="100" value="{{ $patientCase->first_name }}"></label>
+                <label>{{ __('messages.last_name') }}<input name="last_name" maxlength="100" value="{{ $patientCase->last_name }}"></label>
+                <label>{{ __('messages.external_patient_code') }}<input name="external_patient_code" maxlength="100" value="{{ $patientCase->external_patient_code }}"></label>
+                <label>{{ __('messages.patient_note') }}<textarea name="note" rows="2" maxlength="10000">{{ $patientCase->note }}</textarea></label>
+                <button class="btn primary">{{ __('messages.save') }}</button>
+            </form>
+        </details>
+        <a class="btn" href="{{ route('doctor.questionnaires.index', $patientCase) }}">{{ __('messages.questionnaires') }}</a>
+    </td>
 </tr>
-@endforeach
+@empty
+<tr><td colspan="8">{{ __('messages.no_patients') }}</td></tr>
+@endforelse
 </tbody></table></div>
-</div>
+{{ $patientCases->links() }}
 @endif
 @endsection

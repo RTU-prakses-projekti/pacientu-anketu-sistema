@@ -54,10 +54,13 @@ Route::get('/respond/{submission}/attachments/{attachment}', [AttachmentControll
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/doctor', [DoctorDashboardController::class, 'index'])->name('doctor.dashboard');
+    Route::post('/doctor/organisations/{organisation}/patients', [DoctorDashboardController::class, 'storePatient'])->name('doctor.patients.store');
     Route::put('/doctor/organisations/{organisation}/doctors/{doctor}/slots/{slot}', [DoctorDashboardController::class, 'updateSlot'])->name('doctor.patients.slots.update');
     Route::get('/doctor/patients/{patientCase}/assignments/{assignment}/result', [DoctorDashboardController::class, 'result'])->name('doctor.results.show');
     Route::get('/doctor/patients/{patientCase}/questionnaires', [DoctorQuestionnaireController::class, 'index'])->name('doctor.questionnaires.index');
     Route::post('/doctor/patients/{patientCase}/questionnaires', [DoctorQuestionnaireController::class, 'store'])->name('doctor.questionnaires.store');
+    Route::post('/doctor/patients/bulk-questionnaires/create', [DoctorQuestionnaireController::class, 'bulkCreate'])->name('doctor.questionnaires.bulk.create');
+    Route::post('/doctor/patients/bulk-questionnaires', [DoctorQuestionnaireController::class, 'bulkStore'])->name('doctor.questionnaires.bulk.store');
     Route::post('/doctor/patients/{patientCase}/patient-link', [DoctorQuestionnaireController::class, 'issueLink'])->name('doctor.patient-link.issue');
     Route::delete('/doctor/patients/{patientCase}/patient-link/{patientAccessPackage}', [DoctorQuestionnaireController::class, 'revokeLink'])->name('doctor.patient-link.revoke');
 

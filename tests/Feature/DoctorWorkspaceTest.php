@@ -74,7 +74,7 @@ class DoctorWorkspaceTest extends TestCase
         $this->actingAs($admin2)->get(route('system.users'))->assertForbidden();
     }
 
-    public function test_doctor_dashboard_has_200_slots_pseudonymous_patients_and_owner_isolation(): void
+    public function test_doctor_dashboard_dynamically_creates_pseudonymous_patients_and_preserves_owner_isolation(): void
     {
         $organisation = $this->organisation();
         [$doctorA] = $this->member('doctor', $organisation);
@@ -83,25 +83,23 @@ class DoctorWorkspaceTest extends TestCase
         $this->actingAs($doctorA)->get(route('dashboard'))->assertRedirect(route('doctor.dashboard'));
         $this->actingAs($doctorA)->get(route('doctor.dashboard'))
             ->assertOk()
-            ->assertSee('data-slot="200"', false)
-            ->assertSee('data-horizontal-scroll="true"', false)
-            ->assertSee('data-doctor-scroll-top', false)
-            ->assertSee('data-doctor-scroll-spacer', false)
-            ->assertSee('data-doctor-scroll-bottom', false)
-            ->assertSee('class="actions-column"', false)
-            ->assertSeeInOrder(['Nr.', 'Vārds', 'Uzvārds', 'Pacienta ID', 'Pētījuma ID', 'Piezīme', 'Darbības'])
+            ->assertDontSee('data-patient-row=', false)
+            ->assertDontSee('data-doctor-scroll-top', false)
+            ->assertSee('doctor-overview-table', false)
+            ->assertSee('data-patient-select-all', false)
+            ->assertSeeInOrder(['Nr.', 'Pacients', 'Pacienta ID', 'Pētījuma ID', 'Anketas', 'Statuss', 'Darbības'])
             ->assertDontSee(route('system.roles'), false)
             ->assertDontSee(route('forms.index', $organisation), false);
         $this->actingAs($doctorA)->get(route('forms.create', $organisation))->assertForbidden();
 
-        $this->actingAs($doctorA)->put(route('doctor.patients.slots.update', [$organisation, $doctorA, 200]), [
+        $this->actingAs($doctorA)->post(route('doctor.patients.store', $organisation), [
             'first_name' => 'Anna',
             'last_name' => 'Bērziņa',
             'external_patient_code' => 'KL-204',
             'note' => 'Kontroles piezīme',
             'patient_code' => 'PAT-FORGED-CREATE',
         ])->assertRedirect();
-        $patient = PatientCase::where('doctor_id', $doctorA->id)->where('slot_number', 200)->firstOrFail();
+        $patient = PatientCase::where('doctor_id', $doctorA->id)->where('slot_number', 1)->firstOrFail();
         $this->assertStringStartsWith('PAT-', $patient->patient_code);
         $this->assertNotSame('PAT-FORGED-CREATE', $patient->patient_code);
         $this->assertNotSame($patient->external_patient_code, $patient->patient_code);
@@ -112,9 +110,12 @@ class DoctorWorkspaceTest extends TestCase
         $this->assertSame('Kontroles piezīme', $patient->note);
         $this->actingAs($doctorA)->get(route('doctor.dashboard'))->assertOk()->assertSee('Anna')->assertSee('Bērziņa')->assertSee('KL-204')->assertSee($patient->patient_code);
 
+        $this->actingAs($doctorA)->post(route('doctor.patients.store', $organisation), ['first_name' => 'Otra'])->assertRedirect();
+        $this->assertDatabaseHas('patient_cases', ['doctor_id' => $doctorA->id, 'slot_number' => 2, 'first_name' => 'Otra']);
+
         $researchId = $patient->patient_code;
-        $this->actingAs($doctorA)->put(route('doctor.patients.slots.update', [$organisation, $doctorA, 200]), ['first_name' => 'Anete', 'last_name' => 'Kalniņa', 'external_patient_code' => 'KL-205', 'note' => 'Mainīta', 'patient_code' => 'PAT-FORGED-UPDATE'])->assertRedirect();
-        $this->assertSame(1, PatientCase::where('doctor_id', $doctorA->id)->where('slot_number', 200)->count());
+        $this->actingAs($doctorA)->put(route('doctor.patients.slots.update', [$organisation, $doctorA, 1]), ['first_name' => 'Anete', 'last_name' => 'Kalniņa', 'external_patient_code' => 'KL-205', 'note' => 'Mainīta', 'patient_code' => 'PAT-FORGED-UPDATE'])->assertRedirect();
+        $this->assertSame(1, PatientCase::where('doctor_id', $doctorA->id)->where('slot_number', 1)->count());
         $patient->refresh();
         $this->assertSame(['Anete', 'Kalniņa', 'KL-205', 'Mainīta'], [$patient->first_name, $patient->last_name, $patient->external_patient_code, $patient->note]);
         $this->assertSame($researchId, $patient->patient_code);
@@ -141,12 +142,15 @@ class DoctorWorkspaceTest extends TestCase
 
         $this->actingAs($doctorA)->get(route('doctor.dashboard'))
             ->assertOk()
-            ->assertSee('data-status="completed"', false)
-            ->assertSee('data-status="not-completed"', false)
-            ->assertSee(route('doctor.results.show', [$patientA, $assignmentA]), false)
+            ->assertSee('Pabeigtas: 1')
+            ->assertSee('Procesā: 1')
+            ->assertDontSee($publicationA->name)
+            ->assertDontSee($publicationB->name)
             ->assertSee('Doctor A patient')
             ->assertDontSee('Doctor B secret')
             ->assertDontSee($patientB->patient_code);
+        $this->actingAs($doctorA)->get(route('doctor.questionnaires.index', $patientA))
+            ->assertOk()->assertSee(route('doctor.results.show', [$patientA, $assignmentA]), false);
         $this->actingAs($doctorA)->get(route('doctor.results.show', [$patientA, $assignmentA]))->assertOk()->assertSee($submissionA->status);
         $this->actingAs($doctorA)->get(route('doctor.results.show', [$patientA, $assignmentInProgress]))->assertNotFound();
         $this->actingAs($doctorA)->get(route('doctor.results.show', [$patientB, $assignmentB]))->assertForbidden();
@@ -172,6 +176,56 @@ class DoctorWorkspaceTest extends TestCase
             ->assertOk()
             ->assertDontSee($submissionA->public_id)
             ->assertDontSee('Doctor A patient');
+    }
+
+    public function test_removed_or_inactive_organisations_are_not_doctor_workspaces(): void
+    {
+        $activeOrganisation = $this->organisation();
+        [$doctor] = $this->member('doctor', $activeOrganisation);
+
+        $deletedOrganisation = $this->organisation();
+        $deletedMembership = OrganisationMembership::create([
+            'organisation_id' => $deletedOrganisation->id,
+            'user_id' => $doctor->id,
+            'is_active' => true,
+        ]);
+        $deletedMembership->roles()->attach(Role::where('name', 'doctor')->firstOrFail());
+        PatientCase::create([
+            'organisation_id' => $deletedOrganisation->id,
+            'doctor_id' => $doctor->id,
+            'slot_number' => 1,
+            'first_name' => 'Deleted workspace secret',
+        ]);
+        $deletedOrganisation->delete();
+
+        $inactiveOrganisation = $this->organisation();
+        $inactiveMembership = OrganisationMembership::create([
+            'organisation_id' => $inactiveOrganisation->id,
+            'user_id' => $doctor->id,
+            'is_active' => true,
+        ]);
+        $inactiveMembership->roles()->attach(Role::where('name', 'doctor')->firstOrFail());
+        PatientCase::create([
+            'organisation_id' => $inactiveOrganisation->id,
+            'doctor_id' => $doctor->id,
+            'slot_number' => 1,
+            'first_name' => 'Inactive workspace secret',
+        ]);
+        $inactiveOrganisation->update(['is_active' => false]);
+
+        $this->assertTrue($doctor->hasDoctorWorkspace());
+        $this->actingAs($doctor)->get(route('doctor.dashboard'))
+            ->assertOk()
+            ->assertSee($activeOrganisation->name)
+            ->assertDontSee($deletedOrganisation->name)
+            ->assertDontSee($inactiveOrganisation->name)
+            ->assertDontSee('Deleted workspace secret')
+            ->assertDontSee('Inactive workspace secret');
+        $this->assertDatabaseHas('organisation_memberships', ['id' => $deletedMembership->id, 'is_active' => true]);
+        $this->assertNotNull(Organisation::withTrashed()->find($deletedOrganisation->id));
+
+        $activeOrganisation->update(['is_active' => false]);
+        $this->assertFalse($doctor->hasDoctorWorkspace());
     }
 
     private function organisation(): Organisation

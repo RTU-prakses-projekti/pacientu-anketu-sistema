@@ -50,6 +50,7 @@ class User extends Authenticatable
     {
         return $this->memberships()
             ->where('is_active', true)
+            ->whereHas('organisation', fn ($query) => $query->where('is_active', true))
             ->whereHas('roles', fn ($query) => $query->where('roles.name', 'doctor'));
     }
 
@@ -63,7 +64,20 @@ class User extends Authenticatable
         return $this->memberships()
             ->where('organisation_id', $organisationId)
             ->where('is_active', true)
+            ->whereHas('organisation', fn ($query) => $query->where('is_active', true))
             ->whereHas('roles.permissions', fn ($query) => $query->where('permissions.name', $permission))
+            ->exists();
+    }
+
+    public function hasDoctorPermission(int $organisationId, string $permission): bool
+    {
+        return $this->memberships()
+            ->where('organisation_id', $organisationId)
+            ->where('is_active', true)
+            ->whereHas('organisation', fn ($query) => $query->where('is_active', true))
+            ->whereHas('roles', fn ($query) => $query
+                ->where('roles.name', 'doctor')
+                ->whereHas('permissions', fn ($permissions) => $permissions->where('permissions.name', $permission)))
             ->exists();
     }
 

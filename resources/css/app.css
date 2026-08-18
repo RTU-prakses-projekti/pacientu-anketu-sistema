@@ -78,22 +78,13 @@
   .score-card { @apply my-6 grid place-items-center rounded-xl bg-indigo-50 p-6 text-3xl text-indigo-800; }
   .score-card span { @apply text-lg; }
   .three-actions { @apply grid gap-4 md:grid-cols-3; }
-  .doctor-scroll-hint { @apply mb-1 text-xs font-medium text-slate-600; }
-  .doctor-table-top-scroll { @apply mb-2 h-5 max-w-full overflow-x-auto overflow-y-hidden rounded border-x border-slate-200 bg-slate-50; scrollbar-gutter: stable; }
-  .doctor-table-top-scroll-spacer { @apply h-px; }
-  .doctor-table { @apply max-w-full overflow-x-auto; scrollbar-gutter: stable; }
-  .doctor-table table { @apply w-max min-w-[92rem]; }
-  .doctor-table .slot-column { @apply w-16 min-w-16 text-center; }
-  .doctor-table .name-column { @apply w-40 min-w-40; }
-  .doctor-table .patient-id-column { @apply w-44 min-w-44; }
-  .doctor-table .research-id-column { @apply w-52 min-w-52 whitespace-nowrap; }
-  .doctor-table .note-column { @apply w-96 min-w-96; }
-  .doctor-table .actions-column { @apply w-48 min-w-48 whitespace-nowrap; }
-  .doctor-table .status-column { @apply w-28 min-w-28 max-w-36 text-center; }
-  .doctor-table .name-input { @apply w-36 min-w-36; }
-  .doctor-table .patient-id-input { @apply w-40 min-w-40; }
-  .doctor-table .patient-note-input { @apply min-h-16 w-80 min-w-80; }
-  .doctor-table .actions-column .btn { @apply whitespace-nowrap; }
+  .doctor-overview-table table { @apply w-full table-auto; }
+  .doctor-overview-table .selection-column { @apply w-10 text-center; }
+  .doctor-overview-table code { @apply whitespace-nowrap text-xs; }
+  .doctor-row-actions { @apply min-w-44; }
+  .doctor-row-actions > * { @apply mb-2 inline-block align-top; }
+  .doctor-inline-edit { @apply absolute right-0 z-20 mt-2 w-80 rounded-lg border border-slate-200 bg-white p-4 shadow-xl; }
+  .patient-summary-status { @apply whitespace-nowrap font-medium text-emerald-700; }
   .status-square { @apply mx-auto inline-flex h-9 w-9 items-center justify-center rounded-md border text-base font-bold no-underline; }
   .status-square.completed { @apply border-emerald-700 bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white hover:no-underline; }
   .status-square.not-completed { @apply border-slate-300 bg-slate-100 text-slate-500; }
