@@ -10,6 +10,7 @@ use App\Models\Organisation;
 use App\Models\OrganisationMembership;
 use App\Models\PatientCase;
 use App\Models\QuestionnairePackageImport;
+use App\Models\QuestionnairePackagePartImport;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
@@ -192,6 +193,83 @@ class QuestionnairePackageExchangeTest extends TestCase
         $this->expectException(ValidationException::class); $this->packages()->import($export['package_name'], $target, $creator);
     }
 
+    public function test_package_can_be_appended_to_existing_draft_with_collisions_graph_and_provenance_preserved(): void
+    {
+        Storage::fake('local');
+        [$creator, $organisation, $sourceForm, $sourceVersion, $sourceChoice, $sourceTarget] = $this->graph();
+        $authoring = app(FormAuthoringService::class);
+        $second = $authoring->addSection($sourceVersion, 'Otrā importējamā sadaļa');
+        Storage::disk('local')->put('attachments/part.txt', 'part-asset');
+        $attachment = Attachment::create(['organisation_id' => $organisation->id, 'attachable_type' => $sourceVersion->getMorphClass(), 'attachable_id' => $sourceVersion->id,
+            'uploaded_by' => $creator->id, 'disk' => 'local', 'storage_path' => 'attachments/part.txt', 'original_name' => 'part.txt', 'mime_type' => 'text/plain',
+            'size' => strlen('part-asset'), 'sha256' => hash('sha256', 'part-asset'), 'status' => 'ready']);
+        $authoring->addComponent($sourceVersion, $second, ['type' => 'file_attachment', 'label' => 'Part file', 'settings' => ['attachment_id' => $attachment->id], 'options' => []]);
+        $export = $this->actingAs($creator)->packages()->export($sourceForm, $sourceVersion->fresh());
+
+        $targetForm = $authoring->create($organisation->id, $creator, 'Target form', 'blank');
+        $targetVersion = $targetForm->versions()->firstOrFail();
+        $existingSection = $targetVersion->sections()->firstOrFail();
+        $existingSection->update(['stable_key' => $sourceVersion->sections()->first()->stable_key]);
+        $existingComponent = $authoring->addComponent($targetVersion, $existingSection, ['type' => 'short_text', 'label' => 'Existing content', 'options' => []]);
+        $existingComponent->update(['stable_key' => $sourceChoice->stable_key]);
+        $existingLastOrder = $existingSection->display_order;
+
+        $this->actingAs($creator)->get(route('forms.builder', $targetForm))->assertOk()->assertSee(__('messages.add_questionnaire_part_from_git'));
+        $this->get(route('forms.show', $targetForm))->assertOk()->assertSee(__('messages.add_questionnaire_part_from_git'));
+        $this->get(route('questionnaires.parts', [$targetForm, $targetVersion]))->assertOk()->assertSee($export['package_name'])->assertSee(__('messages.import_as_next_part'));
+
+        $imported = $this->packages()->importInto($export['package_name'], $targetVersion, $creator);
+        $this->assertSame(3, $imported->sections()->count());
+        $this->assertDatabaseHas('form_components', ['id' => $existingComponent->id, 'label' => 'Existing content']);
+        $this->assertSame($existingLastOrder + 1, $imported->sections()->where('id', '!=', $existingSection->id)->min('display_order'));
+        $importedChoice = $imported->components()->where('label', $sourceChoice->label)->where('id', '!=', $existingComponent->id)->firstOrFail();
+        $this->assertNotSame($sourceChoice->stable_key, $importedChoice->stable_key);
+        $this->assertSame($sourceChoice->options()->orderBy('display_order')->pluck('value')->all(), $importedChoice->options()->orderBy('display_order')->pluck('value')->all());
+        $this->assertSame($sourceChoice->scoringRule->rules, $importedChoice->scoringRule->rules);
+        $condition = $imported->conditionalRules()->with('actions')->firstOrFail();
+        $this->assertSame($importedChoice->id, $condition->source_component_id);
+        $this->assertSame($imported->components()->where('label', $sourceTarget->label)->value('id'), $condition->actions->first()->target_component_id);
+        $importedFile = $imported->components()->where('label', 'Part file')->firstOrFail();
+        $this->assertNotNull(data_get($importedFile->settings, 'attachment_id'));
+        Storage::disk('local')->assertExists($imported->attachments()->findOrFail(data_get($importedFile->settings, 'attachment_id'))->storage_path);
+        $this->assertDatabaseHas('questionnaire_package_part_imports', ['form_version_id' => $targetVersion->id, 'content_hash' => $export['content_hash']]);
+
+        try { $this->packages()->importInto($export['package_name'], $targetVersion, $creator); $this->fail('Expected duplicate part guard'); }
+        catch (ValidationException) { $this->assertSame(1, QuestionnairePackagePartImport::where('form_version_id', $targetVersion->id)->count()); }
+    }
+
+    public function test_part_import_rejects_invalid_published_and_unauthorised_targets_without_partial_graph(): void
+    {
+        [$creator, $organisation, $sourceForm, $sourceVersion] = $this->graph();
+        $export = $this->actingAs($creator)->packages()->export($sourceForm, $sourceVersion);
+        $authoring = app(FormAuthoringService::class);
+        $targetForm = $authoring->create($organisation->id, $creator, 'Part target', 'blank');
+        $targetVersion = $targetForm->versions()->firstOrFail();
+        $beforeSections = $targetVersion->sections()->count();
+
+        [$respondent] = $this->member('respondent', $organisation);
+        $this->actingAs($respondent)->get(route('questionnaires.parts', [$targetForm, $targetVersion]))->assertForbidden();
+        $this->actingAs($respondent)->post(route('questionnaires.import-part', [$targetForm, $targetVersion]), ['package_name' => $export['package_name']])->assertForbidden();
+        $this->assertSame($beforeSections, $targetVersion->sections()->count());
+
+        $otherOrganisation = $this->organisation();
+        [$otherCreator] = $this->member('form_creator', $otherOrganisation);
+        $otherForm = $authoring->create($otherOrganisation->id, $otherCreator, 'Cross organisation target', 'blank');
+        $this->actingAs($creator)->get(route('questionnaires.parts', [$otherForm, $otherForm->versions()->firstOrFail()]))->assertForbidden();
+
+        $manifest = $this->manifest($export['package_name']);
+        $manifest['conditional_rules'][0]['actions'][0]['target_component_key'] = null;
+        $manifest['content_hash'] = $this->hash($manifest);
+        File::put($this->packageRoot.DIRECTORY_SEPARATOR.$export['package_name'].DIRECTORY_SEPARATOR.'manifest.json', json_encode($manifest));
+        $beforeComponents = $targetVersion->components()->count();
+        try { $this->packages()->importInto($export['package_name'], $targetVersion, $creator); $this->fail('Expected invalid package rejection'); }
+        catch (ValidationException) { $this->assertSame($beforeSections, $targetVersion->sections()->count()); $this->assertSame($beforeComponents, $targetVersion->components()->count()); }
+
+        $published = $authoring->publish($targetVersion);
+        try { $this->packages()->importInto($export['package_name'], $published, $creator); $this->fail('Expected immutable version rejection'); }
+        catch (ValidationException) { $this->assertSame($beforeSections, $published->sections()->count()); }
+    }
+
     public function test_import_requires_forms_create_and_export_is_denied_in_production(): void
     {
         [$creator, $organisation, $form, $version] = $this->graph();
@@ -211,6 +289,24 @@ class QuestionnairePackageExchangeTest extends TestCase
         [$creator, , $form, $version] = $this->graph(); $export = $this->actingAs($creator)->packages()->export($form, $version);
         $this->artisan('questionnaires:list')->expectsOutputToContain($export['package_name'])->assertSuccessful();
         $this->artisan('questionnaires:validate')->expectsOutputToContain('VALID '.$export['package_name'])->assertSuccessful();
+    }
+
+    public function test_targetless_conditional_action_is_rejected_by_builder_publish_and_export(): void
+    {
+        [$creator, , $form, $version] = $this->graph();
+        $version->conditionalRules()->firstOrFail()->actions()->firstOrFail()->update(['target_component_id' => null, 'target_section_id' => null]);
+
+        try { app(FormAuthoringService::class)->publish($version); $this->fail('Expected publish validation failure'); }
+        catch (ValidationException $exception) { $this->assertArrayHasKey('conditions', $exception->errors()); }
+        try { $this->packages()->manifest($form, $version); $this->fail('Expected export validation failure'); }
+        catch (ValidationException $exception) { $this->assertArrayHasKey('conditional_actions', $exception->errors()); }
+
+        $before = $version->conditionalRules()->count();
+        $this->actingAs($creator)->post(route('builder.conditions.store', $form), [
+            'source_component_id' => $version->components()->firstOrFail()->id, 'operator' => 'is_answered',
+            'action' => 'show_component', 'target_component_id' => '', 'target_section_id' => '',
+        ])->assertSessionHasErrors('action');
+        $this->assertSame($before, $version->conditionalRules()->count());
     }
 
     private function graph(): array

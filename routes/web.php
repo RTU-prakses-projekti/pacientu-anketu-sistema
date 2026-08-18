@@ -87,6 +87,8 @@ Route::middleware('auth')->group(function () {
     Route::put('/forms/{form}/versions/{version}', [BuilderController::class, 'updateVersion'])->name('builder.versions.update');
     Route::post('/forms/{form}/versions/{version}/publish', [FormController::class, 'publish'])->name('forms.publish');
     Route::post('/forms/{form}/versions/{version}/export-questionnaire', [QuestionnairePackageController::class, 'export'])->name('questionnaires.export');
+    Route::get('/forms/{form}/versions/{version}/questionnaires/import-part', [QuestionnairePackageController::class, 'parts'])->name('questionnaires.parts');
+    Route::post('/forms/{form}/versions/{version}/questionnaires/import-part', [QuestionnairePackageController::class, 'importPart'])->name('questionnaires.import-part');
     Route::post('/forms/{form}/versions/{version}/new-draft', [FormController::class, 'newDraft'])->name('forms.new-draft');
     Route::post('/forms/{form}/duplicate', [FormController::class, 'duplicate'])->name('forms.duplicate');
     Route::post('/forms/{form}/archive', [FormController::class, 'archive'])->name('forms.archive');

@@ -21,7 +21,7 @@
 @endphp
 <div class="page-header">
     <div><a href="{{ route('forms.show',$form) }}">{{ __('messages.back') }}</a><h1>{{ $form->name }} · {{ __('messages.builder') }}</h1></div>
-    <a class="btn" href="{{ route('forms.preview',$form) }}?locale={{ config('form_locales.default') }}">{{ __('messages.preview') }}</a>
+    <div class="actions">@if($version)<a class="btn" href="{{ route('questionnaires.parts',[$form,$version]) }}">{{ __('messages.add_questionnaire_part_from_git') }}</a>@endif<a class="btn" href="{{ route('forms.preview',$form) }}?locale={{ config('form_locales.default') }}">{{ __('messages.preview') }}</a></div>
 </div>
 
 <form method="POST" action="{{ route('forms.update',$form) }}" class="card form-grid mb-6">@csrf @method('PUT')
@@ -48,7 +48,7 @@
     <hr><h2>{{ __('messages.add_component') }}</h2>
     <form method="POST" action="{{ route('builder.components.store',$form) }}" class="stack" data-component-form data-registry='@json($registry)'>@csrf
         <label>{{ __('messages.section') }}<select name="section_id">@foreach($version->sections as $section)<option value="{{ $section->id }}">{{ $section->localizedTitle('lv') }}</option>@endforeach</select></label>
-        <label>{{ __('messages.component_type') }}<select name="type" data-component-type>@foreach($registry as $key=>$definition)<option value="{{ $key }}">{{ $definition['name'] }} · {{ $definition['category'] }}</option>@endforeach</select></label>
+        <label>{{ __('messages.component_type') }}<select name="type" data-component-type>@foreach($registry as $key=>$definition)<option value="{{ $key }}">{{ in_array($key,['multiple_choice','consent_checkbox'],true) ? __('messages.component_type_'.$key) : $definition['name'] }} · {{ $definition['category'] }}</option>@endforeach</select></label>
         @include('forms.partials.locale-tabs',['group'=>'new-component','prefix'=>'translations','translations'=>null,'fields'=>$newComponentFields])
         <div data-setting="minimum"><label>{{ __('messages.minimum') }}<input type="number" step="any" name="settings[minimum]"></label></div>
         <div data-setting="maximum"><label>{{ __('messages.maximum') }}<input type="number" step="any" name="settings[maximum]"></label></div>
@@ -117,7 +117,7 @@
         if(in_array($component->type,['rating_scale','linear_scale'])) {$componentFields[]=['name'=>'minimum_label','label'=>__('messages.minimum_label'),'base'=>data_get($component->settings,'minimum_label')];$componentFields[]=['name'=>'maximum_label','label'=>__('messages.maximum_label'),'base'=>data_get($component->settings,'maximum_label')];}
         if($component->type==='image') {$componentFields[]=['name'=>'image_title','label'=>__('messages.image_title'),'base'=>data_get($component->settings,'image_title')];$componentFields[]=['name'=>'image_caption','label'=>__('messages.image_caption'),'base'=>data_get($component->settings,'image_caption'),'type'=>'textarea'];}
     @endphp
-    <article class="component-card"><div class="page-header"><div><span class="badge">{{ $component->type }}</span> <strong>{{ $component->localizedLabel('lv') }}</strong></div><div class="actions"><form method="POST" action="{{ route('builder.components.copy',[$form,$component]) }}">@csrf<button class="icon-btn" title="{{ __('messages.copy') }}">⧉</button></form>@foreach(['up','down'] as $direction)<form method="POST" action="{{ route('builder.components.move',[$form,$component]) }}">@csrf<input type="hidden" name="direction" value="{{ $direction }}"><button class="icon-btn">{{ $direction==='up'?'↑':'↓' }}</button></form>@endforeach<form method="POST" action="{{ route('builder.components.destroy',[$form,$component]) }}" data-confirm="{{ __('messages.confirm_delete') }}">@csrf @method('DELETE')<button class="icon-btn danger">×</button></form></div></div>
+    <article class="component-card"><div class="page-header"><div><span class="badge">{{ $component->type }}</span> <strong>{{ $component->localizedLabel(app()->getLocale()) }}</strong></div><div class="actions"><form method="POST" action="{{ route('builder.components.copy',[$form,$component]) }}">@csrf<button class="icon-btn" title="{{ __('messages.copy') }}">⧉</button></form>@foreach(['up','down'] as $direction)<form method="POST" action="{{ route('builder.components.move',[$form,$component]) }}">@csrf<input type="hidden" name="direction" value="{{ $direction }}"><button class="icon-btn">{{ $direction==='up'?'↑':'↓' }}</button></form>@endforeach<form method="POST" action="{{ route('builder.components.destroy',[$form,$component]) }}" data-confirm="{{ __('messages.confirm_delete') }}">@csrf @method('DELETE')<button class="icon-btn danger">×</button></form></div></div>
     <form method="POST" action="{{ route('builder.components.update',[$form,$component]) }}" class="stack">@csrf @method('PUT')
         @include('forms.partials.locale-tabs',['group'=>'component-'.$component->id,'prefix'=>'translations','translations'=>$component->translations,'fields'=>$componentFields])
         <div class="form-grid">

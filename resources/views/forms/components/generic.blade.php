@@ -9,7 +9,7 @@
 @if($showFallbackIndicators && $component->usesContentFallback($contentLocale))<span class="fallback-indicator">{{ __('messages.fallback_used') }}</span>@endif
 @if($component->type==='form_title')<h1>{{ $label }}</h1>
 @elseif($component->type==='heading')<h3>{{ $label }}</h3>
-@elseif($component->type==='explanatory_text')<div class="prose"><strong>{{ $label }}</strong>@if($description)<p>{{ $description }}</p>@endif</div>
+@elseif($component->type==='explanatory_text')<div class="prose"><strong class="multiline-text">{{ $label }}</strong>@if($description)<p class="multiline-text">{{ $description }}</p>@endif</div>
 @elseif(in_array($component->type,['image','file_attachment']))
     @php($mediaTitle=$component->type==='image'?$component->localizedImageTitle($contentLocale):$label)
     @if($mediaTitle)<p><strong>{{ $mediaTitle }}</strong></p>@endif
@@ -18,7 +18,7 @@
         @if($component->type==='image')<figure><img src="{{ $attachmentUrl }}" alt="{{ $mediaTitle }}" class="max-w-full rounded">@if($component->localizedImageCaption($contentLocale))<figcaption>{{ $component->localizedImageCaption($contentLocale) }}</figcaption>@endif</figure>@else<a class="btn" href="{{ $attachmentUrl }}">{{ __('messages.download', [], $contentLocale) }}</a>@endif
     @endif
 @else
-<fieldset><legend>{{ $label }} @if($component->is_required)<span aria-hidden="true">*</span>@endif</legend>@if($description)<p>{{ $description }}</p>@endif @if($helpText)<p class="help">{{ $helpText }}</p>@endif
+<fieldset><legend>{{ $label }} @if($component->is_required)<span aria-hidden="true">*</span>@endif</legend>@if($description)<p class="multiline-text">{{ $description }}</p>@endif @if($helpText)<p class="help multiline-text">{{ $helpText }}</p>@endif
 @php($name="answers[$component->id]") @php($value=$answers[$component->id]??data_get($component->settings,'default_value'))
 @switch($component->type)
 @case('short_text')<input data-answer name="{{ $name }}" value="{{ $value }}" placeholder="{{ $component->localizedPlaceholder($contentLocale) }}" @required($component->is_required)>@break
@@ -42,7 +42,7 @@
     <p class="scale-current" id="{{ $rangeOutputId }}">{{ __('messages.selected_value', [], $contentLocale) }}: <output data-range-output for="{{ $rangeId }}">{{ $rangeValue }}</output></p>
 </div>
 @break
-@case('consent_checkbox')<label class="choice consent"><input data-answer type="checkbox" name="{{ $name }}" value="1" @checked((bool)$value) @required($component->is_required)> {{ $component->localizedConsentText($contentLocale) }}</label>@break
+@case('consent_checkbox')<label class="choice consent"><input data-answer type="checkbox" name="{{ $name }}" value="1" @checked((bool)$value) @required($component->is_required)> <span class="multiline-text">{{ $component->localizedConsentText($contentLocale) }}</span></label>@break
 @endswitch</fieldset>
 @endif
 </div>

@@ -1,38 +1,7 @@
 {
     "attachments": [],
-    "conditional_rules": [
-        {
-            "actions": [
-                {
-                    "action": "show_component",
-                    "target_component_key": null,
-                    "target_section_key": null
-                }
-            ],
-            "comparison_value": {
-                "value": null
-            },
-            "operator": "equals",
-            "priority": 1,
-            "source_component_key": "45af6ae5-a646-4472-a165-8ecbf707d304"
-        },
-        {
-            "actions": [
-                {
-                    "action": "show_component",
-                    "target_component_key": null,
-                    "target_section_key": null
-                }
-            ],
-            "comparison_value": {
-                "value": null
-            },
-            "operator": "equals",
-            "priority": 2,
-            "source_component_key": "45af6ae5-a646-4472-a165-8ecbf707d304"
-        }
-    ],
-    "content_hash": "79d0ea8e40e23904e715951301b2e4793bc03db674d610f1319fc05870269993",
+    "conditional_rules": [],
+    "content_hash": "661271402a65dfc3167136c9882e14daaed93795d49ad2102befacedfbaa9bba",
     "form": {
         "name": "Informēta piekrišana dalībai pētījumā",
         "preset_key": "patient_questionnaire",

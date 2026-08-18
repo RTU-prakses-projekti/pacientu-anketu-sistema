@@ -32,4 +32,20 @@ class QuestionnairePackageController extends Controller
         $form = $packages->import($data['package_name'], $organisation, $request->user());
         return redirect()->route('forms.builder', $form)->with('success', __('messages.questionnaire_imported_as_draft'));
     }
+
+    public function parts(Form $form, FormVersion $version, QuestionnairePackageService $packages)
+    {
+        $this->authorize('update', $form);
+        abort_unless($version->form_id === $form->id && $version->status === 'draft', 404);
+        return view('questionnaires.parts', ['form' => $form, 'version' => $version, 'packages' => $packages->discoverForVersion($version)]);
+    }
+
+    public function importPart(Request $request, Form $form, FormVersion $version, QuestionnairePackageService $packages)
+    {
+        $this->authorize('update', $form);
+        abort_unless($version->form_id === $form->id && $version->status === 'draft', 404);
+        $data = $request->validate(['package_name' => ['required', 'string', 'max:255']]);
+        $packages->importInto($data['package_name'], $version, $request->user());
+        return redirect()->route('forms.builder', $form)->with('success', __('messages.questionnaire_part_imported'));
+    }
 }
