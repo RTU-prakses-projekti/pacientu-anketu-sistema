@@ -9,7 +9,7 @@
 @if($showFallbackIndicators && $component->usesContentFallback($contentLocale))<span class="fallback-indicator">{{ __('messages.fallback_used') }}</span>@endif
 @if($component->type==='form_title')<h1>{{ $label }}</h1>
 @elseif($component->type==='heading')<h3>{{ $label }}</h3>
-@elseif($component->type==='explanatory_text')<div class="prose"><strong>{{ $label }}</strong>@if($description)<p>{{ $description }}</p>@endif</div>
+@elseif($component->type==='explanatory_text')<div class="prose"><strong class="multiline-text">{{ $label }}</strong>@if($description)<p class="multiline-text">{{ $description }}</p>@endif</div>
 @elseif(in_array($component->type,['image','file_attachment']))
     @php($mediaTitle=$component->type==='image'?$component->localizedImageTitle($contentLocale):$label)
     @if($mediaTitle)<p><strong>{{ $mediaTitle }}</strong></p>@endif
@@ -18,7 +18,7 @@
         @if($component->type==='image')<figure><img src="{{ $attachmentUrl }}" alt="{{ $mediaTitle }}" class="max-w-full rounded">@if($component->localizedImageCaption($contentLocale))<figcaption>{{ $component->localizedImageCaption($contentLocale) }}</figcaption>@endif</figure>@else<a class="btn" href="{{ $attachmentUrl }}">{{ __('messages.download', [], $contentLocale) }}</a>@endif
     @endif
 @else
-<fieldset><legend>{{ $label }} @if($component->is_required)<span aria-hidden="true">*</span>@endif</legend>@if($description)<p>{{ $description }}</p>@endif @if($helpText)<p class="help">{{ $helpText }}</p>@endif
+<fieldset><legend>{{ $label }} @if($component->is_required)<span aria-hidden="true">*</span>@endif</legend>@if($description)<p class="multiline-text">{{ $description }}</p>@endif @if($helpText)<p class="help multiline-text">{{ $helpText }}</p>@endif
 @php($name="answers[$component->id]") @php($value=$answers[$component->id]??data_get($component->settings,'default_value'))
 @switch($component->type)
 @case('short_text')<input data-answer name="{{ $name }}" value="{{ $value }}" placeholder="{{ $component->localizedPlaceholder($contentLocale) }}" @required($component->is_required)>@break
@@ -31,14 +31,7 @@
 @case('multiple_choice')@foreach($component->options as $option)<label class="choice"><input data-answer type="checkbox" name="{{ $name }}[]" value="{{ $option->value }}" @checked(in_array($option->value,(array)$value,true))> {{ $option->localizedLabel($contentLocale) }}</label>@endforeach @break
 @case('dropdown')<select data-answer name="{{ $name }}" @required($component->is_required)><option value="">—</option>@foreach($component->options as $option)<option value="{{ $option->value }}" @selected((string)$value===(string)$option->value)>{{ $option->localizedLabel($contentLocale) }}</option>@endforeach</select>@break
 @case('rating_scale') @case('linear_scale')<div class="scale-labels"><span>{{ $component->localizedMinimumLabel($contentLocale) }}</span><span>{{ $component->localizedMaximumLabel($contentLocale) }}</span></div><input data-answer type="range" name="{{ $name }}" value="{{ $value??data_get($component->settings,'minimum',1) }}" min="{{ data_get($component->settings,'minimum',1) }}" max="{{ data_get($component->settings,'maximum',5) }}"><output>{{ $value??data_get($component->settings,'minimum',1) }}</output>@break
-@case('consent_checkbox')
-    @if($component->options->isNotEmpty())
-        @if($component->localizedConsentText($contentLocale))<p>{{ $component->localizedConsentText($contentLocale) }}</p>@endif
-        @foreach($component->options as $option)<label class="choice consent"><input data-answer type="checkbox" name="{{ $name }}[]" value="{{ $option->value }}" @checked(in_array($option->value,(array)$value,true))> {{ $option->localizedLabel($contentLocale) }}</label>@endforeach
-    @else
-        <label class="choice consent"><input data-answer type="checkbox" name="{{ $name }}" value="1" @checked((bool)$value) @required($component->is_required)> {{ $component->localizedConsentText($contentLocale) }}</label>
-    @endif
-    @break
+@case('consent_checkbox')<label class="choice consent"><input data-answer type="checkbox" name="{{ $name }}" value="1" @checked((bool)$value) @required($component->is_required)> {{ $component->localizedConsentText($contentLocale) }}</label>@break
 @endswitch</fieldset>
 @endif
 </div>

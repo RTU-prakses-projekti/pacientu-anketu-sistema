@@ -24,6 +24,6 @@ class RolePermissionSeeder extends Seeder
             'respondent' => ['display_name'=>'Pacients','scope'=>'organisation','permissions'=>['organisation.view','publications.respond']],
             'doctor' => ['display_name'=>'Ārsts','scope'=>'organisation','permissions'=>['doctor.dashboard.view','patients.view','patients.update','patient.questionnaires.view']],
         ];
-        foreach ($roles as $name=>$config) { $role=Role::updateOrCreate(['name'=>$name],['display_name'=>$config['display_name'],'scope'=>$config['scope']]);$role->permissions()->sync(Permission::whereIn('name',$config['permissions'])->pluck('id')); }
+        foreach ($roles as $name=>$config) { $role=Role::updateOrCreate(['name'=>$name],['display_name'=>$config['display_name'],'scope'=>$config['scope'],'is_system'=>true]);$role->permissions()->sync(Permission::whereIn('name',$config['permissions'])->pluck('id')); }
     }
 }

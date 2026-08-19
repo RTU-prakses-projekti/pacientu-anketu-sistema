@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Audit\AuditService;
+use App\Domain\Administration\CleanupService;
 use App\Models\Organisation;
 use App\Models\OrganisationMembership;
 use App\Models\Permission;
@@ -11,20 +12,55 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rules\Password;
 
 class SystemAdministrationController extends Controller
 {
-    public function users(Request $request)
+    public function users(Request $request, CleanupService $cleanup)
     {
         abort_unless($request->user()->isPlatformAdmin(), 403);
 
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:255'],
+            'organisation' => ['nullable', 'integer', 'exists:organisations,id'],
+            'role' => ['nullable', 'integer', 'exists:roles,id'],
+            'status' => ['nullable', Rule::in(['active', 'inactive'])],
+        ]);
+        $selectedRole = isset($filters['role'])
+            ? Role::findOrFail($filters['role'])
+            : null;
+        $users = User::query()
+            ->with(['globalRoles', 'memberships.organisation', 'memberships.roles'])
+            ->when(filled($filters['q'] ?? null), function ($query) use ($filters): void {
+                $search = addcslashes(trim($filters['q']), '%_\\');
+                $query->where(function ($query) use ($search): void {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                    if (ctype_digit($search)) $query->orWhere('users.id', (int) $search);
+                });
+            })
+            ->when(isset($filters['organisation']) && (!$selectedRole || $selectedRole->scope !== 'organisation'),
+                fn ($query) => $query->whereHas('memberships', fn ($membership) => $membership
+                    ->where('organisation_id', $filters['organisation'])->where('is_active', true)))
+            ->when($selectedRole?->scope === 'global',
+                fn ($query) => $query->whereHas('globalRoles', fn ($role) => $role->whereKey($selectedRole->id)))
+            ->when($selectedRole?->scope === 'organisation',
+                fn ($query) => $query->whereHas('memberships', fn ($membership) => $membership
+                    ->where('is_active', true)
+                    ->when(isset($filters['organisation']), fn ($membership) => $membership->where('organisation_id', $filters['organisation']))
+                    ->whereHas('roles', fn ($role) => $role->whereKey($selectedRole->id))))
+            ->when(isset($filters['status']), fn ($query) => $query->where('is_active', $filters['status'] === 'active'))
+            ->orderBy('name')->paginate(50)->withQueryString();
+
         return view('system.users', [
-            'users' => User::with(['globalRoles', 'memberships.organisation', 'memberships.roles'])
-                ->orderBy('name')
-                ->paginate(50),
+            'users' => $users,
+            'organisations' => Organisation::orderBy('name')->get(),
+            'roles' => Role::orderBy('scope')->orderBy('display_name')->get(),
+            'filters' => $filters,
+            'deleteEligibility' => $cleanup->userEligibilityMap($users->getCollection()),
         ]);
     }
 
@@ -46,6 +82,58 @@ class SystemAdministrationController extends Controller
         $audit->record('role.permissions_updated', $role, null, ['permission_ids' => $data['permissions'] ?? []]);
 
         return back()->with('success', __('messages.saved'));
+    }
+
+    public function storeRole(Request $request, AuditService $audit)
+    {
+        abort_unless($request->user()->isPlatformAdmin(), 403);
+        $data = $request->validate([
+            'display_name' => ['required', 'string', 'max:255'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['integer', 'distinct', 'exists:permissions,id'],
+        ]);
+        $name = Str::slug(trim($data['display_name']), '_');
+        if ($name === '' || in_array($name, Role::SYSTEM_NAMES, true)) {
+            throw ValidationException::withMessages(['display_name' => __('messages.reserved_role_name')]);
+        }
+
+        $role = DB::transaction(function () use ($data, $name, $audit): Role {
+            if (Role::where('name', $name)->lockForUpdate()->exists()) {
+                throw ValidationException::withMessages(['display_name' => __('messages.role_name_already_exists')]);
+            }
+            $role = Role::create([
+                'name' => $name,
+                'display_name' => trim($data['display_name']),
+                'scope' => 'organisation',
+                'is_system' => false,
+            ]);
+            $permissionIds = collect($data['permissions'] ?? [])->map(fn ($id) => (int) $id)->unique()->values();
+            $role->permissions()->sync($permissionIds);
+            $audit->record('role.created', $role, null, ['permission_ids' => $permissionIds->all(), 'scope' => 'organisation']);
+            return $role;
+        });
+
+        return redirect()->route('system.roles')->with('success', __('messages.role_created', ['role' => $role->display_name]));
+    }
+
+    public function destroyRole(Request $request, Role $role, AuditService $audit)
+    {
+        abort_unless($request->user()->isPlatformAdmin(), 403);
+        DB::transaction(function () use ($role, $audit): void {
+            $role = Role::lockForUpdate()->findOrFail($role->id);
+            if ($role->is_system || in_array($role->name, Role::SYSTEM_NAMES, true)) {
+                throw ValidationException::withMessages(['role' => __('messages.system_role_delete_denied')]);
+            }
+            if (DB::table('user_roles')->where('role_id', $role->id)->exists()
+                || DB::table('membership_roles')->where('role_id', $role->id)->exists()) {
+                throw ValidationException::withMessages(['role' => __('messages.assigned_role_delete_denied')]);
+            }
+            $role->permissions()->detach();
+            $audit->record('role.deleted', $role, null, ['name' => $role->name, 'scope' => $role->scope]);
+            $role->delete();
+        });
+
+        return redirect()->route('system.roles')->with('success', __('messages.role_deleted'));
     }
 
     public function storeUser(Request $request, AuditService $audit)

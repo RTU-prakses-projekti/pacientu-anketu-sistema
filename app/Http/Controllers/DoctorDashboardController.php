@@ -7,9 +7,11 @@ use App\Models\Organisation;
 use App\Models\OrganisationMembership;
 use App\Models\PatientCase;
 use App\Models\PatientFormAssignment;
+use App\Models\FormSubmission;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class DoctorDashboardController extends Controller
 {
@@ -21,6 +23,7 @@ class DoctorDashboardController extends Controller
         $workspaces = OrganisationMembership::query()
             ->with(['organisation', 'user'])
             ->where('is_active', true)
+            ->whereHas('organisation', fn ($query) => $query->where('is_active', true))
             ->whereHas('roles', fn ($query) => $query->where('roles.name', 'doctor'))
             ->where('user_id', $actor->id)
             ->get()
@@ -37,30 +40,64 @@ class DoctorDashboardController extends Controller
         }
 
         $patientCases = collect();
-        $columns = collect();
         if ($selected) {
             $patientCases = PatientCase::query()
                 ->visibleTo($actor)
                 ->where('organisation_id', $selected->organisation_id)
-                ->with(['assignments.publication.formVersion', 'assignments.completedSubmission'])
+                ->withCount([
+                    'assignments',
+                    'assignments as completed_assignments_count' => fn ($query) => $query->whereHas('submissions', fn ($submissions) => $submissions->whereIn('status', FormSubmission::PATIENT_COMPLETED_STATUSES)),
+                    'assignments as in_progress_assignments_count' => fn ($query) => $query
+                        ->whereHas('submissions', fn ($submissions) => $submissions->where('status', 'in_progress'))
+                        ->whereDoesntHave('submissions', fn ($submissions) => $submissions->whereIn('status', FormSubmission::PATIENT_COMPLETED_STATUSES)),
+                ])
                 ->orderBy('slot_number')
-                ->get()
-                ->keyBy('slot_number');
-
-            $columns = $patientCases
-                ->flatMap(fn (PatientCase $patientCase) => $patientCase->assignments)
-                ->sortBy(fn (PatientFormAssignment $assignment) => sprintf('%010d|%s|%010d', $assignment->display_order, $assignment->label, $assignment->publication_id))
-                ->unique('publication_id')
-                ->values();
+                ->paginate(50)
+                ->withQueryString();
         }
 
         return view('doctor.dashboard', [
             'workspaces' => $workspaces,
             'selectedMembership' => $selected,
             'patientCases' => $patientCases,
-            'columns' => $columns,
-            'slots' => range(1, 200),
         ]);
+    }
+
+    public function storePatient(Request $request, Organisation $organisation, AuditService $audit)
+    {
+        $actor = $request->user();
+        abort_unless($actor->hasDoctorWorkspace(), 403);
+        $data = $this->patientData($request);
+
+        $patientCase = DB::transaction(function () use ($actor, $organisation, $data): PatientCase {
+            $membership = OrganisationMembership::query()
+                ->where('organisation_id', $organisation->id)
+                ->where('user_id', $actor->id)
+                ->where('is_active', true)
+                ->whereHas('organisation', fn ($query) => $query->where('is_active', true))
+                ->whereHas('roles', fn ($query) => $query->where('roles.name', 'doctor'))
+                ->lockForUpdate()
+                ->first();
+            abort_unless($membership && $actor->hasDoctorPermission($organisation->id, 'patients.update'), 403);
+
+            $slot = ((int) PatientCase::query()
+                ->where('organisation_id', $organisation->id)
+                ->where('doctor_id', $actor->id)
+                ->max('slot_number')) + 1;
+            if ($slot > 200) {
+                throw ValidationException::withMessages(['patient' => __('messages.patient_limit_reached')]);
+            }
+
+            return PatientCase::create(array_merge($data, [
+                'organisation_id' => $organisation->id,
+                'doctor_id' => $actor->id,
+                'slot_number' => $slot,
+            ]));
+        });
+        $audit->record('patient_case.created', $patientCase, $organisation->id, ['slot_number' => $patientCase->slot_number]);
+
+        return redirect()->route('doctor.dashboard', ['organisation_id' => $organisation->id])
+            ->with('success', __('messages.patient_saved'));
     }
 
     public function updateSlot(Request $request, Organisation $organisation, User $doctor, int $slot, AuditService $audit)
@@ -79,12 +116,7 @@ class DoctorDashboardController extends Controller
             'slot_number' => $slot,
         ]);
         $this->authorize('update', $patientCase);
-        $data = $request->validate([
-            'first_name' => ['nullable', 'string', 'max:100'],
-            'last_name' => ['nullable', 'string', 'max:100'],
-            'external_patient_code' => ['nullable', 'string', 'max:100'],
-            'note' => ['nullable', 'string', 'max:10000'],
-        ]);
+        $data = $this->patientData($request);
 
         $created = !$patientCase->exists;
         DB::transaction(function () use ($patientCase, $data): void {
@@ -108,5 +140,20 @@ class DoctorDashboardController extends Controller
         $submission->load('publication.form', 'formVersion', 'answers.component.options', 'answers.score');
 
         return view('doctor.results.show', compact('patientCase', 'assignment', 'submission'));
+    }
+
+    private function patientData(Request $request): array
+    {
+        $data = $request->validate([
+            'first_name' => ['nullable', 'string', 'max:100'],
+            'last_name' => ['nullable', 'string', 'max:100'],
+            'external_patient_code' => ['nullable', 'string', 'max:100'],
+            'note' => ['nullable', 'string', 'max:10000'],
+        ]);
+        foreach ($data as $field => $value) {
+            $data[$field] = filled($value) ? trim($value) : null;
+        }
+
+        return $data;
     }
 }

@@ -4,4 +4,32 @@
 <section class="card"><h2>{{ __('messages.history') }}</h2>@foreach($form->versions->sortByDesc('version_number') as $version)<div class="list-row"><span>v{{ $version->version_number }} · {{ $version->status }} @if($version->published_at)· {{ $version->published_at }}@endif</span><span class="actions">@if(in_array(app()->environment(),config('questionnaire_packages.write_environments',[]),true))<form method="POST" action="{{ route('questionnaires.export',[$form,$version]) }}">@csrf<button class="btn">{{ __('messages.export_to_git') }} · v{{ $version->version_number }} ({{ $version->status }})</button></form>@endif @if($version->status==='draft')<form method="POST" action="{{ route('forms.publish',[$form,$version]) }}">@csrf<button class="btn primary">{{ __('messages.publish') }}</button></form>@elseif($version->status==='published'&&!$form->versions->contains('status','draft'))<form method="POST" action="{{ route('forms.new-draft',[$form,$version]) }}">@csrf<button class="btn">{{ __('messages.new_draft') }}</button></form>@endif</span></div>@endforeach</section>
 <section class="card mt-6"><h2>{{ __('messages.create_publication') }}</h2><form method="POST" action="{{ route('publications.store',$form) }}" class="form-grid">@csrf<label>{{ __('messages.version') }}<select name="form_version_id">@foreach($form->versions->where('status','published') as $version)<option value="{{ $version->id }}">v{{ $version->version_number }}</option>@endforeach</select></label><label>{{ __('messages.name') }}<input name="name" required></label><label>{{ __('messages.access_mode') }}<select name="access_mode"><option value="authenticated">{{ __('messages.authenticated') }}</option><option value="public">{{ __('messages.public_link') }}</option><option value="access_code">{{ __('messages.access_code') }}</option><option value="invitation">{{ __('messages.invitation') }}</option></select></label><label>{{ __('messages.access_code') }}<input name="access_code"></label><label>{{ __('messages.opens_at') }}<input type="datetime-local" name="opens_at"></label><label>{{ __('messages.closes_at') }}<input type="datetime-local" name="closes_at"></label><label>{{ __('messages.attempt_limit') }}<input type="number" name="attempt_limit" value="1" min="1"></label><label>{{ __('messages.duration_minutes') }}<input type="number" name="duration_minutes" value="30" min="1"></label><label>{{ __('messages.result_visibility') }}<select name="result_visibility"><option value="completion">{{ __('messages.completion_only') }}</option><option value="score">{{ __('messages.score') }}</option><option value="none">{{ __('messages.no') }}</option></select></label>@foreach(['timer_enabled'=>'timer','correct_answers_visible'=>'correct_answers','anonymous_allowed'=>'anonymous','identified_required'=>'identified','consent_required'=>'consent_required','autosave_enabled'=>'autosave','resume_enabled'=>'resume'] as $field=>$key)<label class="check"><input type="checkbox" name="{{ $field }}" value="1" @checked(in_array($field,['autosave_enabled','resume_enabled','identified_required']))> {{ __('messages.'.$key) }}</label>@endforeach<label>{{ __('messages.status') }}<select name="status"><option value="active">{{ __('messages.active') }}</option><option value="inactive">{{ __('messages.inactive') }}</option></select></label><button class="btn primary">{{ __('messages.create') }}</button></form></section>
 <section class="mt-6"><h2>{{ __('messages.publications') }}</h2>@foreach($form->publications as $publication)<article class="card mb-3"><div class="page-header"><div><strong>{{ $publication->name }}</strong> <span class="badge">{{ $publication->status }}</span><p><a href="{{ route('publications.show',$publication) }}">{{ route('publications.show',$publication) }}</a></p></div><form method="POST" action="{{ route('publications.toggle',[$form,$publication]) }}">@csrf<button class="btn">{{ $publication->status==='active'?__('messages.inactive'):__('messages.active') }}</button></form></div>@if($publication->access_mode==='invitation')<form method="POST" action="{{ route('invitations.store',[$form,$publication]) }}" class="form-grid">@csrf<label>Reference<input name="recipient_reference"></label><label>Max uses<input type="number" name="max_uses" value="1"></label><label>Expires<input type="datetime-local" name="expires_at"></label><button class="btn">{{ __('messages.invitation') }}</button></form>@endif</article>@endforeach</section>
+@if($form->publications->where('access_mode', 'invitation')->isNotEmpty())
+<section class="card mt-6">
+    <h2>{{ __('messages.invitation_links') }}</h2>
+    @foreach($form->publications->where('access_mode', 'invitation') as $publication)
+        <h3>{{ $publication->name }}</h3>
+        @forelse($publication->invitations as $invitation)
+            @php($invitationStatus = $invitation->revoked_at ? 'revoked' : ($invitation->expires_at?->isPast() ? 'expired' : 'active'))
+            <div class="page-header">
+                <div>
+                    <strong>{{ $invitation->recipient_reference ?: '#'.$invitation->id }}</strong>
+                    <span class="badge">{{ __('messages.'.$invitationStatus) }}</span>
+                    <small>{{ $invitation->uses }}/{{ $invitation->max_uses }}</small>
+                </div>
+                @if($invitationStatus === 'active')
+                    <form method="POST" action="{{ route('invitations.revoke', [$form, $publication, $invitation]) }}" onsubmit="return confirm(@js(__('messages.confirm_link_revoke')))" >
+                        @csrf @method('DELETE')
+                        <button class="btn danger" type="submit">{{ __('messages.deactivate') }}</button>
+                    </form>
+                @endif
+            </div>
+        @empty
+            <p>{{ __('messages.no_records') }}</p>
+        @endforelse
+    @endforeach
+</section>
+@endif
+@php($draftVersion=$form->versions->firstWhere('status','draft'))
+@if($draftVersion)<section class="card mt-6"><h2>{{ __('messages.add_questionnaire_part_from_git') }}</h2><a class="btn" href="{{ route('questionnaires.parts',[$form,$draftVersion]) }}">{{ __('messages.add_questionnaire_part_from_git') }}</a></section>@endif
 @endsection

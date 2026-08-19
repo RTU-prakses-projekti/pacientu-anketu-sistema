@@ -66,6 +66,7 @@ class FormAuthoringService
     {
         $this->ensureDraft($version);
         if ($section->form_version_id !== $version->id) throw ValidationException::withMessages(['section' => __('messages.invalid_section')]);
+        if (count($data['options'] ?? []) > 100) throw ValidationException::withMessages(['options' => __('validation.max.array', ['max' => 100])]);
         $definition = $this->registry->definition($data['type']);
         $translations = $this->componentTranslations($data);
         $settings = $this->componentSettings($data['type'], $data['settings'] ?? [], $translations);
@@ -113,14 +114,24 @@ class FormAuthoringService
         if ($version->sections->isEmpty()) throw ValidationException::withMessages(['form' => __('messages.form_needs_section')]);
 
         $componentIds = $version->components->pluck('id');
+        $sectionIds = $version->sections->pluck('id');
         foreach ($version->conditionalRules as $rule) {
             if (!$componentIds->contains($rule->source_component_id)) throw ValidationException::withMessages(['conditions' => __('messages.invalid_condition_reference')]);
             foreach ($rule->actions as $action) {
+                $componentAction = in_array($action->action, ['show_component', 'hide_component'], true);
+                if (($componentAction && (!$action->target_component_id || $action->target_section_id))
+                    || (!$componentAction && (!$action->target_section_id || $action->target_component_id))) {
+                    throw ValidationException::withMessages(['conditions' => __('messages.invalid_condition_target')]);
+                }
                 if ($action->target_component_id === $rule->source_component_id) throw ValidationException::withMessages(['conditions' => __('messages.condition_self_reference')]);
                 if ($action->target_component_id && !$componentIds->contains($action->target_component_id)) throw ValidationException::withMessages(['conditions' => __('messages.invalid_condition_reference')]);
+                if ($action->target_section_id && !$sectionIds->contains($action->target_section_id)) throw ValidationException::withMessages(['conditions' => __('messages.invalid_condition_reference')]);
             }
         }
         foreach ($version->components as $component) {
+            if (in_array($component->type, ['single_choice', 'multiple_choice', 'dropdown'], true) && $component->options->count() < 2) {
+                throw ValidationException::withMessages(['options' => __('messages.minimum_choice_options_required')]);
+            }
             if ($component->scoringRule) $this->scoringRules->validate($component, $component->scoringRule->strategy, $component->scoringRule->rules ?? [], true);
         }
 

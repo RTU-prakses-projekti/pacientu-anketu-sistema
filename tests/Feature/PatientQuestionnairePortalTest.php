@@ -142,12 +142,12 @@ class PatientQuestionnairePortalTest extends TestCase
         $this->post(route('patient.assignments.start', [$package, $secondAssignment]))->assertStatus(409);
     }
 
-    public function test_doctor_dashboard_keeps_completed_green_and_in_progress_grey(): void
+    public function test_doctor_dashboard_summarises_completed_and_in_progress_assignments(): void
     {
         [$doctor, $patient, $first, $organisation] = $this->base(); $second = $this->publication($organisation, 'Second');
         $firstAssignment = $this->assign($patient, $first, 'First', 1); $secondAssignment = $this->assign($patient, $second, 'Second', 2);
         $this->completedSubmission($firstAssignment); $this->inProgressSubmission($secondAssignment);
-        $this->actingAs($doctor)->get(route('doctor.dashboard'))->assertOk()->assertSee('data-status="completed"', false)->assertSee('data-status="not-completed"', false);
+        $this->actingAs($doctor)->get(route('doctor.dashboard'))->assertOk()->assertSee(__('messages.completed_count', ['count' => 1]))->assertSee(__('messages.in_progress_count', ['count' => 1]));
     }
 
     public function test_admin_one_has_no_patient_management_or_portal_session_access(): void

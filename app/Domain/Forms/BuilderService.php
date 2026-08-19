@@ -123,6 +123,9 @@ class BuilderService
 
     private function syncOptions(FormComponent $component, array $input): void
     {
+        if (!array_key_exists('existing', $input) && !array_key_exists('new', $input) && count($input) > 100) {
+            throw ValidationException::withMessages(['options' => __('validation.max.array', ['max' => 100])]);
+        }
         $component->load('options');
         if (array_key_exists('existing', $input) || array_key_exists('new', $input)) {
             $existing = collect($input['existing'] ?? [])->mapWithKeys(function ($optionInput, $id) use ($component) {
@@ -134,6 +137,17 @@ class BuilderService
                 $label = data_get($translations, 'lv.label');
                 return $this->localized->isPresent($label) ? [(int) $id => ['label' => $label, 'translations' => $translations]] : [];
             });
+            $deleted = $component->options->whereNotIn('id', $existing->keys());
+            if ($deleted->isNotEmpty()) {
+                $deletedValues = $deleted->pluck('value')->map(fn ($value) => (string) $value);
+                $usedByCondition = $component->formVersion->conditionalRules()
+                    ->where('source_component_id', $component->id)
+                    ->get()
+                    ->contains(fn ($rule) => $deletedValues->contains((string) data_get($rule->comparison_value, 'value')));
+                if ($usedByCondition) {
+                    throw ValidationException::withMessages(['options' => __('messages.option_in_use_by_condition')]);
+                }
+            }
             $component->options()->whereNotIn('id', $existing->keys())->delete();
             foreach ($existing as $id => $optionData) $component->options()->whereKey($id)->update($optionData);
             $new = collect($input['new'] ?? [])->map(function ($optionInput) {
@@ -143,6 +157,9 @@ class BuilderService
                 $label = data_get($translations, 'lv.label');
                 return $this->localized->isPresent($label) ? ['label' => $label, 'translations' => $translations] : null;
             })->filter()->values()->all();
+            if ($existing->count() + count($new) > 100) {
+                throw ValidationException::withMessages(['options' => __('validation.max.array', ['max' => 100])]);
+            }
         } else {
             $labels = array_values(array_filter(array_map(fn ($label) => trim((string) $label), $input)));
             $current = $component->options->values();

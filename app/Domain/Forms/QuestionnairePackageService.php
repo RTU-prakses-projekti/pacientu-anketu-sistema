@@ -8,6 +8,7 @@ use App\Models\Form;
 use App\Models\FormVersion;
 use App\Models\Organisation;
 use App\Models\QuestionnairePackageImport;
+use App\Models\QuestionnairePackagePartImport;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\DB;
@@ -93,6 +94,15 @@ class QuestionnairePackageService
     public function validatePackage(string $packageName): array
     {
         return $this->validateDirectory($this->packageDirectory($packageName));
+    }
+
+    public function discoverForVersion(FormVersion $version): array
+    {
+        return array_map(function (array $package) use ($version) {
+            $package['part_duplicate'] = QuestionnairePackagePartImport::where('form_version_id', $version->id)
+                ->where('content_hash', $package['content_hash'])->exists();
+            return $package;
+        }, $this->discover($version->form->organisation));
     }
 
     public function import(string $packageName, Organisation $organisation, User $creator): Form
@@ -202,6 +212,99 @@ class QuestionnairePackageService
         }
     }
 
+    public function importInto(string $packageName, FormVersion $version, User $creator): FormVersion
+    {
+        $version->loadMissing('form');
+        if ($version->status !== 'draft') {
+            throw ValidationException::withMessages(['version' => __('messages.published_immutable')]);
+        }
+
+        $directory = $this->packageDirectory($packageName);
+        $manifest = $this->validateDirectory($directory);
+        $hash = $manifest['content_hash'];
+        if (QuestionnairePackagePartImport::where('form_version_id', $version->id)->where('content_hash', $hash)->exists()) {
+            throw ValidationException::withMessages(['package' => __('messages.questionnaire_part_already_imported')]);
+        }
+
+        $storedPaths = [];
+        try {
+            return DB::transaction(function () use ($manifest, $directory, $packageName, $version, $creator, $hash, &$storedPaths) {
+                $organisationId = $version->form->organisation_id;
+                $attachmentMap = [];
+                foreach ($manifest['attachments'] as $portable) {
+                    $absolute = $this->assetPath($directory, $portable['asset_path']);
+                    $extension = preg_replace('/[^a-z0-9]/', '', strtolower(pathinfo($portable['original_name'], PATHINFO_EXTENSION)));
+                    $storagePath = 'attachments/'.$organisationId.'/'.Str::uuid().($extension ? '.'.$extension : '');
+                    Storage::disk('local')->put($storagePath, File::get($absolute));
+                    $storedPaths[] = $storagePath;
+                    $attachment = Attachment::create([
+                        'organisation_id' => $organisationId, 'attachable_type' => $version->getMorphClass(), 'attachable_id' => $version->id,
+                        'uploaded_by' => $creator->id, 'disk' => 'local', 'storage_path' => $storagePath,
+                        'original_name' => $portable['original_name'], 'mime_type' => $portable['mime_type'], 'size' => $portable['size'],
+                        'sha256' => $portable['sha256'], 'status' => 'ready',
+                    ]);
+                    $attachmentMap[$portable['ref']] = $attachment->id;
+                }
+
+                $usedSectionKeys = $version->sections()->pluck('stable_key')->flip()->all();
+                $usedComponentKeys = $version->components()->pluck('stable_key')->flip()->all();
+                $nextSectionOrder = ((int) $version->sections()->max('display_order')) + 1;
+                $nextConditionPriority = ((int) $version->conditionalRules()->max('priority')) + 1;
+                $sectionMap = [];
+                $componentMap = [];
+                foreach ($manifest['sections'] as $sectionOffset => $portableSection) {
+                    $sectionKey = $this->availablePortableKey($portableSection['stable_key'], $usedSectionKeys);
+                    $section = $version->sections()->create([
+                        'stable_key' => $sectionKey, 'title' => $portableSection['title'], 'description' => $portableSection['description'],
+                        'display_order' => $nextSectionOrder + $sectionOffset, 'visible' => $portableSection['visible'], 'translations' => $portableSection['translations'],
+                    ]);
+                    $sectionMap[$portableSection['stable_key']] = $section->id;
+                    foreach ($portableSection['components'] as $componentOffset => $portableComponent) {
+                        $componentKey = $this->availablePortableKey($portableComponent['stable_key'], $usedComponentKeys);
+                        $settings = $portableComponent['settings'];
+                        if ($portableComponent['attachment_ref']) $settings['attachment_id'] = $attachmentMap[$portableComponent['attachment_ref']];
+                        $component = $section->components()->create([
+                            'form_version_id' => $version->id, 'stable_key' => $componentKey, 'type' => $portableComponent['type'],
+                            'label' => $portableComponent['label'], 'description' => $portableComponent['description'], 'help_text' => $portableComponent['help_text'],
+                            'display_order' => $componentOffset + 1, 'is_required' => $portableComponent['is_required'], 'visible' => $portableComponent['visible'],
+                            'max_points' => $portableComponent['max_points'], 'manual_grading' => $portableComponent['manual_grading'],
+                            'settings' => $settings, 'translations' => $portableComponent['translations'],
+                        ]);
+                        $componentMap[$portableComponent['stable_key']] = $component->id;
+                        foreach ($portableComponent['options'] as $option) $component->options()->create($option);
+                        foreach ($portableComponent['validation_rules'] as $rule) $component->validationRules()->create($rule);
+                        if ($portableComponent['scoring_rule']) $component->scoringRule()->create($portableComponent['scoring_rule']);
+                    }
+                }
+
+                foreach ($manifest['conditional_rules'] as $ruleOffset => $portableRule) {
+                    $rule = $version->conditionalRules()->create([
+                        'source_component_id' => $componentMap[$portableRule['source_component_key']],
+                        'operator' => $portableRule['operator'], 'comparison_value' => $portableRule['comparison_value'],
+                        'priority' => $nextConditionPriority + $ruleOffset,
+                    ]);
+                    foreach ($portableRule['actions'] as $portableAction) {
+                        $rule->actions()->create([
+                            'action' => $portableAction['action'],
+                            'target_component_id' => $portableAction['target_component_key'] ? $componentMap[$portableAction['target_component_key']] : null,
+                            'target_section_id' => $portableAction['target_section_key'] ? $sectionMap[$portableAction['target_section_key']] : null,
+                        ]);
+                    }
+                }
+
+                QuestionnairePackagePartImport::create([
+                    'organisation_id' => $organisationId, 'form_id' => $version->form_id, 'form_version_id' => $version->id,
+                    'imported_by' => $creator->id, 'content_hash' => $hash, 'package_name' => $packageName,
+                ]);
+                $this->audit->record('questionnaire_package.part_imported', $version, $organisationId, ['content_hash' => $hash, 'package_name' => $packageName]);
+                return $version->fresh('sections.components.options');
+            });
+        } catch (Throwable $exception) {
+            foreach ($storedPaths as $path) Storage::disk('local')->delete($path);
+            throw $exception;
+        }
+    }
+
     public function manifest(Form $form, FormVersion $version): array
     {
         $version->load('attachments', 'sections.components.options', 'sections.components.validationRules', 'sections.components.scoringRule', 'conditionalRules.actions');
@@ -222,6 +325,15 @@ class QuestionnairePackageService
 
         $componentKeys = $version->sections->flatMap->components->keyBy('id')->map->stable_key;
         $sectionKeys = $version->sections->keyBy('id')->map->stable_key;
+        foreach ($version->conditionalRules as $rule) {
+            if (!isset($componentKeys[$rule->source_component_id])) $this->invalid('conditional_rules');
+            foreach ($rule->actions as $action) {
+                $componentAction = in_array($action->action, ['show_component', 'hide_component'], true);
+                if (($componentAction && (!$action->target_component_id || $action->target_section_id || !isset($componentKeys[$action->target_component_id])))
+                    || (!$componentAction && (!$action->target_section_id || $action->target_component_id || !isset($sectionKeys[$action->target_section_id])))
+                    || $action->target_component_id === $rule->source_component_id) $this->invalid('conditional_actions');
+            }
+        }
         $sections = $version->sections->sortBy(fn ($section) => sprintf('%010d|%s', $section->display_order, $section->stable_key))->map(function ($section) use ($attachmentRefs) {
             return [
                 'stable_key' => $section->stable_key, 'title' => $section->title, 'description' => $section->description,
@@ -445,6 +557,13 @@ class QuestionnairePackageService
     }
 
     private function portableKey(mixed $value): bool { return is_string($value) && Str::isUuid($value); }
+    private function availablePortableKey(string $preferred, array &$used): string
+    {
+        $key = isset($used[$preferred]) ? (string) Str::uuid() : $preferred;
+        while (isset($used[$key])) $key = (string) Str::uuid();
+        $used[$key] = true;
+        return $key;
+    }
     private function root(): string { return rtrim((string) config('questionnaire_packages.root', base_path('questionnaires')), '\\/'); }
 
     private function uniqueSlug(int $organisationId, string $name): string

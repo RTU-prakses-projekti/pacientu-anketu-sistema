@@ -25,6 +25,6 @@ class PatientCasePolicy
     private function ownsWithPermission(User $user, PatientCase $patientCase, string $permission): bool
     {
         return $patientCase->doctor_id === $user->id
-            && $user->hasMembershipPermission($patientCase->organisation_id, $permission);
+            && $user->hasDoctorPermission($patientCase->organisation_id, $permission);
     }
 }

@@ -21,10 +21,19 @@ class FormComponent extends Model
     public function localizedDescription(?string $locale = null): ?string { return $this->localized('description', $this->description, $locale); }
     public function localizedHelpText(?string $locale = null): ?string { return $this->localized('help_text', $this->help_text, $locale); }
     public function localizedPlaceholder(?string $locale = null): ?string { return $this->localized('placeholder', data_get($this->settings, 'placeholder'), $locale); }
-    public function localizedConsentText(?string $locale = null): ?string { return $this->localized('consent_text', $this->consentTextBaseValue(), $locale); }
+    public function localizedConsentText(?string $locale = null): ?string
+    {
+        return $this->localized('consent_text', data_get($this->settings, 'consent_text'), $locale)
+            ?: $this->localizedDescription($locale)
+            ?: $this->localizedLabel($locale);
+    }
     public function localizedConsentTextSourceLocale(?string $locale = null): ?string
     {
-        $source = $this->localizedSourceLocale('consent_text', $this->consentTextBaseValue(), $locale);
+        $source = $this->localizedSourceLocale('consent_text', data_get($this->settings, 'consent_text'), $locale);
+        if ($source === null && $this->localizedDescription($locale) !== null) {
+            $source = $this->localizedSourceLocale('description', $this->description, $locale);
+        }
+        if ($source === null) $source = $this->localizedSourceLocale('label', $this->label, $locale);
 
         return $source === 'base' ? (string) config('form_locales.default', 'lv') : $source;
     }
@@ -47,7 +56,9 @@ class FormComponent extends Model
                 $fields += ['description' => $this->description, 'help_text' => $this->help_text];
             }
             if (in_array($this->type, ['short_text', 'long_text', 'number', 'dropdown'], true)) $fields['placeholder'] = data_get($this->settings, 'placeholder');
-            if ($this->type === 'consent_checkbox') $fields['consent_text'] = $this->consentTextBaseValue();
+            if ($this->type === 'consent_checkbox' && $this->localized('consent_text', data_get($this->settings, 'consent_text'), $locale) !== null) {
+                $fields['consent_text'] = data_get($this->settings, 'consent_text');
+            }
             if (in_array($this->type, ['rating_scale', 'linear_scale'], true)) $fields += ['minimum_label' => data_get($this->settings, 'minimum_label'), 'maximum_label' => data_get($this->settings, 'maximum_label')];
         }
 
@@ -72,7 +83,6 @@ class FormComponent extends Model
 
     private function consentTextBaseValue(): ?string
     {
-        $value = data_get($this->settings, 'consent_text');
-        return is_string($value) && trim($value) !== '' ? $value : null;
+        return data_get($this->settings, 'consent_text') ?: $this->description ?: $this->label;
     }
 }

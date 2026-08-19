@@ -54,10 +54,13 @@ Route::get('/respond/{submission}/attachments/{attachment}', [AttachmentControll
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/doctor', [DoctorDashboardController::class, 'index'])->name('doctor.dashboard');
+    Route::post('/doctor/organisations/{organisation}/patients', [DoctorDashboardController::class, 'storePatient'])->name('doctor.patients.store');
     Route::put('/doctor/organisations/{organisation}/doctors/{doctor}/slots/{slot}', [DoctorDashboardController::class, 'updateSlot'])->name('doctor.patients.slots.update');
     Route::get('/doctor/patients/{patientCase}/assignments/{assignment}/result', [DoctorDashboardController::class, 'result'])->name('doctor.results.show');
     Route::get('/doctor/patients/{patientCase}/questionnaires', [DoctorQuestionnaireController::class, 'index'])->name('doctor.questionnaires.index');
     Route::post('/doctor/patients/{patientCase}/questionnaires', [DoctorQuestionnaireController::class, 'store'])->name('doctor.questionnaires.store');
+    Route::post('/doctor/patients/bulk-questionnaires/create', [DoctorQuestionnaireController::class, 'bulkCreate'])->name('doctor.questionnaires.bulk.create');
+    Route::post('/doctor/patients/bulk-questionnaires', [DoctorQuestionnaireController::class, 'bulkStore'])->name('doctor.questionnaires.bulk.store');
     Route::post('/doctor/patients/{patientCase}/patient-link', [DoctorQuestionnaireController::class, 'issueLink'])->name('doctor.patient-link.issue');
     Route::delete('/doctor/patients/{patientCase}/patient-link/{patientAccessPackage}', [DoctorQuestionnaireController::class, 'revokeLink'])->name('doctor.patient-link.revoke');
 
@@ -66,14 +69,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/organisations', [OrganisationController::class, 'store'])->name('organisations.store');
     Route::get('/organisations/{organisation}/edit', [OrganisationController::class, 'edit'])->name('organisations.edit');
     Route::put('/organisations/{organisation}', [OrganisationController::class, 'update'])->name('organisations.update');
+    Route::delete('/organisations/{organisation}', [OrganisationController::class, 'destroy'])->name('organisations.destroy');
     Route::get('/system/audit', [AuditLogController::class, 'index'])->name('audit.system');
     Route::get('/system/users', [SystemAdministrationController::class, 'users'])->name('system.users');
     Route::post('/system/users', [SystemAdministrationController::class, 'storeUser'])->name('system.users.store');
     Route::get('/system/users/{user}/roles', [SystemAdministrationController::class, 'editUserRoles'])->name('system.users.roles.edit');
     Route::put('/system/users/{user}/roles', [SystemAdministrationController::class, 'updateUserRoles'])->name('system.users.roles.update');
     Route::get('/system/roles', [SystemAdministrationController::class, 'roles'])->name('system.roles');
+    Route::post('/system/roles', [SystemAdministrationController::class, 'storeRole'])->name('system.roles.store');
     Route::put('/system/roles/{role}', [SystemAdministrationController::class, 'updateRole'])->name('system.roles.update');
+    Route::delete('/system/roles/{role}', [SystemAdministrationController::class, 'destroyRole'])->name('system.roles.destroy');
     Route::post('/users/{user}/toggle', [UserAdministrationController::class, 'toggleUser'])->name('users.toggle');
+    Route::delete('/system/users/{user}', [UserAdministrationController::class, 'destroyUser'])->name('system.users.destroy');
 
     Route::get('/organisations/{organisation}/forms', [FormController::class, 'index'])->name('forms.index');
     Route::get('/organisations/{organisation}/questionnaires/import', [QuestionnairePackageController::class, 'index'])->name('questionnaires.index');
@@ -82,11 +89,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/forms', [FormController::class, 'store'])->name('forms.store');
     Route::get('/forms/{form}', [FormController::class, 'show'])->name('forms.show');
     Route::put('/forms/{form}', [FormController::class, 'update'])->name('forms.update');
+    Route::delete('/forms/{form}', [FormController::class, 'destroy'])->name('forms.destroy');
     Route::get('/forms/{form}/builder', [BuilderController::class, 'edit'])->name('forms.builder');
     Route::get('/forms/{form}/preview', [BuilderController::class, 'preview'])->name('forms.preview');
     Route::put('/forms/{form}/versions/{version}', [BuilderController::class, 'updateVersion'])->name('builder.versions.update');
     Route::post('/forms/{form}/versions/{version}/publish', [FormController::class, 'publish'])->name('forms.publish');
     Route::post('/forms/{form}/versions/{version}/export-questionnaire', [QuestionnairePackageController::class, 'export'])->name('questionnaires.export');
+    Route::get('/forms/{form}/versions/{version}/questionnaires/import-part', [QuestionnairePackageController::class, 'parts'])->name('questionnaires.parts');
+    Route::post('/forms/{form}/versions/{version}/questionnaires/import-part', [QuestionnairePackageController::class, 'importPart'])->name('questionnaires.import-part');
     Route::post('/forms/{form}/versions/{version}/new-draft', [FormController::class, 'newDraft'])->name('forms.new-draft');
     Route::post('/forms/{form}/duplicate', [FormController::class, 'duplicate'])->name('forms.duplicate');
     Route::post('/forms/{form}/archive', [FormController::class, 'archive'])->name('forms.archive');
