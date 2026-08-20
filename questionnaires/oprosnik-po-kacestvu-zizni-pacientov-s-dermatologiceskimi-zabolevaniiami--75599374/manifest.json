@@ -1,0 +1,1132 @@
+{
+    "attachments": [],
+    "conditional_rules": [],
+    "content_hash": "75599374bbc13b9c82ac2527eac2853ef26831df39d2e9131f209df7a18438c2",
+    "form": {
+        "name": "ОПРОСНИК ПО КАЧЕСТВУ ЖИЗНИ ПАЦИЕНТОВ С ДЕРМАТОЛОГИЧЕСКИМИ ЗАБОЛЕВАНИЯМИ",
+        "preset_key": "patient_questionnaire",
+        "translations": {
+            "lv": {
+                "name": "ОПРОСНИК ПО КАЧЕСТВУ ЖИЗНИ ПАЦИЕНТОВ С ДЕРМАТОЛОГИЧЕСКИМИ ЗАБОЛЕВАНИЯМИ"
+            }
+        }
+    },
+    "package_type": "universal_form_questionnaire",
+    "schema_version": 1,
+    "sections": [
+        {
+            "components": [
+                {
+                    "attachment_ref": null,
+                    "description": "Демонстрационный текст согласия. Это не юридический документ.",
+                    "display_order": 1,
+                    "help_text": null,
+                    "is_required": true,
+                    "label": "Согласие",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "consent_text": "Я согласен",
+                        "refusal_policy": "block"
+                    },
+                    "stable_key": "f9fea95b-04ef-48c6-b2f3-acb31625aa2f",
+                    "translations": {
+                        "lv": {
+                            "consent_text": "Я согласен",
+                            "description": "Демонстрационный текст согласия. Это не юридический документ.",
+                            "label": "Согласие"
+                        },
+                        "ru": {
+                            "consent_text": "Я согласен",
+                            "description": "Демонстрационный текст согласия. Это не юридический документ.",
+                            "label": "Согласие"
+                        }
+                    },
+                    "type": "consent_checkbox",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 2,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Номер лечебного учреждения:",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "max_length": null,
+                        "min_length": null,
+                        "placeholder": "Введите номер"
+                    },
+                    "stable_key": "e4884c8e-e889-4dbe-87ec-ad103a9dba09",
+                    "translations": {
+                        "lv": {
+                            "label": "Номер лечебного учреждения:",
+                            "placeholder": "Введите номер"
+                        }
+                    },
+                    "type": "short_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 3,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "ФИО пациента",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "max_length": null,
+                        "min_length": null,
+                        "placeholder": "ФИО"
+                    },
+                    "stable_key": "5b7c00c6-42e5-4876-af86-550373a63919",
+                    "translations": {
+                        "lv": {
+                            "label": "ФИО пациента",
+                            "placeholder": "ФИО"
+                        }
+                    },
+                    "type": "short_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 4,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Адрес:",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "max_length": null,
+                        "min_length": null,
+                        "placeholder": "Введите адрес"
+                    },
+                    "stable_key": "37106707-d984-4c5d-b1c2-4170ee76989a",
+                    "translations": {
+                        "lv": {
+                            "label": "Адрес:",
+                            "placeholder": "Введите адрес"
+                        }
+                    },
+                    "type": "short_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 5,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Дата:",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "max_length": null,
+                        "min_length": null,
+                        "placeholder": "Введите дату"
+                    },
+                    "stable_key": "82641594-c589-408b-aa43-b518641eb8f2",
+                    "translations": {
+                        "lv": {
+                            "label": "Дата:",
+                            "placeholder": "Введите дату"
+                        }
+                    },
+                    "type": "short_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 6,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Диагноз",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "max_length": null,
+                        "min_length": null,
+                        "placeholder": "Диагноз"
+                    },
+                    "stable_key": "4d46ad74-8266-48fe-9e3f-99143583384a",
+                    "translations": {
+                        "lv": {
+                            "label": "Диагноз",
+                            "placeholder": "Диагноз"
+                        }
+                    },
+                    "type": "short_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "DLQI",
+                    "display_order": 7,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Значение индекса",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "max_length": null,
+                        "min_length": null,
+                        "placeholder": "Введите адрес"
+                    },
+                    "stable_key": "949d0d3e-8782-4a37-8f0f-03ebd5f8c9e5",
+                    "translations": {
+                        "lv": {
+                            "description": "DLQI",
+                            "label": "Значение индекса"
+                        }
+                    },
+                    "type": "short_text",
+                    "validation_rules": [],
+                    "visible": true
+                }
+            ],
+            "description": null,
+            "display_order": 0,
+            "stable_key": "fe6b9a54-2793-4997-98d5-241ce01f7c2b",
+            "title": "1. sadaļa",
+            "translations": {
+                "lv": {
+                    "title": "1. sadaļa"
+                },
+                "ru": {
+                    "title": "1-ый раздел"
+                }
+            },
+            "visible": true
+        },
+        {
+            "components": [
+                {
+                    "attachment_ref": null,
+                    "description": "На протяжении последней недели, насколько\r\nсильно беспокоили Вас зуд, чувствительность,\r\nболезненность или жжение кожи?",
+                    "display_order": 1,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "1.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Очень сильно",
+                            "stable_key": "02dd5b41-6b50-4bac-a2e9-6346ff648a98",
+                            "translations": {
+                                "lv": {
+                                    "label": "Очень сильно"
+                                },
+                                "ru": {
+                                    "label": "Очень сильно"
+                                }
+                            },
+                            "value": "ef964d23-c21a-40ab-ae7b-0f6ee552ff8e"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Сильно",
+                            "stable_key": "8088b1c2-8afe-4167-b799-b33737f27555",
+                            "translations": {
+                                "lv": {
+                                    "label": "Сильно"
+                                },
+                                "ru": {
+                                    "label": "Сильно"
+                                }
+                            },
+                            "value": "9e48efd0-2160-43bc-b123-450e92b4777a"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Незначительно",
+                            "stable_key": "b297c6cb-2e56-4f91-ba8f-8015e2c9bd21",
+                            "translations": {
+                                "lv": {
+                                    "label": "Незначительно"
+                                },
+                                "ru": {
+                                    "label": "Незначительно"
+                                }
+                            },
+                            "value": "ab5fe07a-7068-4627-b3ff-84d4539bb813"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Совсем нет",
+                            "stable_key": "b408f82d-3f50-4d21-b08d-7357a9856e8a",
+                            "translations": {
+                                "lv": {
+                                    "label": "Совсем нет"
+                                }
+                            },
+                            "value": "91f24a6e-ed52-4220-9e01-f4345beae37c"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "f15014a7-400b-4d27-a9f8-9f6ba4776c5d",
+                    "translations": {
+                        "lv": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно беспокоили Вас зуд, чувствительность,\r\nболезненность или жжение кожи?",
+                            "label": "1."
+                        },
+                        "ru": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно беспокоили Вас зуд, чувствительность,\r\nболезненность или жжение кожи?",
+                            "label": "1."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "На протяжении последней недели, насколько\r\nсильно Вы чувствовали смущение или\r\nнеловкость из-за состояния Вашей кожи?",
+                    "display_order": 2,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "2.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Очень сильно",
+                            "stable_key": "f93afbf1-1e2d-4a5f-980f-cd9432dd91a9",
+                            "translations": {
+                                "lv": {
+                                    "label": "Очень сильно"
+                                }
+                            },
+                            "value": "bda01ef3-2764-46c1-9718-38eda70315b8"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Сильно",
+                            "stable_key": "61b718eb-45b9-4683-9a88-fdca2e7a95da",
+                            "translations": {
+                                "lv": {
+                                    "label": "Сильно"
+                                }
+                            },
+                            "value": "5fe421d4-59dc-4d30-81a7-0f175dbff72a"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Незначительно",
+                            "stable_key": "0544fd32-fab7-4a90-8686-096510c310f5",
+                            "translations": {
+                                "lv": {
+                                    "label": "Незначительно"
+                                }
+                            },
+                            "value": "24f48b45-73b5-4040-83c8-5c6afd935335"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Совсем нет",
+                            "stable_key": "df20c15c-f8e5-419c-88b3-f6058ff78161",
+                            "translations": {
+                                "lv": {
+                                    "label": "Совсем нет"
+                                }
+                            },
+                            "value": "6fe026fc-d4f6-4123-8e53-7cf9807f81f3"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "d826e82b-f95a-488a-89dd-0de38f2cac23",
+                    "translations": {
+                        "lv": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно Вы чувствовали смущение или\r\nнеловкость из-за состояния Вашей кожи?",
+                            "label": "2."
+                        },
+                        "ru": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно Вы чувствовали смущение или\r\nнеловкость из-за состояния Вашей кожи?",
+                            "label": "2."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "На протяжении последней недели, насколько\r\nсильно состояние Вашей кожи мешало Вашим\r\nпоходам за покупками, уходу за домом или\r\nсадом?",
+                    "display_order": 3,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "3.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Очень сильно",
+                            "stable_key": "e1e8733c-a4d0-4d55-bfa7-ec445072d6e0",
+                            "translations": {
+                                "lv": {
+                                    "label": "Очень сильно"
+                                }
+                            },
+                            "value": "bda01ef3-2764-46c1-9718-38eda70315b8"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Сильно",
+                            "stable_key": "72dd7215-9ea2-4e8b-b680-887a0d56b553",
+                            "translations": {
+                                "lv": {
+                                    "label": "Сильно"
+                                }
+                            },
+                            "value": "5fe421d4-59dc-4d30-81a7-0f175dbff72a"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Незначительно",
+                            "stable_key": "41658ea6-0bd3-4b93-bfd7-9fad3d3a6195",
+                            "translations": {
+                                "lv": {
+                                    "label": "Незначительно"
+                                }
+                            },
+                            "value": "24f48b45-73b5-4040-83c8-5c6afd935335"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Совсем нет",
+                            "stable_key": "8b3e3cd8-f15b-462f-9a82-07e99387b55d",
+                            "translations": {
+                                "lv": {
+                                    "label": "Совсем нет"
+                                }
+                            },
+                            "value": "6fe026fc-d4f6-4123-8e53-7cf9807f81f3"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Не применимо",
+                            "stable_key": "97e2936d-4602-4c00-88e8-c80033789935",
+                            "translations": {
+                                "lv": {
+                                    "label": "Не применимо"
+                                }
+                            },
+                            "value": "dda843dc-1658-4e54-a5b2-e7884c8016f3"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "576c12a7-b51d-474a-b327-51deed9d155e",
+                    "translations": {
+                        "lv": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно состояние Вашей кожи мешало Вашим\r\nпоходам за покупками, уходу за домом или\r\nсадом?",
+                            "label": "3."
+                        },
+                        "ru": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно Вы чувствовали смущение или\r\nнеловкость из-за состояния Вашей кожи?",
+                            "label": "2."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "На протяжении последней недели, насколько\r\nсильно состояние Вашей кожи влияло на выбор\r\nодежды, которую Вы надевали?",
+                    "display_order": 4,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "4.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Очень сильно",
+                            "stable_key": "45b99748-8c3d-4ad5-9d50-c263fb5f4cb2",
+                            "translations": {
+                                "lv": {
+                                    "label": "Очень сильно"
+                                }
+                            },
+                            "value": "bda01ef3-2764-46c1-9718-38eda70315b8"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Сильно",
+                            "stable_key": "6ea84fc0-e4fc-42b7-8f36-16826ef1e368",
+                            "translations": {
+                                "lv": {
+                                    "label": "Сильно"
+                                }
+                            },
+                            "value": "5fe421d4-59dc-4d30-81a7-0f175dbff72a"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Незначительно",
+                            "stable_key": "3322dedb-628a-4117-bbdd-5fcd93ee4b0a",
+                            "translations": {
+                                "lv": {
+                                    "label": "Незначительно"
+                                }
+                            },
+                            "value": "24f48b45-73b5-4040-83c8-5c6afd935335"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Совсем нет",
+                            "stable_key": "1e600ff4-c6fc-4822-815d-84d7e4cc53d3",
+                            "translations": {
+                                "lv": {
+                                    "label": "Совсем нет"
+                                }
+                            },
+                            "value": "6fe026fc-d4f6-4123-8e53-7cf9807f81f3"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Не применимо",
+                            "stable_key": "ebe0de11-b254-46d8-8f86-ae9a75e3836b",
+                            "translations": {
+                                "lv": {
+                                    "label": "Не применимо"
+                                }
+                            },
+                            "value": "dda843dc-1658-4e54-a5b2-e7884c8016f3"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "d0fc5d1d-6cb0-4290-9c76-f7d079d0b4c9",
+                    "translations": {
+                        "lv": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно состояние Вашей кожи влияло на выбор\r\nодежды, которую Вы надевали?",
+                            "label": "4."
+                        },
+                        "ru": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно Вы чувствовали смущение или\r\nнеловкость из-за состояния Вашей кожи?",
+                            "label": "2."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "На протяжении последней недели, насколько\r\nсильно состояние Вашей кожи влияло на Вашу\r\nобщественную деятельность или досуг?",
+                    "display_order": 5,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "5.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Очень сильно",
+                            "stable_key": "6571fb6b-c443-4b16-af97-881ac3dfda19",
+                            "translations": {
+                                "lv": {
+                                    "label": "Очень сильно"
+                                }
+                            },
+                            "value": "bda01ef3-2764-46c1-9718-38eda70315b8"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Сильно",
+                            "stable_key": "d1a205de-1ea2-469a-b7ac-04bd25b6bd44",
+                            "translations": {
+                                "lv": {
+                                    "label": "Сильно"
+                                }
+                            },
+                            "value": "5fe421d4-59dc-4d30-81a7-0f175dbff72a"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Незначительно",
+                            "stable_key": "24e976f6-6279-4259-bba3-d5fc2bb8653d",
+                            "translations": {
+                                "lv": {
+                                    "label": "Незначительно"
+                                }
+                            },
+                            "value": "24f48b45-73b5-4040-83c8-5c6afd935335"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Совсем нет",
+                            "stable_key": "96822813-b0db-46e7-bb39-d68059dde184",
+                            "translations": {
+                                "lv": {
+                                    "label": "Совсем нет"
+                                }
+                            },
+                            "value": "6fe026fc-d4f6-4123-8e53-7cf9807f81f3"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Не применимо",
+                            "stable_key": "383449f5-a046-4bb4-99ec-6332200a9563",
+                            "translations": {
+                                "lv": {
+                                    "label": "Не применимо"
+                                }
+                            },
+                            "value": "dda843dc-1658-4e54-a5b2-e7884c8016f3"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "20e6f797-5093-4337-aaae-5cd1ec4c6fef",
+                    "translations": {
+                        "lv": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно состояние Вашей кожи влияло на Вашу\r\nобщественную деятельность или досуг?",
+                            "label": "5."
+                        },
+                        "ru": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно Вы чувствовали смущение или\r\nнеловкость из-за состояния Вашей кожи?",
+                            "label": "2."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "На протяжении последней недели, насколько\r\nсильно состояние Вашей кожи затрудняло\r\nВаши занятия спортом?",
+                    "display_order": 6,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "6.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Очень сильно",
+                            "stable_key": "991fc2b5-763a-47b0-9169-a87d974e9269",
+                            "translations": {
+                                "lv": {
+                                    "label": "Очень сильно"
+                                }
+                            },
+                            "value": "bda01ef3-2764-46c1-9718-38eda70315b8"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Сильно",
+                            "stable_key": "783c5c7c-c9a8-465f-8417-aaf2a5d921e1",
+                            "translations": {
+                                "lv": {
+                                    "label": "Сильно"
+                                }
+                            },
+                            "value": "5fe421d4-59dc-4d30-81a7-0f175dbff72a"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Незначительно",
+                            "stable_key": "eacdbac3-cb23-4f77-b538-be3d0fb7ccc0",
+                            "translations": {
+                                "lv": {
+                                    "label": "Незначительно"
+                                }
+                            },
+                            "value": "24f48b45-73b5-4040-83c8-5c6afd935335"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Совсем нет",
+                            "stable_key": "5a218d38-d3c9-4010-8534-2dabaddcdca1",
+                            "translations": {
+                                "lv": {
+                                    "label": "Совсем нет"
+                                }
+                            },
+                            "value": "6fe026fc-d4f6-4123-8e53-7cf9807f81f3"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Не применимо",
+                            "stable_key": "e5ddde58-22db-4341-9fbe-bbaeeba094df",
+                            "translations": {
+                                "lv": {
+                                    "label": "Не применимо"
+                                }
+                            },
+                            "value": "dda843dc-1658-4e54-a5b2-e7884c8016f3"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "c0ff2a7f-8aa7-4132-a785-0fd7c4a1211d",
+                    "translations": {
+                        "lv": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно состояние Вашей кожи затрудняло\r\nВаши занятия спортом?",
+                            "label": "6."
+                        },
+                        "ru": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно Вы чувствовали смущение или\r\nнеловкость из-за состояния Вашей кожи?",
+                            "label": "2."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Полностью ли препятствовало состояние\r\nВашей кожи работе или учебе в течение\r\nпоследней недели?",
+                    "display_order": 7,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "7.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Да",
+                            "stable_key": "a342c01d-fcfb-4b7f-8cf1-a0edd7d7f6ab",
+                            "translations": {
+                                "lv": {
+                                    "label": "Да"
+                                }
+                            },
+                            "value": "5e494cff-4223-4c00-bf4d-dcf908b6489e"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Нет",
+                            "stable_key": "3e52a23d-2e60-4ab4-9a5e-0659101754a7",
+                            "translations": {
+                                "lv": {
+                                    "label": "Нет"
+                                }
+                            },
+                            "value": "dcbcde6d-5834-4048-ab0d-47e0638a968d"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Не применимо",
+                            "stable_key": "5e51e9de-348a-4756-a300-35ab3abdf163",
+                            "translations": {
+                                "lv": {
+                                    "label": "Не применимо"
+                                }
+                            },
+                            "value": "550596d7-639c-4358-82b2-50b1265229a5"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "8eb3a255-1f8f-4e76-9144-74e421aa0004",
+                    "translations": {
+                        "lv": {
+                            "description": "Полностью ли препятствовало состояние\r\nВашей кожи работе или учебе в течение\r\nпоследней недели?",
+                            "label": "7."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Если “Нет”, то в какой степени, на протяжении\r\nпоследней недели, состояние Вашей кожи было\r\nпроблемой для Вашей работы или учебы?",
+                    "display_order": 8,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "-",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Сильно",
+                            "stable_key": "bb2d3225-2cd8-43f6-a649-c623d384e790",
+                            "translations": {
+                                "lv": {
+                                    "label": "Сильно"
+                                }
+                            },
+                            "value": "0cd58954-7e61-420d-b1c5-a2da9c437c47"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Незначительно",
+                            "stable_key": "52f67817-695f-4727-8bfa-c1e11d2648e1",
+                            "translations": {
+                                "lv": {
+                                    "label": "Незначительно"
+                                }
+                            },
+                            "value": "61e6d9d7-810d-4bf3-8ead-8e3b3c48018c"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Совсем нет",
+                            "stable_key": "088f57a5-52b1-462d-a690-56a074671918",
+                            "translations": {
+                                "lv": {
+                                    "label": "Совсем нет"
+                                }
+                            },
+                            "value": "ae43ecbd-167e-43d9-ab3a-95c683c2439c"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "301d2ed8-a8d7-4c63-977d-adb18973962e",
+                    "translations": {
+                        "lv": {
+                            "description": "Если “Нет”, то в какой степени, на протяжении\r\nпоследней недели, состояние Вашей кожи было\r\nпроблемой для Вашей работы или учебы?",
+                            "label": "-"
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "На протяжении последней недели, насколько\r\nсильно состояние Вашей кожи создавало\r\nпроблемы с Вашим партнером (-шей) или\r\nВашими близкими друзьями или\r\nродственниками?",
+                    "display_order": 9,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "8.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Очень сильно",
+                            "stable_key": "11266545-9679-46ce-9de4-e48fc0d8d9a2",
+                            "translations": {
+                                "lv": {
+                                    "label": "Очень сильно"
+                                }
+                            },
+                            "value": "bda01ef3-2764-46c1-9718-38eda70315b8"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Сильно",
+                            "stable_key": "329bf06f-1076-4277-8b5e-7e8d6f232555",
+                            "translations": {
+                                "lv": {
+                                    "label": "Сильно"
+                                }
+                            },
+                            "value": "5fe421d4-59dc-4d30-81a7-0f175dbff72a"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Незначительно",
+                            "stable_key": "520783f9-ffec-4010-9fb6-7eabf417bbe6",
+                            "translations": {
+                                "lv": {
+                                    "label": "Незначительно"
+                                }
+                            },
+                            "value": "24f48b45-73b5-4040-83c8-5c6afd935335"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Совсем нет",
+                            "stable_key": "6a6e6be6-2d1e-4e30-826b-7a484e13e314",
+                            "translations": {
+                                "lv": {
+                                    "label": "Совсем нет"
+                                }
+                            },
+                            "value": "6fe026fc-d4f6-4123-8e53-7cf9807f81f3"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Не применимо",
+                            "stable_key": "04e591fa-0c16-49f4-99de-250a7a1b5551",
+                            "translations": {
+                                "lv": {
+                                    "label": "Не применимо"
+                                }
+                            },
+                            "value": "dda843dc-1658-4e54-a5b2-e7884c8016f3"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "06ccfbbd-cb53-434a-8045-6dc9ab72ce6a",
+                    "translations": {
+                        "lv": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно состояние Вашей кожи создавало\r\nпроблемы с Вашим партнером (-шей) или\r\nВашими близкими друзьями или\r\nродственниками?",
+                            "label": "8."
+                        },
+                        "ru": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно Вы чувствовали смущение или\r\nнеловкость из-за состояния Вашей кожи?",
+                            "label": "2."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "На протяжении последней недели, насколько\r\nсильно состояние Вашей кожи было причиной\r\nВаших сексуальных проблем любого\r\nхарактера?",
+                    "display_order": 10,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "9.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Очень сильно",
+                            "stable_key": "f86d9a6a-3ba4-4771-a0e7-b06988db0fd2",
+                            "translations": {
+                                "lv": {
+                                    "label": "Очень сильно"
+                                }
+                            },
+                            "value": "bda01ef3-2764-46c1-9718-38eda70315b8"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Сильно",
+                            "stable_key": "882ef2e1-65d5-49c4-bb07-b4e7595c4ef1",
+                            "translations": {
+                                "lv": {
+                                    "label": "Сильно"
+                                }
+                            },
+                            "value": "5fe421d4-59dc-4d30-81a7-0f175dbff72a"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Незначительно",
+                            "stable_key": "1a2912c6-16b0-4551-8fc8-744b64f53b17",
+                            "translations": {
+                                "lv": {
+                                    "label": "Незначительно"
+                                }
+                            },
+                            "value": "24f48b45-73b5-4040-83c8-5c6afd935335"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Совсем нет",
+                            "stable_key": "25cdc156-d95f-48a2-a487-56b92be83e1f",
+                            "translations": {
+                                "lv": {
+                                    "label": "Совсем нет"
+                                }
+                            },
+                            "value": "6fe026fc-d4f6-4123-8e53-7cf9807f81f3"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Не применимо",
+                            "stable_key": "cea86a57-0b8b-4a69-a372-4a053a38ee5b",
+                            "translations": {
+                                "lv": {
+                                    "label": "Не применимо"
+                                }
+                            },
+                            "value": "dda843dc-1658-4e54-a5b2-e7884c8016f3"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "b3b9bc82-2149-4d8d-ad34-f50ba136159d",
+                    "translations": {
+                        "lv": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно состояние Вашей кожи было причиной\r\nВаших сексуальных проблем любого\r\nхарактера?",
+                            "label": "9."
+                        },
+                        "ru": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно Вы чувствовали смущение или\r\nнеловкость из-за состояния Вашей кожи?",
+                            "label": "2."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "На протяжении последней недели, насколько\r\nсильно лечение Вашего кожного заболевания\r\nсоздавало Вам сложности, например, создавало\r\nбеспорядок в доме или отнимало время?",
+                    "display_order": 11,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "10.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [
+                        {
+                            "display_order": 0,
+                            "label": "Очень сильно",
+                            "stable_key": "3a4af807-ab48-4fc9-a220-e300c1cde09a",
+                            "translations": {
+                                "lv": {
+                                    "label": "Очень сильно"
+                                }
+                            },
+                            "value": "bda01ef3-2764-46c1-9718-38eda70315b8"
+                        },
+                        {
+                            "display_order": 1,
+                            "label": "Сильно",
+                            "stable_key": "0bed7ffe-8f4c-4eb8-ad67-7cc875d07eda",
+                            "translations": {
+                                "lv": {
+                                    "label": "Сильно"
+                                }
+                            },
+                            "value": "5fe421d4-59dc-4d30-81a7-0f175dbff72a"
+                        },
+                        {
+                            "display_order": 2,
+                            "label": "Незначительно",
+                            "stable_key": "99b320f9-cdf6-4b47-86ad-7d477557647c",
+                            "translations": {
+                                "lv": {
+                                    "label": "Незначительно"
+                                }
+                            },
+                            "value": "24f48b45-73b5-4040-83c8-5c6afd935335"
+                        },
+                        {
+                            "display_order": 3,
+                            "label": "Совсем нет",
+                            "stable_key": "0334e755-bfb8-46be-b720-03ae82327b25",
+                            "translations": {
+                                "lv": {
+                                    "label": "Совсем нет"
+                                }
+                            },
+                            "value": "6fe026fc-d4f6-4123-8e53-7cf9807f81f3"
+                        },
+                        {
+                            "display_order": 4,
+                            "label": "Не применимо",
+                            "stable_key": "7ddb56df-098b-4bf2-9c31-4758d0c9b6a9",
+                            "translations": {
+                                "lv": {
+                                    "label": "Не применимо"
+                                }
+                            },
+                            "value": "dda843dc-1658-4e54-a5b2-e7884c8016f3"
+                        }
+                    ],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "bd5a802d-d34f-4e55-8ae7-bbecfe5c1896",
+                    "translations": {
+                        "lv": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно лечение Вашего кожного заболевания\r\nсоздавало Вам сложности, например, создавало\r\nбеспорядок в доме или отнимало время?",
+                            "label": "10."
+                        },
+                        "ru": {
+                            "description": "На протяжении последней недели, насколько\r\nсильно Вы чувствовали смущение или\r\nнеловкость из-за состояния Вашей кожи?",
+                            "label": "2."
+                        }
+                    },
+                    "type": "single_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 12,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Пожалуйста, проверьте, ответили ли Вы на КАЖДЫЙ вопрос. Спасибо.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "5385b5e5-bbb5-4bcc-a1a4-81aa96090e27",
+                    "translations": {
+                        "lv": {
+                            "label": "Пожалуйста, проверьте, ответили ли Вы на КАЖДЫЙ вопрос. Спасибо."
+                        }
+                    },
+                    "type": "heading",
+                    "validation_rules": [],
+                    "visible": true
+                }
+            ],
+            "description": null,
+            "display_order": 1,
+            "stable_key": "f6ebc1b1-92eb-49f6-bebc-18f9cf0f629e",
+            "title": "Опрос",
+            "translations": {
+                "lv": {
+                    "title": "Опрос"
+                },
+                "ru": {
+                    "description": "Цель этого опросника – оценить, какое влияние оказывало на Вашу жизнь кожное заболевание в ТЕЧЕНИЕ\r\nПОСЛЕДНЕЙ НЕДЕЛИ. Пожалуйста, отметьте галочкой одну ячейку для каждого вопроса.",
+                    "title": "Опрос"
+                }
+            },
+            "visible": true
+        }
+    ],
+    "version": {
+        "description": null,
+        "settings": {
+            "anonymous_allowed": true,
+            "consent_required": true,
+            "result_visibility": "completion",
+            "scoring_enabled": false
+        },
+        "title": "ОПРОСНИК ПО КАЧЕСТВУ ЖИЗНИ ПАЦИЕНТОВ С ДЕРМАТОЛОГИЧЕСКИМИ ЗАБОЛЕВАНИЯМИ",
+        "translations": {
+            "lv": {
+                "title": "ОПРОСНИК ПО КАЧЕСТВУ ЖИЗНИ ПАЦИЕНТОВ С ДЕРМАТОЛОГИЧЕСКИМИ ЗАБОЛЕВАНИЯМИ"
+            }
+        }
+    }
+}

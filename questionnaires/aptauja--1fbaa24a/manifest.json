@@ -1,7 +1,7 @@
 {
     "attachments": [],
     "conditional_rules": [],
-    "content_hash": "750dced11862bb1f8040ceaf18a75fb52013670fa81277a929e60157305cdfcb",
+    "content_hash": "1fbaa24ad7ffa3b377178d59f80273d66f6592cf991ab8a5adeb66ef255cba84",
     "form": {
         "name": "Aptauja",
         "preset_key": "patient_questionnaire",
@@ -492,6 +492,28 @@
                         }
                     },
                     "type": "multiple_choice",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 22,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Aptaujas veicēja: Ilona Radionova",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "d58d08a2-6add-431a-ac7f-806990ae70e9",
+                    "translations": {
+                        "lv": {
+                            "label": "Aptaujas veicēja: Ilona Radionova"
+                        }
+                    },
+                    "type": "explanatory_text",
                     "validation_rules": [],
                     "visible": true
                 }
