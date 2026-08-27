@@ -30,7 +30,7 @@ class PatientAccessService
                 'expires_at' => now()->addDays($days),
             ]);
             $patientCase->assignments()->with(['invitation', 'publication'])->get()->each(function ($assignment) use ($package, $patientCase): void {
-                if ($assignment->publication->access_mode !== 'invitation') {
+                if (!in_array($assignment->publication->access_mode, ['invitation', 'public'], true)) {
                     throw ValidationException::withMessages(['assignments' => __('messages.invalid_invitation')]);
                 }
                 $invitation = $assignment->invitation ?: Invitation::create([

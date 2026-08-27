@@ -68,7 +68,7 @@
   .form-component { @apply mb-6; }
   .form-component legend { @apply mb-2 font-semibold; }
   .help { @apply mb-2 text-sm text-slate-500; }
-  .multiline-text { white-space: pre-line; }
+  .multiline-text { white-space: pre-wrap; }
   .runner-header { @apply mb-5 flex flex-wrap justify-between gap-4 rounded-xl bg-white p-5 shadow-sm; }
   .progress-track { @apply mt-3 h-2 w-64 max-w-full overflow-hidden rounded-full bg-slate-200; }
   .progress-track > div { @apply h-full bg-indigo-600 transition-all; width: 0; }

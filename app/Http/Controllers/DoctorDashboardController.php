@@ -11,7 +11,10 @@ use App\Models\FormSubmission;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 
 class DoctorDashboardController extends Controller
 {
@@ -140,6 +143,71 @@ class DoctorDashboardController extends Controller
         $submission->load('publication.form', 'formVersion', 'answers.component.options', 'answers.score');
 
         return view('doctor.results.show', compact('patientCase', 'assignment', 'submission'));
+    }
+
+    public function exportForm(Request $request, Organisation $organisation)
+    {
+        $actor = $request->user();
+        abort_unless($actor->hasDoctorPermission($organisation->id, 'patient.questionnaires.view'), 403);
+
+        return view('doctor.export', compact('organisation'));
+    }
+
+    public function exportAnswers(Request $request, Organisation $organisation)
+    {
+        $actor = $request->user();
+        abort_unless($actor->hasDoctorPermission($organisation->id, 'patient.questionnaires.view'), 403);
+        $data = $request->validate(['format' => ['required', Rule::in(['csv', 'xlsx'])], 'anonymize' => ['sometimes', 'boolean']]);
+        $anonymize = $request->boolean('anonymize', true);
+
+        $patientCases = PatientCase::query()->visibleTo($actor)
+            ->where('organisation_id', $organisation->id)
+            ->with(['assignments.completedSubmission.answers.component'])
+            ->orderBy('slot_number')
+            ->get();
+
+        $rows = [];
+        foreach ($patientCases as $patientCase) {
+            $identity = $anonymize ? $patientCase->patient_code : trim($patientCase->first_name.' '.$patientCase->last_name).' ('.$patientCase->patient_code.')';
+            foreach ($patientCase->assignments as $assignment) {
+                $submission = $assignment->completedSubmission;
+                if (!$submission) continue;
+                foreach ($submission->answers as $answer) {
+                    $rows[] = [$identity, $assignment->label, $answer->component->label, $answer->display_value];
+                }
+            }
+        }
+        $header = [__('messages.research_id'), __('messages.questionnaires'), __('messages.component'), __('messages.answer')];
+
+        return $data['format'] === 'xlsx' ? $this->downloadXlsx($header, $rows) : $this->downloadCsv($header, $rows);
+    }
+
+    private function downloadCsv(array $header, array $rows)
+    {
+        return response()->streamDownload(function () use ($header, $rows): void {
+            $handle = fopen('php://output', 'wb');
+            fputcsv($handle, $header);
+            foreach ($rows as $row) fputcsv($handle, array_map([$this, 'csvSafe'], $row));
+            fclose($handle);
+        }, 'patient-answers.csv');
+    }
+
+    private function downloadXlsx(array $header, array $rows)
+    {
+        $path = tempnam(sys_get_temp_dir(), 'patient-export').'.xlsx';
+        $writer = new Writer();
+        $writer->openToFile($path);
+        $writer->addRow(Row::fromValues($header));
+        foreach ($rows as $row) $writer->addRow(Row::fromValues(array_map([$this, 'csvSafe'], $row)));
+        $writer->close();
+
+        return response()->download($path, 'patient-answers.xlsx')->deleteFileAfterSend(true);
+    }
+
+    private function csvSafe(mixed $value): mixed
+    {
+        if (!is_string($value)) return $value;
+        return preg_match('/^[=+\-@\t\r]/u', $value) ? "'".$value : $value;
     }
 
     private function patientData(Request $request): array

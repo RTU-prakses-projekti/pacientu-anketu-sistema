@@ -35,7 +35,7 @@ class SubmissionService
 
     public function startForInvitation(Publication $publication, Invitation $invitation): FormSubmission
     {
-        if (!$publication->isOpen() || $publication->access_mode !== 'invitation' || $invitation->publication_id !== $publication->id
+        if (!$publication->isOpen() || !in_array($publication->access_mode, ['invitation', 'public'], true) || $invitation->publication_id !== $publication->id
             || $invitation->revoked_at || ($invitation->expires_at && $invitation->expires_at->isPast())) {
             throw ValidationException::withMessages(['invitation' => __('messages.invalid_invitation')]);
         }

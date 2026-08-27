@@ -17,7 +17,7 @@ class ExportService
     {
         $export->update(['status' => 'processing']);
         try {
-            $submissions = FormSubmission::with('publication.form', 'user', 'answers.component')->where('organisation_id', $export->organisation_id)
+            $submissions = FormSubmission::with('publication.form', 'user', 'answers.component.options')->where('organisation_id', $export->organisation_id)
                 ->withoutPatientAssignment()
                 ->when($export->form_id, fn ($q) => $q->whereHas('publication', fn ($p) => $p->where('form_id', $export->form_id)))->get();
             $relative = 'exports/'.$export->organisation_id.'/'.$export->public_id.'.'.$export->format;
@@ -36,8 +36,17 @@ class ExportService
     private function csv(string $path, $submissions): void
     {
         $handle = fopen($path, 'wb');
-        fputcsv($handle, ['Submission', 'Form', 'Version', 'Status', 'Respondent', 'Attempt', 'Started', 'Submitted', 'Score', 'Percentage']);
-        foreach ($submissions as $submission) fputcsv($handle, array_map([$this, 'safe'], $this->submissionRow($submission)));
+        fputcsv($handle, ['Submission', 'Form', 'Version', 'Status', 'Respondent', 'Attempt', 'Started', 'Submitted', 'Score', 'Percentage', 'Component key', 'Component', 'Type', 'Value']);
+        foreach ($submissions as $submission) {
+            $row = $this->submissionRow($submission);
+            if ($submission->answers->isEmpty()) {
+                fputcsv($handle, array_map([$this, 'safe'], [...$row, '', '', '', '']));
+                continue;
+            }
+            foreach ($submission->answers as $answer) {
+                fputcsv($handle, array_map([$this, 'safe'], [...$row, $answer->component->stable_key, $answer->component->label, $answer->component->type, $answer->display_value]));
+            }
+        }
         fclose($handle);
     }
 

@@ -54,6 +54,8 @@ Route::get('/respond/{submission}/attachments/{attachment}', [AttachmentControll
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/doctor', [DoctorDashboardController::class, 'index'])->name('doctor.dashboard');
+    Route::get('/doctor/organisations/{organisation}/patients-export', [DoctorDashboardController::class, 'exportForm'])->name('doctor.patients.export');
+    Route::post('/doctor/organisations/{organisation}/patients-export', [DoctorDashboardController::class, 'exportAnswers'])->name('doctor.patients.export.download');
     Route::post('/doctor/organisations/{organisation}/patients', [DoctorDashboardController::class, 'storePatient'])->name('doctor.patients.store');
     Route::put('/doctor/organisations/{organisation}/doctors/{doctor}/slots/{slot}', [DoctorDashboardController::class, 'updateSlot'])->name('doctor.patients.slots.update');
     Route::get('/doctor/patients/{patientCase}/assignments/{assignment}/result', [DoctorDashboardController::class, 'result'])->name('doctor.results.show');

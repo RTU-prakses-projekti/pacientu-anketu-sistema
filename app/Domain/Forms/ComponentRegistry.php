@@ -130,6 +130,9 @@ class ComponentRegistry
 
     public function formatForExport(FormComponent $component, mixed $value): string
     {
+        if (in_array($component->type, ['single_choice', 'multiple_choice', 'dropdown'], true)) {
+            return $component->localizedAnswerValue($value);
+        }
         if (is_array($value)) return implode('; ', $value);
         if (is_bool($value)) return $value ? __('messages.yes') : __('messages.no');
         return (string) ($value ?? '');
