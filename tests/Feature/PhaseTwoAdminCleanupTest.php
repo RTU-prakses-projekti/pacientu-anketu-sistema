@@ -401,7 +401,7 @@ class PhaseTwoAdminCleanupTest extends TestCase
     {
         $user = User::factory()->create(array_merge(['is_active' => true], $attributes));
         $membership = OrganisationMembership::create(['organisation_id' => $organisation->id, 'user_id' => $user->id, 'is_active' => true]);
-        $membership->roles()->attach(Role::where('name', $roleName)->firstOrFail());
+        $membership->roles()->attach(Role::where('name', $roleName === 'respondent' ? 'doctor' : $roleName)->firstOrFail());
         return $user;
     }
 

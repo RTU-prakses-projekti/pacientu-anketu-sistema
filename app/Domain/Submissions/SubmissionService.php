@@ -230,7 +230,7 @@ class SubmissionService
     {
         if (!$publication->isOpen()) throw ValidationException::withMessages(['publication' => __('messages.publication_closed')]);
         if ($publication->access_mode === 'authenticated' && !$user) throw ValidationException::withMessages(['auth' => __('messages.login_required')]);
-        if ($publication->access_mode === 'authenticated' && $user && !$user->isPlatformAdmin() && !$user->memberships()->where('organisation_id', $publication->organisation_id)->where('is_active', true)->exists()) throw ValidationException::withMessages(['auth' => __('messages.login_required')]);
+        if ($publication->access_mode === 'authenticated' && $user && !$user->isBootstrapRoot() && !$user->memberships()->where('organisation_id', $publication->organisation_id)->where('is_active', true)->exists()) throw ValidationException::withMessages(['auth' => __('messages.login_required')]);
         if ($publication->identified_required && !$user && $publication->access_mode !== 'invitation') throw ValidationException::withMessages(['identity' => __('messages.identity_required')]);
         if (!$user && !$publication->anonymous_allowed && $publication->access_mode !== 'invitation') throw ValidationException::withMessages(['identity' => __('messages.identity_required')]);
         if ($publication->access_mode === 'access_code' && (!$accessCode || !$publication->access_code_hash || !Hash::check($accessCode, $publication->access_code_hash))) throw ValidationException::withMessages(['access_code' => __('messages.invalid_access_code')]);

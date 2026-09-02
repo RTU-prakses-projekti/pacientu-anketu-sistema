@@ -9,21 +9,19 @@ class FormSubmissionPolicy
 {
     public function view(User $user, FormSubmission $submission): bool
     {
-        return !$submission->isPatientLinked()
+        return $user->isBootstrapRoot() || (!$submission->isPatientLinked()
             && ($submission->user_id === $user->id
-                || $user->isPlatformAdmin()
-                || $user->hasOrganisationPermission($submission->organisation_id, 'submissions.view'));
+                || $user->canAdministerSystem()
+                || $user->hasOrganisationPermission($submission->organisation_id, 'submissions.view')));
     }
 
     public function grade(User $user, FormSubmission $submission): bool
     {
-        return !$submission->isPatientLinked()
-            && ($user->isPlatformAdmin() || $user->hasOrganisationPermission($submission->organisation_id, 'submissions.grade'));
+        return $user->isBootstrapRoot();
     }
 
     public function manage(User $user, FormSubmission $submission): bool
     {
-        return !$submission->isPatientLinked()
-            && ($user->isPlatformAdmin() || $user->hasOrganisationPermission($submission->organisation_id, 'submissions.manage'));
+        return $user->isBootstrapRoot();
     }
 }

@@ -21,7 +21,7 @@ class SystemAdministrationController extends Controller
 {
     public function users(Request $request, CleanupService $cleanup)
     {
-        abort_unless($request->user()->isPlatformAdmin(), 403);
+        abort_unless($request->user()->canAdministerSystem(), 403);
 
         $filters = $request->validate([
             'q' => ['nullable', 'string', 'max:255'],
@@ -58,7 +58,7 @@ class SystemAdministrationController extends Controller
         return view('system.users', [
             'users' => $users,
             'organisations' => Organisation::orderBy('name')->get(),
-            'roles' => Role::orderBy('scope')->orderBy('display_name')->get(),
+            'roles' => Role::where('name', '!=', 'platform_admin')->orderBy('scope')->orderBy('display_name')->get(),
             'filters' => $filters,
             'deleteEligibility' => $cleanup->userEligibilityMap($users->getCollection()),
         ]);
@@ -66,17 +66,18 @@ class SystemAdministrationController extends Controller
 
     public function roles(Request $request)
     {
-        abort_unless($request->user()->isPlatformAdmin(), 403);
+        abort_unless($request->user()->canAdministerSystem(), 403);
 
         return view('system.roles', [
-            'roles' => Role::with('permissions')->orderBy('scope')->orderBy('name')->get(),
+            'roles' => Role::with('permissions')->where('name', '!=', 'platform_admin')->orderBy('scope')->orderBy('name')->get(),
             'permissions' => Permission::orderBy('name')->get(),
         ]);
     }
 
     public function updateRole(Request $request, Role $role, AuditService $audit)
     {
-        abort_unless($request->user()->isPlatformAdmin(), 403);
+        abort_unless($request->user()->canAdministerSystem(), 403);
+        abort_if($role->name === 'platform_admin', 403);
         $data = $request->validate(['permissions' => 'nullable|array', 'permissions.*' => 'integer|exists:permissions,id']);
         $role->permissions()->sync($data['permissions'] ?? []);
         $audit->record('role.permissions_updated', $role, null, ['permission_ids' => $data['permissions'] ?? []]);
@@ -86,7 +87,7 @@ class SystemAdministrationController extends Controller
 
     public function storeRole(Request $request, AuditService $audit)
     {
-        abort_unless($request->user()->isPlatformAdmin(), 403);
+        abort_unless($request->user()->canAdministerSystem(), 403);
         $data = $request->validate([
             'display_name' => ['required', 'string', 'max:255'],
             'permissions' => ['nullable', 'array'],
@@ -118,7 +119,7 @@ class SystemAdministrationController extends Controller
 
     public function destroyRole(Request $request, Role $role, AuditService $audit)
     {
-        abort_unless($request->user()->isPlatformAdmin(), 403);
+        abort_unless($request->user()->canAdministerSystem(), 403);
         DB::transaction(function () use ($role, $audit): void {
             $role = Role::lockForUpdate()->findOrFail($role->id);
             if ($role->is_system || in_array($role->name, Role::SYSTEM_NAMES, true)) {
@@ -138,7 +139,7 @@ class SystemAdministrationController extends Controller
 
     public function storeUser(Request $request, AuditService $audit)
     {
-        abort_unless($request->user()->isPlatformAdmin(), 403);
+        abort_unless($request->user()->canAdministerSystem(), 403);
         $data = $request->validate([
             'name' => ['required','string','max:255'],
             'email' => ['required','email','max:255','unique:users,email'],
@@ -164,11 +165,11 @@ class SystemAdministrationController extends Controller
 
     public function editUserRoles(Request $request, User $user)
     {
-        abort_unless($request->user()->isPlatformAdmin(), 403);
+        abort_unless($request->user()->canAdministerSystem(), 403);
 
         return view('system.user-roles', [
             'managedUser' => $user->load(['globalRoles', 'memberships.roles']),
-            'globalRoles' => Role::where('scope', 'global')->orderBy('display_name')->get(),
+            'globalRoles' => Role::where('scope', 'global')->where('name', '!=', 'platform_admin')->orderBy('display_name')->get(),
             'organisationRoles' => Role::where('scope', 'organisation')->orderBy('display_name')->get(),
             'organisations' => Organisation::where('is_active', true)->orderBy('name')->get(),
         ]);
@@ -176,9 +177,9 @@ class SystemAdministrationController extends Controller
 
     public function updateUserRoles(Request $request, User $user, AuditService $audit)
     {
-        abort_unless($request->user()->isPlatformAdmin(), 403);
+        abort_unless($request->user()->canAdministerSystem(), 403);
 
-        $globalRoleIds = Role::where('scope', 'global')->pluck('id');
+        $globalRoleIds = Role::where('scope', 'global')->where('name', 'administrator')->pluck('id');
         $organisationRoleIds = Role::where('scope', 'organisation')->pluck('id');
         $activeOrganisations = Organisation::where('is_active', true)->orderBy('name')->get();
         $activeOrganisationIds = $activeOrganisations->modelKeys();
@@ -204,22 +205,8 @@ class SystemAdministrationController extends Controller
             ->map(fn ($ids) => collect($ids)->map(fn ($id) => (int) $id)->unique()->values());
 
         DB::transaction(function () use ($request, $user, $audit, $selectedGlobalRoleIds, $selectedByOrganisation, $activeOrganisations): void {
-            $platformRole = Role::where('name', 'platform_admin')->where('scope', 'global')->lockForUpdate()->firstOrFail();
-            $platformAdministrators = DB::table('user_roles')
-                ->where('role_id', $platformRole->id)
-                ->lockForUpdate()
-                ->pluck('user_id');
-
-            if ($request->user()->is($user)
-                && $platformAdministrators->contains($user->id)
-                && !$selectedGlobalRoleIds->contains($platformRole->id)
-                && $platformAdministrators->count() === 1) {
-                throw ValidationException::withMessages([
-                    'global_roles' => __('messages.last_platform_admin_required'),
-                ]);
-            }
-
-            $user->globalRoles()->sync($selectedGlobalRoleIds);
+            $rootRoleIds = $user->globalRoles()->where('name', 'platform_admin')->pluck('roles.id');
+            $user->globalRoles()->sync($rootRoleIds->merge($selectedGlobalRoleIds)->unique()->values());
 
             foreach ($activeOrganisations as $organisation) {
                 $roleIds = $selectedByOrganisation->get($organisation->id, collect());

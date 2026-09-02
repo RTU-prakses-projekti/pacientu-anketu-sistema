@@ -33,6 +33,10 @@ class PatientCase extends Model
 
     public function scopeVisibleTo(Builder $query, User $user): Builder
     {
+        if ($user->isBootstrapRoot()) {
+            return $query;
+        }
+
         return $query->where('doctor_id', $user->id);
     }
 

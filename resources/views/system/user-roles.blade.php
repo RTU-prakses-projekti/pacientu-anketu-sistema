@@ -5,7 +5,7 @@
     <section class="card">
         <h2>{{ __('messages.global_roles') }}</h2>
         <div class="grid-cards">
-            @foreach($globalRoles as $role)<label class="choice"><input type="checkbox" name="global_roles[]" value="{{ $role->id }}" @checked($managedUser->globalRoles->contains($role))> {{ $role->display_name }}</label>@endforeach
+            @foreach($globalRoles as $role)<label class="choice"><input type="checkbox" name="global_roles[]" value="{{ $role->id }}" @checked($managedUser->globalRoles->contains($role))> {{ $role->label() }}</label>@endforeach
         </div>
     </section>
     <section class="card">
@@ -14,7 +14,7 @@
             @forelse($organisations as $organisation)
                 @php($membership = $managedUser->memberships->firstWhere('organisation_id', $organisation->id))
                 <fieldset class="card"><legend><strong>{{ $organisation->name }}</strong></legend><div class="grid-cards">
-                    @foreach($organisationRoles as $role)<label class="choice"><input type="checkbox" name="organisation_roles[{{ $organisation->id }}][]" value="{{ $role->id }}" @checked($membership?->is_active && $membership->roles->contains($role))> {{ $role->display_name }}</label>@endforeach
+                    @foreach($organisationRoles as $role)<label class="choice"><input type="checkbox" name="organisation_roles[{{ $organisation->id }}][]" value="{{ $role->id }}" @checked($membership?->is_active && $membership->roles->contains($role))> {{ $role->label() }}</label>@endforeach
                 </div></fieldset>
             @empty<p>{{ __('messages.no_records') }}</p>@endforelse
         </div>

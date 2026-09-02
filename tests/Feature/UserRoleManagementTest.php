@@ -46,8 +46,8 @@ class UserRoleManagementTest extends TestCase
         $this->actingAs($admin)->get(route('system.users'))
             ->assertOk()
             ->assertSee('Doctor Test')
-            ->assertSee('Admin 1')
-            ->assertDontSee('platform_admin');
+            ->assertSee('—')
+            ->assertDontSee('Bootstrap root');
     }
 
     public function test_admin_one_assigns_every_organisation_role_to_the_correct_membership_and_can_revoke_them(): void
@@ -57,29 +57,29 @@ class UserRoleManagementTest extends TestCase
         $organisation = $this->organisation('RTU');
         $otherOrganisation = $this->organisation('LU');
         $roles = Role::where('scope', 'organisation')->whereIn('name', [
-            'organisation_admin', 'form_creator', 'doctor', 'reviewer', 'respondent',
+            'organisation_admin', 'form_creator', 'doctor',
         ])->get()->keyBy('name');
 
         $this->actingAs($admin)->get(route('system.users.roles.edit', $target))
             ->assertOk()
             ->assertSee('RTU')
             ->assertSee('LU')
-            ->assertSee('Admin 2')
-            ->assertSee('Admin 3')
+            ->assertSee('Administratora palīgs')
+            ->assertSee('Anketu pārvaldnieks')
             ->assertSee('Ārsts')
-            ->assertSee('Vērtētājs')
-            ->assertSee('Pacients');
+            ->assertDontSee('Vērtētājs')
+            ->assertDontSee('Pacients');
 
         $this->actingAs($admin)->put(route('system.users.roles.update', $target), [
             'organisation_roles' => [
                 $organisation->id => $roles->pluck('id')->all(),
-                $otherOrganisation->id => [$roles['reviewer']->id],
+                $otherOrganisation->id => [$roles['doctor']->id],
             ],
         ])->assertRedirect(route('system.users'));
 
         $membership = OrganisationMembership::where('organisation_id', $organisation->id)->where('user_id', $target->id)->firstOrFail();
         $this->assertTrue($membership->is_active);
-        foreach (['organisation_admin', 'form_creator', 'doctor', 'reviewer', 'respondent'] as $roleName) {
+        foreach (['organisation_admin', 'form_creator', 'doctor'] as $roleName) {
             $this->assertTrue($membership->roles()->where('name', $roleName)->exists(), $roleName.' was not assigned.');
         }
         $this->assertSame(1, OrganisationMembership::where('organisation_id', $otherOrganisation->id)->where('user_id', $target->id)->firstOrFail()->roles()->count());
@@ -132,30 +132,32 @@ class UserRoleManagementTest extends TestCase
         }
     }
 
-    public function test_admin_one_assignment_is_audited_and_the_last_admin_cannot_remove_their_own_role(): void
+    public function test_product_administrator_assignment_is_audited_while_bootstrap_root_is_not_assignable(): void
     {
         $admin = $this->platformAdmin();
         $candidate = User::factory()->create(['is_active' => true]);
         $platformRole = Role::where('name', 'platform_admin')->firstOrFail();
+        $administratorRole = Role::where('name', 'administrator')->firstOrFail();
 
         $this->actingAs($admin)->put(route('system.users.roles.update', $candidate), [
-            'global_roles' => [$platformRole->id],
+            'global_roles' => [$administratorRole->id],
         ])->assertRedirect(route('system.users'));
-        $this->assertTrue($candidate->fresh()->isPlatformAdmin());
+        $this->assertTrue($candidate->fresh()->isAdministrator());
         $this->assertDatabaseHas('audit_logs', ['actor_id' => $admin->id, 'action' => 'user.roles_updated', 'subject_id' => $candidate->id]);
 
         $this->actingAs($admin)->put(route('system.users.roles.update', $candidate), [])->assertRedirect(route('system.users'));
-        $this->assertFalse($candidate->fresh()->isPlatformAdmin());
+        $this->assertFalse($candidate->fresh()->isAdministrator());
 
         $this->actingAs($admin)->from(route('system.users.roles.edit', $admin))
-            ->put(route('system.users.roles.update', $admin), [])
-            ->assertSessionHasErrors('global_roles');
-        $this->assertTrue($admin->fresh()->isPlatformAdmin());
+            ->put(route('system.users.roles.update', $admin), ['global_roles' => [$platformRole->id]])
+            ->assertSessionHasErrors('global_roles.0');
+        $this->assertTrue($admin->fresh()->isBootstrapRoot());
     }
 
     public function test_doctor_assignment_redirects_the_doctor_without_weakening_admin_clinical_privacy(): void
     {
-        $admin = $this->platformAdmin();
+        $admin = User::factory()->create(['is_active' => true]);
+        $admin->globalRoles()->attach(Role::where('name', 'administrator')->firstOrFail());
         $doctor = User::factory()->create(['is_active' => true]);
         $organisation = $this->organisation('RTU');
         $doctorRole = Role::where('name', 'doctor')->firstOrFail();

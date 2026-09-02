@@ -150,12 +150,12 @@ class PatientQuestionnairePortalTest extends TestCase
         $this->actingAs($doctor)->get(route('doctor.dashboard'))->assertOk()->assertSee(__('messages.completed_count', ['count' => 1]))->assertSee(__('messages.in_progress_count', ['count' => 1]));
     }
 
-    public function test_admin_one_has_no_patient_management_or_portal_session_access(): void
+    public function test_bootstrap_root_has_patient_management_bypass_but_not_patient_portal_session_access(): void
     {
         [$doctor, $patient, $publication] = $this->base(); $this->assign($patient, $publication, 'First', 1); [$package] = $this->actingAs($doctor)->issue($patient);
         $admin = User::factory()->create(['is_active' => true]); $admin->globalRoles()->attach(Role::where('name', 'platform_admin')->firstOrFail());
-        $this->actingAs($admin)->get(route('doctor.questionnaires.index', $patient))->assertForbidden();
-        $this->actingAs($admin)->post(route('doctor.patient-link.issue', $patient), ['expires_in_days' => 30])->assertForbidden();
+        $this->actingAs($admin)->get(route('doctor.questionnaires.index', $patient))->assertOk();
+        $this->actingAs($admin)->post(route('doctor.patient-link.issue', $patient), ['expires_in_days' => 30])->assertRedirect();
         $this->get(route('patient.portal', $package))->assertForbidden();
     }
 
@@ -246,6 +246,6 @@ class PatientQuestionnairePortalTest extends TestCase
     private function member(string $roleName, Organisation $organisation): array
     {
         $user = User::factory()->create(['is_active' => true]); $membership = OrganisationMembership::create(['organisation_id' => $organisation->id, 'user_id' => $user->id, 'is_active' => true]);
-        $membership->roles()->attach(Role::where('name', $roleName)->firstOrFail()); return [$user, $membership];
+        $membership->roles()->attach(Role::where('name', $roleName === 'respondent' ? 'doctor' : $roleName)->firstOrFail()); return [$user, $membership];
     }
 }

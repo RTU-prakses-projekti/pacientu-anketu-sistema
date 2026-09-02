@@ -17,7 +17,7 @@ class UserAdministrationController extends Controller
     {
         abort_unless($request->user()->hasOrganisationPermission($organisation->id, 'users.manage'), 403);
         $roles = Role::where('scope', 'organisation')
-            ->when(!$request->user()->isPlatformAdmin(), fn ($query) => $query->where('name', '!=', 'doctor'))
+            ->when(!$request->user()->canAdministerSystem(), fn ($query) => $query->where('name', '!=', 'doctor'))
             ->orderBy('display_name')
             ->get();
 
@@ -40,7 +40,7 @@ class UserAdministrationController extends Controller
         if (!$user) return back()->withErrors(['email' => __('messages.membership_candidate_not_found')]);
 
         $requestedRoles = Role::where('scope', 'organisation')->whereIn('id', $data['roles'])->get();
-        if (!$request->user()->isPlatformAdmin() && $requestedRoles->contains('name', 'doctor')) {
+        if (!$request->user()->canAdministerSystem() && $requestedRoles->contains('name', 'doctor')) {
             abort(403);
         }
 
@@ -49,7 +49,7 @@ class UserAdministrationController extends Controller
             ['is_active' => true],
         );
         $roleIds = $requestedRoles->pluck('id');
-        if (!$request->user()->isPlatformAdmin()) {
+        if (!$request->user()->canAdministerSystem()) {
             $roleIds = $roleIds->merge($membership->roles()->where('name', 'doctor')->pluck('roles.id'));
         }
         $membership->roles()->sync($roleIds->unique()->values());
@@ -60,7 +60,7 @@ class UserAdministrationController extends Controller
 
     public function toggleUser(Request $request, User $user, AuditService $audit, CleanupService $cleanup)
     {
-        abort_unless($request->user()->isPlatformAdmin(), 403);
+        abort_unless($request->user()->canAdministerSystem(), 403);
         abort_if($request->user()->is($user), 422, __('messages.cannot_disable_self'));
         DB::transaction(function () use ($user, $cleanup, $audit): void {
             $user = User::lockForUpdate()->findOrFail($user->id);
@@ -73,7 +73,7 @@ class UserAdministrationController extends Controller
 
     public function destroyUser(Request $request, User $user, CleanupService $cleanup)
     {
-        abort_unless($request->user()->isPlatformAdmin(), 403);
+        abort_unless($request->user()->canAdministerSystem(), 403);
         abort_if($request->user()->is($user), 422, __('messages.cannot_delete_self'));
         $cleanup->deleteUser($user);
         return redirect()->route('system.users')->with('success', __('messages.user_deleted'));

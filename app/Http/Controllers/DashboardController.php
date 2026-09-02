@@ -14,7 +14,7 @@ class DashboardController extends Controller
         if ($user->isDoctorOnly()) {
             return redirect()->route('doctor.dashboard');
         }
-        $organisationIds = $user->isPlatformAdmin() ? Organisation::pluck('id') : $user->memberships()->where('is_active', true)->pluck('organisation_id');
+        $organisationIds = $user->canAdministerSystem() ? Organisation::pluck('id') : $user->memberships()->where('is_active', true)->pluck('organisation_id');
         return view('dashboard', [
             'organisations' => Organisation::whereIn('id', $organisationIds)->get(),
             'available' => Publication::with('formVersion')->whereIn('organisation_id', $organisationIds)->where('status', 'active')->where('access_mode', 'authenticated')->get()->filter->isOpen(),

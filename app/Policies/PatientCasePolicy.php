@@ -7,6 +7,11 @@ use App\Models\User;
 
 class PatientCasePolicy
 {
+    public function before(User $user): ?bool
+    {
+        return $user->isBootstrapRoot() ? true : null;
+    }
+
     public function view(User $user, PatientCase $patientCase): bool
     {
         return $this->ownsWithPermission($user, $patientCase, 'patients.view');

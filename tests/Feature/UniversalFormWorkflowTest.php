@@ -80,13 +80,14 @@ class UniversalFormWorkflowTest extends TestCase
         $this->assertSame(0,User::whereHas('globalRoles',fn($query)=>$query->where('name','platform_admin'))->count());$this->bootstrapAdmin('Winning Admin','winner@example.test')->assertExitCode(ConsoleCommand::SUCCESS);$this->assertSame(1,User::whereHas('globalRoles',fn($query)=>$query->where('name','platform_admin'))->count());
     }
 
-    public function test_additional_platform_administrators_require_authenticated_audited_interface(): void
+    public function test_system_administration_assigns_product_administrators_but_never_bootstrap_root(): void
     {
-        $role=Role::where('name','platform_admin')->firstOrFail();$admin=User::factory()->create(['is_active'=>true]);$admin->globalRoles()->attach($role);$candidate=User::factory()->create(['is_active'=>true]);
+        $rootRole=Role::where('name','platform_admin')->firstOrFail();$administratorRole=Role::where('name','administrator')->firstOrFail();$admin=User::factory()->create(['is_active'=>true]);$admin->globalRoles()->attach($rootRole);$candidate=User::factory()->create(['is_active'=>true]);
         $this->post(route('system.users.store'),['name'=>'Blocked','email'=>'blocked@example.test','password'=>'AnotherPassword123','password_confirmation'=>'AnotherPassword123'])->assertRedirect(route('login'));
-        $this->actingAs($candidate)->put(route('system.users.roles.update',$candidate),['global_roles'=>[$role->id]])->assertForbidden();
+        $this->actingAs($candidate)->put(route('system.users.roles.update',$candidate),['global_roles'=>[$administratorRole->id]])->assertForbidden();
         $this->actingAs($admin)->post(route('system.users.store'),['name'=>'Created User','email'=>'created-user@example.test','password'=>'AnotherPassword123','password_confirmation'=>'AnotherPassword123'])->assertRedirect();$created=User::where('email','created-user@example.test')->firstOrFail();$this->assertFalse($created->isPlatformAdmin());$this->assertDatabaseHas('audit_logs',['actor_id'=>$admin->id,'action'=>'user.created','subject_id'=>$created->id]);
-        $this->actingAs($admin)->put(route('system.users.roles.update',$candidate),['global_roles'=>[$role->id]])->assertRedirect();$this->assertTrue($candidate->fresh()->isPlatformAdmin());$this->assertDatabaseHas('audit_logs',['actor_id'=>$admin->id,'action'=>'user.roles_updated','subject_id'=>$candidate->id]);
+        $this->actingAs($admin)->from(route('system.users.roles.edit',$candidate))->put(route('system.users.roles.update',$candidate),['global_roles'=>[$rootRole->id]])->assertSessionHasErrors('global_roles.0');$this->assertFalse($candidate->fresh()->isBootstrapRoot());
+        $this->actingAs($admin)->put(route('system.users.roles.update',$candidate),['global_roles'=>[$administratorRole->id]])->assertRedirect();$this->assertTrue($candidate->fresh()->isAdministrator());$this->assertDatabaseHas('audit_logs',['actor_id'=>$admin->id,'action'=>'user.roles_updated','subject_id'=>$candidate->id]);
     }
 
     public function test_organisation_policies_prevent_cross_organisation_access(): void
@@ -230,7 +231,7 @@ class UniversalFormWorkflowTest extends TestCase
 
     public function test_partial_numeric_and_manual_scoring_share_one_engine_and_grading_is_audited(): void
     {
-        [$creator,$organisation]=$this->member('form_creator');[$reviewer]=$this->member('reviewer',$organisation);$authoring=app(FormAuthoringService::class);$form=$authoring->create($organisation->id,$creator,'Mixed assessment','blank');$version=$form->versions()->first();$section=$version->sections()->first();
+        [$creator,$organisation]=$this->member('form_creator');$reviewer=User::factory()->create(['is_active'=>true]);$reviewer->globalRoles()->attach(Role::where('name','platform_admin')->firstOrFail());$authoring=app(FormAuthoringService::class);$form=$authoring->create($organisation->id,$creator,'Mixed assessment','blank');$version=$form->versions()->first();$section=$version->sections()->first();
         $multi=$authoring->addComponent($version,$section,['type'=>'multiple_choice','label'=>'Choose','is_required'=>true,'max_points'=>4,'options'=>['Alpha','Beta','Gamma'],'scoring_strategy'=>'multiple_partial','scoring_rules'=>['correct'=>[]]]);$correct=$multi->options()->whereIn('label',['Alpha','Beta'])->pluck('value')->all();$multi->scoringRule->update(['rules'=>['correct'=>$correct]]);
         $numeric=$authoring->addComponent($version,$section,['type'=>'number','label'=>'Number','is_required'=>true,'max_points'=>3,'options'=>[],'scoring_strategy'=>'numeric_tolerance','scoring_rules'=>['correct'=>10,'tolerance'=>0.5]]);
         $manual=$authoring->addComponent($version,$section,['type'=>'long_text','label'=>'Essay','is_required'=>true,'max_points'=>2,'manual_grading'=>true,'options'=>[],'scoring_strategy'=>'manual','scoring_rules'=>[]]);
@@ -277,7 +278,7 @@ class UniversalFormWorkflowTest extends TestCase
 
     public function test_reviewer_can_read_but_cannot_autosave_or_finalize_another_respondent_submission(): void
     {
-        [$creator,$organisation]=$this->member('form_creator');[$respondent]=$this->member('respondent',$organisation);[$reviewer]=$this->member('reviewer',$organisation);
+        [$creator,$organisation]=$this->member('form_creator');[$respondent]=$this->member('respondent',$organisation);[$reviewer]=$this->member('organisation_admin',$organisation);
         $authoring=app(FormAuthoringService::class);$form=$authoring->create($organisation->id,$creator,'Owned exam','test');$published=$authoring->publish($form->versions()->first());$publication=$this->publication($form,$published);$submission=app(SubmissionService::class)->start($publication,$respondent,null,null,'unused');$component=$published->components()->with('options')->first();$payload=['expected_revision'=>0,'client_mutation_id'=>(string)Str::uuid(),'answers'=>[$component->id=>$component->options->first()->value]];
         $this->actingAs($reviewer)->postJson(route('submissions.autosave',$submission),$payload)->assertForbidden();
         $payload['client_mutation_id']=(string)Str::uuid();$this->actingAs($reviewer)->postJson(route('submissions.finalize',$submission),$payload)->assertForbidden();
@@ -332,12 +333,12 @@ class UniversalFormWorkflowTest extends TestCase
 
     public function test_duplicate_requires_forms_create_permission(): void
     {
-        [$creator,$organisation]=$this->member('form_creator');[$reviewer]=$this->member('reviewer',$organisation);$form=app(FormAuthoringService::class)->create($organisation->id,$creator,'Duplicate source','blank');$this->actingAs($reviewer)->post(route('forms.duplicate',$form))->assertForbidden();$this->actingAs($creator)->post(route('forms.duplicate',$form))->assertRedirect();$this->assertSame(2,Form::where('organisation_id',$organisation->id)->count());
+        [$creator,$organisation]=$this->member('form_creator');[$reviewer]=$this->member('doctor',$organisation);$form=app(FormAuthoringService::class)->create($organisation->id,$creator,'Duplicate source','blank');$this->actingAs($reviewer)->post(route('forms.duplicate',$form))->assertForbidden();$this->actingAs($creator)->post(route('forms.duplicate',$form))->assertRedirect();$this->assertSame(2,Form::where('organisation_id',$organisation->id)->count());
     }
 
     public function test_organisation_user_page_does_not_expose_platform_directory_or_other_tenant(): void
     {
-        [$admin,$organisation]=$this->member('organisation_admin');[$otherAdmin,$otherOrganisation]=$this->member('organisation_admin');$outsider=User::factory()->create(['name'=>'Private Outsider','email'=>'private-outsider@example.test','is_active'=>true]);$otherMembership=OrganisationMembership::create(['organisation_id'=>$otherOrganisation->id,'user_id'=>$outsider->id,'is_active'=>true]);$otherMembership->roles()->attach(Role::where('name','respondent')->firstOrFail());
+        [$admin,$organisation]=$this->member('organisation_admin');[$otherAdmin,$otherOrganisation]=$this->member('organisation_admin');$outsider=User::factory()->create(['name'=>'Private Outsider','email'=>'private-outsider@example.test','is_active'=>true]);$otherMembership=OrganisationMembership::create(['organisation_id'=>$otherOrganisation->id,'user_id'=>$outsider->id,'is_active'=>true]);$otherMembership->roles()->attach(Role::where('name','doctor')->firstOrFail());
         $this->actingAs($admin)->get(route('users.index',$organisation))->assertOk()->assertDontSee('Private Outsider')->assertDontSee('private-outsider@example.test');$this->actingAs($admin)->get(route('users.index',$otherOrganisation))->assertForbidden();$this->actingAs($otherAdmin)->get(route('users.index',$otherOrganisation))->assertOk()->assertSee('Private Outsider');
     }
 
@@ -431,7 +432,7 @@ class UniversalFormWorkflowTest extends TestCase
 
     private function member(string $roleName, ?Organisation $organisation=null): array
     {
-        $organisation??=Organisation::create(['name'=>Str::random(8),'slug'=>Str::lower(Str::random(10)),'is_active'=>true]);$user=User::factory()->create(['student_id'=>Str::uuid()->toString(),'is_active'=>true]);$membership=OrganisationMembership::create(['organisation_id'=>$organisation->id,'user_id'=>$user->id,'is_active'=>true]);$membership->roles()->attach(Role::where('name',$roleName)->firstOrFail());return [$user,$organisation];
+        $organisation??=Organisation::create(['name'=>Str::random(8),'slug'=>Str::lower(Str::random(10)),'is_active'=>true]);$user=User::factory()->create(['student_id'=>Str::uuid()->toString(),'is_active'=>true]);$membership=OrganisationMembership::create(['organisation_id'=>$organisation->id,'user_id'=>$user->id,'is_active'=>true]);$membership->roles()->attach(Role::where('name', in_array($roleName, ['respondent', 'reviewer'], true) ? 'doctor' : $roleName)->firstOrFail());return [$user,$organisation];
     }
 
     private function bootstrapAdmin(string $name, string $email)

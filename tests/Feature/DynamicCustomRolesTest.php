@@ -80,7 +80,7 @@ class DynamicCustomRolesTest extends TestCase
         $role = Role::create(['name' => 'form_auditor', 'display_name' => 'Formu auditors', 'scope' => 'organisation', 'is_system' => false]);
         $role->permissions()->sync(Permission::whereIn('name', ['organisation.view', 'forms.view'])->pluck('id'));
         $otherMembership = OrganisationMembership::create(['organisation_id' => $otherOrganisation->id, 'user_id' => $target->id, 'is_active' => true]);
-        $respondentRole = Role::where('name', 'respondent')->firstOrFail();
+        $respondentRole = Role::where('name', 'doctor')->firstOrFail();
         $otherMembership->roles()->attach($respondentRole);
 
         $this->actingAs($admin)->get(route('system.users.roles.edit', $target))

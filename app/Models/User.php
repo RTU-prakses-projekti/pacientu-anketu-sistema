@@ -71,6 +71,10 @@ class User extends Authenticatable
 
     public function hasDoctorPermission(int $organisationId, string $permission): bool
     {
+        if ($this->isBootstrapRoot()) {
+            return true;
+        }
+
         return $this->memberships()
             ->where('organisation_id', $organisationId)
             ->where('is_active', true)
@@ -83,13 +87,13 @@ class User extends Authenticatable
 
     public function isDoctorOnly(): bool
     {
-        if ($this->isPlatformAdmin() || !$this->doctorMemberships()->exists()) {
+        if ($this->canAdministerSystem() || !$this->doctorMemberships()->exists()) {
             return false;
         }
 
         $administrativePermissions = [
             'organisation.manage', 'forms.view', 'forms.create', 'forms.update', 'forms.publish',
-            'submissions.view', 'submissions.grade', 'submissions.manage', 'exports.create',
+            'submissions.view', 'exports.create',
             'audit.view', 'users.manage',
         ];
 
@@ -99,14 +103,30 @@ class User extends Authenticatable
             ->exists();
     }
 
-    public function isPlatformAdmin(): bool
+    public function isBootstrapRoot(): bool
     {
         return $this->globalRoles()->where('name', 'platform_admin')->exists();
     }
 
+    /** @deprecated Use isBootstrapRoot() for the technical root account. */
+    public function isPlatformAdmin(): bool
+    {
+        return $this->isBootstrapRoot();
+    }
+
+    public function isAdministrator(): bool
+    {
+        return $this->globalRoles()->where('name', 'administrator')->exists();
+    }
+
+    public function canAdministerSystem(): bool
+    {
+        return $this->isBootstrapRoot() || $this->isAdministrator();
+    }
+
     public function hasOrganisationPermission(int $organisationId, string $permission): bool
     {
-        if ($this->isPlatformAdmin()) {
+        if ($this->canAdministerSystem()) {
             return true;
         }
 

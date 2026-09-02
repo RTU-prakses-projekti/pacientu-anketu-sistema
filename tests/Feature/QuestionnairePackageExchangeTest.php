@@ -334,7 +334,7 @@ class QuestionnairePackageExchangeTest extends TestCase
     private function member(string $role, Organisation $organisation): array
     {
         $user = User::factory()->create(['is_active' => true]); $membership = OrganisationMembership::create(['organisation_id' => $organisation->id, 'user_id' => $user->id, 'is_active' => true]);
-        $membership->roles()->attach(Role::where('name', $role)->firstOrFail()); return [$user, $membership];
+        $membership->roles()->attach(Role::where('name', $role === 'respondent' ? 'doctor' : $role)->firstOrFail()); return [$user, $membership];
     }
     private function hash(array $manifest): string { unset($manifest['content_hash']); return hash('sha256', json_encode($this->canonicalize($manifest), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR)); }
     private function canonicalize(mixed $value): mixed

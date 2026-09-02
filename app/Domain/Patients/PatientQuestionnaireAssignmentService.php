@@ -68,12 +68,12 @@ class PatientQuestionnaireAssignmentService
             }
 
             $organisationIds = $lockedPatients->pluck('organisation_id')->unique();
-            if ($organisationIds->count() !== 1 || $lockedPatients->contains(fn (PatientCase $patient) => $patient->doctor_id !== $actor->id)) {
+            if (!$actor->isBootstrapRoot() && ($organisationIds->count() !== 1 || $lockedPatients->contains(fn (PatientCase $patient) => $patient->doctor_id !== $actor->id))) {
                 abort(403);
             }
 
             $organisationId = (int) $organisationIds->first();
-            abort_unless($actor->hasDoctorPermission($organisationId, 'patients.update'), 403);
+            abort_unless($actor->isBootstrapRoot() || $actor->hasDoctorPermission($organisationId, 'patients.update'), 403);
 
             $publication = $this->eligibleQuery($organisationId)->lockForUpdate()->find($publicationId);
             if (!$publication || PatientFormAssignment::query()->whereIn('patient_case_id', $ids)->where('publication_id', $publicationId)->exists()) {

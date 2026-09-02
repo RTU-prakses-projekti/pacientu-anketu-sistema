@@ -5,7 +5,7 @@
 <form method="GET" action="{{ route('system.users') }}" class="card form-grid mb-6">
     <label>{{ __('messages.search') }}<input name="q" value="{{ $filters['q'] ?? '' }}" placeholder="{{ __('messages.user_search_placeholder') }}"></label>
     <label>{{ __('messages.organisation') }}<select name="organisation"><option value="">{{ __('messages.all_organisations') }}</option>@foreach($organisations as $organisation)<option value="{{ $organisation->id }}" @selected((string)($filters['organisation'] ?? '') === (string)$organisation->id)>{{ $organisation->name }}</option>@endforeach</select></label>
-    <label>{{ __('messages.role') }}<select name="role"><option value="">{{ __('messages.all_roles') }}</option>@foreach($roles as $role)<option value="{{ $role->id }}" @selected((string)($filters['role'] ?? '') === (string)$role->id)>{{ $role->display_name }}</option>@endforeach</select></label>
+    <label>{{ __('messages.role') }}<select name="role"><option value="">{{ __('messages.all_roles') }}</option>@foreach($roles as $role)<option value="{{ $role->id }}" @selected((string)($filters['role'] ?? '') === (string)$role->id)>{{ $role->label() }}</option>@endforeach</select></label>
     <label>{{ __('messages.status') }}<select name="status"><option value="">{{ __('messages.all_statuses') }}</option><option value="active" @selected(($filters['status'] ?? '') === 'active')>{{ __('messages.active') }}</option><option value="inactive" @selected(($filters['status'] ?? '') === 'inactive')>{{ __('messages.inactive') }}</option></select></label>
     <div class="actions"><button class="btn primary" type="submit">{{ __('messages.search') }}</button><a class="btn" href="{{ route('system.users') }}">{{ __('messages.clear_filters') }}</a></div>
 </form>
@@ -20,9 +20,9 @@
 </form>
 <div class="card overflow-x-auto"><table><thead><tr><th>ID</th><th>{{ __('messages.name') }}</th><th>{{ __('messages.email') }}</th><th>{{ __('messages.global_role') }}</th><th>{{ __('messages.organisations_roles') }}</th><th>{{ __('messages.status') }}</th><th>{{ __('messages.actions') }}</th></tr></thead><tbody>
 @forelse($users as $user)
-<tr><td>{{ $user->id }}</td><td>{{ $user->name }}</td><td>{{ $user->email }}</td><td>{{ $user->globalRoles->pluck('display_name')->join(', ') ?: '—' }}</td><td>
+<tr><td>{{ $user->id }}</td><td>{{ $user->name }}</td><td>{{ $user->email }}</td><td>{{ $user->globalRoles->reject(fn ($role) => $role->name === 'platform_admin')->map(fn ($role) => $role->label())->join(', ') ?: '—' }}</td><td>
     @php($activeMemberships = $user->memberships->where('is_active', true)->filter(fn ($membership) => $membership->organisation?->is_active && $membership->roles->isNotEmpty()))
-    @forelse($activeMemberships as $membership)<div>{{ $membership->organisation->name }} — {{ $membership->roles->pluck('display_name')->join(', ') }}</div>@empty — @endforelse
+    @forelse($activeMemberships as $membership)<div>{{ $membership->organisation->name }} — {{ $membership->roles->map(fn ($role) => $role->label())->join(', ') }}</div>@empty — @endforelse
 </td><td>{{ $user->is_active ? __('messages.active') : __('messages.inactive') }}</td><td><div class="actions">
     <a class="btn" href="{{ route('system.users.roles.edit', $user) }}">{{ __('messages.change_roles') }}</a>
     @unless(auth()->user()->is($user))

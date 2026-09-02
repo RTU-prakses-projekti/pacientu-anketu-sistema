@@ -21,14 +21,14 @@ class DoctorDashboardController extends Controller
     public function index(Request $request)
     {
         $actor = $request->user();
-        abort_unless($actor->hasDoctorWorkspace(), 403);
+        abort_unless($actor->isBootstrapRoot() || $actor->hasDoctorWorkspace(), 403);
 
         $workspaces = OrganisationMembership::query()
             ->with(['organisation', 'user'])
             ->where('is_active', true)
             ->whereHas('organisation', fn ($query) => $query->where('is_active', true))
             ->whereHas('roles', fn ($query) => $query->where('roles.name', 'doctor'))
-            ->where('user_id', $actor->id)
+            ->when(!$actor->isBootstrapRoot(), fn ($query) => $query->where('user_id', $actor->id))
             ->get()
             ->sortBy(fn ($membership) => $membership->organisation->name.'|'.$membership->user->name)
             ->values();
@@ -69,7 +69,7 @@ class DoctorDashboardController extends Controller
     public function storePatient(Request $request, Organisation $organisation, AuditService $audit)
     {
         $actor = $request->user();
-        abort_unless($actor->hasDoctorWorkspace(), 403);
+        abort_unless($actor->isBootstrapRoot() || $actor->hasDoctorWorkspace(), 403);
         $data = $this->patientData($request);
 
         $patientCase = DB::transaction(function () use ($actor, $organisation, $data): PatientCase {
@@ -81,7 +81,7 @@ class DoctorDashboardController extends Controller
                 ->whereHas('roles', fn ($query) => $query->where('roles.name', 'doctor'))
                 ->lockForUpdate()
                 ->first();
-            abort_unless($membership && $actor->hasDoctorPermission($organisation->id, 'patients.update'), 403);
+            abort_unless($actor->isBootstrapRoot() || ($membership && $actor->hasDoctorPermission($organisation->id, 'patients.update')), 403);
 
             $slot = ((int) PatientCase::query()
                 ->where('organisation_id', $organisation->id)
@@ -148,7 +148,7 @@ class DoctorDashboardController extends Controller
     public function exportForm(Request $request, Organisation $organisation)
     {
         $actor = $request->user();
-        abort_unless($actor->hasDoctorPermission($organisation->id, 'patient.questionnaires.view'), 403);
+        abort_unless($actor->isBootstrapRoot() || $actor->hasDoctorPermission($organisation->id, 'patient.questionnaires.view'), 403);
         $data = $request->validate(['patient_case_ids' => ['nullable', 'array', 'min:1', 'max:200'], 'patient_case_ids.*' => ['integer', 'distinct']]);
 
         return view('doctor.export', ['organisation' => $organisation, 'patientCaseIds' => $data['patient_case_ids'] ?? []]);
@@ -157,7 +157,7 @@ class DoctorDashboardController extends Controller
     public function exportAnswers(Request $request, Organisation $organisation)
     {
         $actor = $request->user();
-        abort_unless($actor->hasDoctorPermission($organisation->id, 'patient.questionnaires.view'), 403);
+        abort_unless($actor->isBootstrapRoot() || $actor->hasDoctorPermission($organisation->id, 'patient.questionnaires.view'), 403);
         $data = $request->validate([
             'format' => ['required', Rule::in(['csv', 'xlsx'])],
             'anonymize' => ['sometimes', 'boolean'],

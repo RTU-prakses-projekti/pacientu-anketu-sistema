@@ -90,7 +90,7 @@ class MultilineContentRenderingTest extends TestCase
     {
         $user = User::factory()->create(['is_active' => true]);
         $membership = OrganisationMembership::create(['organisation_id' => $organisation->id, 'user_id' => $user->id, 'is_active' => true]);
-        $membership->roles()->attach(Role::where('name', $roleName)->firstOrFail());
+        $membership->roles()->attach(Role::where('name', $roleName === 'respondent' ? 'doctor' : $roleName)->firstOrFail());
         return $user;
     }
 }

@@ -32,9 +32,10 @@ class DoctorWorkspaceTest extends TestCase
 
     public function test_role_hierarchy_names_and_least_privilege_permissions_are_seeded(): void
     {
-        $this->assertSame('Admin 1', Role::where('name', 'platform_admin')->value('display_name'));
-        $this->assertSame('Admin 2', Role::where('name', 'organisation_admin')->value('display_name'));
-        $this->assertSame('Admin 3', Role::where('name', 'form_creator')->value('display_name'));
+        $this->assertSame('Bootstrap root', Role::where('name', 'platform_admin')->value('display_name'));
+        $this->assertSame('Administrators', Role::where('name', 'administrator')->value('display_name'));
+        $this->assertSame('Administratora palīgs', Role::where('name', 'organisation_admin')->value('display_name'));
+        $this->assertSame('Anketu pārvaldnieks', Role::where('name', 'form_creator')->value('display_name'));
 
         $doctorPermissions = Role::where('name', 'doctor')->firstOrFail()->permissions()->pluck('name')->sort()->values()->all();
         $this->assertSame(['doctor.dashboard.view', 'patient.questionnaires.view', 'patients.update', 'patients.view'], $doctorPermissions);
@@ -44,7 +45,7 @@ class DoctorWorkspaceTest extends TestCase
         foreach (['forms.view', 'forms.create', 'forms.update', 'forms.publish', 'submissions.view'] as $permission) {
             $this->assertTrue($admin3->permissions()->where('name', $permission)->exists());
         }
-        foreach (['users.manage', 'organisation.manage', 'submissions.manage', 'audit.view'] as $permission) {
+        foreach (['users.manage', 'organisation.manage', 'audit.view'] as $permission) {
             $this->assertFalse($admin3->permissions()->where('name', $permission)->exists());
         }
     }
@@ -167,11 +168,11 @@ class DoctorWorkspaceTest extends TestCase
             'patient.questionnaires.view',
         ])->pluck('id'));
         $this->assertFalse($admin1->hasDoctorWorkspace());
-        $this->assertSame(0, PatientCase::query()->visibleTo($admin1)->count());
-        $this->assertTrue(Gate::forUser($admin1)->denies('view', $patientB));
-        $this->actingAs($admin1)->get(route('doctor.dashboard', ['organisation_id' => $organisation->id, 'doctor_id' => $doctorB->id]))->assertForbidden();
-        $this->actingAs($admin1)->get(route('doctor.results.show', [$patientB, $assignmentB]))->assertForbidden();
-        $this->actingAs($admin1)->get(route('admin.submissions.show', $submissionA))->assertForbidden();
+        $this->assertSame(2, PatientCase::query()->visibleTo($admin1)->count());
+        $this->assertTrue(Gate::forUser($admin1)->allows('view', $patientB));
+        $this->actingAs($admin1)->get(route('doctor.dashboard', ['organisation_id' => $organisation->id, 'doctor_id' => $doctorB->id]))->assertOk();
+        $this->actingAs($admin1)->get(route('doctor.results.show', [$patientB, $assignmentB]))->assertOk();
+        $this->actingAs($admin1)->get(route('admin.submissions.show', $submissionA))->assertOk();
         $this->actingAs($admin1)->get(route('admin.submissions.index', $organisation))
             ->assertOk()
             ->assertDontSee($submissionA->public_id)

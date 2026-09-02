@@ -18,7 +18,7 @@
 @foreach($roles as $role)
     <section class="card">
         <form method="POST" action="{{ route('system.roles.update', $role) }}">@csrf @method('PUT')
-            <div class="page-header"><div><h2>{{ $role->display_name }}</h2><p class="help"><code>{{ $role->name }}</code> · {{ $role->scope }} · {{ __($role->is_system ? 'messages.system_role' : 'messages.custom_role') }}</p></div></div>
+            <div class="page-header"><div><h2>{{ $role->label() }}</h2><p class="help"><code>{{ $role->name }}</code> · {{ $role->scope }} · {{ __($role->is_system ? 'messages.system_role' : 'messages.custom_role') }}</p></div></div>
             <div class="grid-cards">@foreach($permissions as $permission)<label class="choice"><input type="checkbox" name="permissions[]" value="{{ $permission->id }}" @checked($role->permissions->contains($permission))> {{ $permission->name }}</label>@endforeach</div>
             <button class="btn primary mt-4">{{ __('messages.save') }}</button>
         </form>
