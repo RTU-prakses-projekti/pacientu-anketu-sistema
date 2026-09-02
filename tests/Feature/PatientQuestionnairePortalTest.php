@@ -132,7 +132,7 @@ class PatientQuestionnairePortalTest extends TestCase
 
     public function test_refusing_consent_ends_the_patient_flow_and_blocks_later_parts(): void
     {
-        [$doctor, $patient, $first, $organisation] = $this->base(); $second = $this->publication($organisation, 'Second');
+        [$doctor, $patient, $first, $organisation] = $this->base(false, true); $second = $this->publication($organisation, 'Second');
         $firstAssignment = $this->assign($patient, $first, 'Consent', 1); $secondAssignment = $this->assign($patient, $second, 'Follow-up', 2);
         [$package, $token] = $this->actingAs($doctor)->issue($patient); $this->flushSession(); $this->get(route('patient.access', $token));
         $this->post(route('patient.assignments.start', [$package, $firstAssignment])); $submission = FormSubmission::firstOrFail(); $consent = $submission->formVersion->components()->where('type', 'consent_checkbox')->firstOrFail();
@@ -198,12 +198,12 @@ class PatientQuestionnairePortalTest extends TestCase
         $this->assertSame($publication->id, $assignment->invitation->publication_id);
     }
 
-    private function base(bool $answerable = false): array
+    private function base(bool $answerable = false, bool $withConsent = false): array
     {
         $organisation = Organisation::create(['name' => Str::random(8), 'slug' => Str::lower(Str::random(10)), 'is_active' => true]);
         [$doctor] = $this->member('doctor', $organisation); [$creator] = $this->member('form_creator', $organisation);
         $patient = PatientCase::create(['organisation_id' => $organisation->id, 'doctor_id' => $doctor->id, 'slot_number' => 1, 'first_name' => 'Private', 'last_name' => 'Patient']);
-        [$publication, $component] = $this->publicationWithCreator($organisation, $creator, 'First publication', 'invitation', $answerable);
+        [$publication, $component] = $this->publicationWithCreator($organisation, $creator, 'First publication', 'invitation', $answerable, $withConsent);
         return [$doctor, $patient, $publication, $organisation, $component];
     }
 
@@ -213,14 +213,16 @@ class PatientQuestionnairePortalTest extends TestCase
         return $this->publicationWithCreator($organisation, $creator, $name, $accessMode)[0];
     }
 
-    private function publicationWithCreator(Organisation $organisation, User $creator, string $name, string $accessMode, bool $answerable = false): array
+    private function publicationWithCreator(Organisation $organisation, User $creator, string $name, string $accessMode, bool $answerable = false, bool $withConsent = false): array
     {
         $authoring = app(FormAuthoringService::class); $form = $authoring->create($organisation->id, $creator, $name, 'blank'); $version = $form->versions()->firstOrFail();
         $component = $answerable ? $authoring->addComponent($version, $version->sections()->first(), ['type' => 'short_text', 'label' => 'Answer', 'is_required' => true, 'options' => []]) : null;
+        if ($withConsent) $authoring->addComponent($version, $version->sections()->first(), ['type' => 'consent_checkbox', 'label' => 'Consent', 'is_required' => true, 'options' => []]);
         $published = $authoring->publish($version);
         $publication = Publication::create(['organisation_id' => $organisation->id, 'form_id' => $form->id, 'form_version_id' => $published->id,
             'public_key' => Str::lower(Str::random(20)), 'name' => $name, 'status' => 'active', 'access_mode' => $accessMode,
-            'anonymous_allowed' => false, 'identified_required' => true, 'attempt_limit' => 1, 'autosave_enabled' => true, 'resume_enabled' => true]);
+            'anonymous_allowed' => false, 'identified_required' => true, 'consent_required' => $withConsent,
+            'attempt_limit' => 1, 'autosave_enabled' => true, 'resume_enabled' => true]);
         return [$publication, $component];
     }
 

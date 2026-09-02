@@ -1,0 +1,590 @@
+{
+    "attachments": [],
+    "conditional_rules": [],
+    "content_hash": "661271402a65dfc3167136c9882e14daaed93795d49ad2102befacedfbaa9bba",
+    "form": {
+        "name": "Informēta piekrišana dalībai pētījumā",
+        "preset_key": "patient_questionnaire",
+        "translations": {
+            "lv": {
+                "name": "Informēta piekrišana dalībai pētījumā"
+            }
+        }
+    },
+    "package_type": "universal_form_questionnaire",
+    "schema_version": 1,
+    "sections": [
+        {
+            "components": [
+                {
+                    "attachment_ref": null,
+                    "description": "Pētījuma nosaukums:\r\nDzīves kvalitāte pacientiem ar smagu hronisku psoriāzi, terapijas pieredze un gatavība apsvērt jaunas ārstēšanas iespējas Latvijā\r\n\r\nAicinām Jūs piedalīties pētījumā, kas tiek veikts Ulža Bērziņa promocijas darba ietvaros sadarbībā ar aptaujas veicēju Ilonu Radionovu, pašnodarbinātu personu, ārsti, dermatoloģi/veneroloģi (sertifikāts Nr. A-66415), projekta BioPhoT/DEPCELL ietvaros.\r\n\r\nPirms šī dokumenta parakstīšanas, lūdzu, rūpīgi izlasiet sniegto informāciju. Jums ir tiesības uzdot jautājumus un saņemt saprotamas atbildes.",
+                    "display_order": 1,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Informācija par pētījumu",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "5eb13c88-ccc8-4122-9df4-2d95597e541e",
+                    "translations": {
+                        "lv": {
+                            "description": "Pētījuma nosaukums:\r\nDzīves kvalitāte pacientiem ar smagu hronisku psoriāzi, terapijas pieredze un gatavība apsvērt jaunas ārstēšanas iespējas Latvijā\r\n\r\nAicinām Jūs piedalīties pētījumā, kas tiek veikts Ulža Bērziņa promocijas darba ietvaros sadarbībā ar aptaujas veicēju Ilonu Radionovu, pašnodarbinātu personu, ārsti, dermatoloģi/veneroloģi (sertifikāts Nr. A-66415), projekta BioPhoT/DEPCELL ietvaros.\r\n\r\nPirms šī dokumenta parakstīšanas, lūdzu, rūpīgi izlasiet sniegto informāciju. Jums ir tiesības uzdot jautājumus un saņemt saprotamas atbildes.",
+                            "label": "Informācija par pētījumu"
+                        },
+                        "ru": {
+                            "description": "Название исследования:\r\nКачество жизни пациентов с тяжёлым хроническим псориазом, опыт терапии и готовность рассмотреть новые возможности лечения в Латвии\r\n\r\nПриглашаем Вас принять участие в исследовании, которое проводится в рамках докторской диссертации Улдиса Берзиньша совместно с лицом, проводящим опрос, Илоной Радионовой, самозанятым лицом, врачом, дерматологом/венерологом (сертификат № A-66415), в рамках проекта BioPhoT/DEPCELL.\r\n\r\nПеред подписанием данного документа, пожалуйста, внимательно ознакомьтесь с предоставленной информацией. Вы имеете право задавать вопросы и получать понятные ответы.",
+                            "label": "Информация об исследовании"
+                        }
+                    },
+                    "type": "explanatory_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Pētījuma mērķis ir noskaidrot, kā vidēji smaga vai smaga hroniska psoriāze ietekmē pacientu dzīves kvalitāti, kā pacienti vērtē pašreizējās ārstēšanas efektivitāti, pieejamību un organizāciju, kā arī vai pacienti vēlas saņemt informāciju par jaunām terapijas iespējām vai iespējamu dalību klīniskajos pētījumos.\r\n\r\nPētījuma rezultāti tiks izmantoti Ulža Bērziņa promocijas darbā un zinātniskā publikācijā apkopotā un anonimizētā veidā.",
+                    "display_order": 2,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Pētījuma mērķis",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "45af6ae5-a646-4472-a165-8ecbf707d304",
+                    "translations": {
+                        "lv": {
+                            "description": "Pētījuma mērķis ir noskaidrot, kā vidēji smaga vai smaga hroniska psoriāze ietekmē pacientu dzīves kvalitāti, kā pacienti vērtē pašreizējās ārstēšanas efektivitāti, pieejamību un organizāciju, kā arī vai pacienti vēlas saņemt informāciju par jaunām terapijas iespējām vai iespējamu dalību klīniskajos pētījumos.\r\n\r\nPētījuma rezultāti tiks izmantoti Ulža Bērziņa promocijas darbā un zinātniskā publikācijā apkopotā un anonimizētā veidā.",
+                            "label": "Pētījuma mērķis"
+                        },
+                        "ru": {
+                            "description": "Цель исследования — выяснить, как хронический псориаз средней или тяжёлой степени тяжести влияет на качество жизни пациентов, как пациенты оценивают эффективность, доступность и организацию текущего лечения, а также хотят ли пациенты получить информацию о новых возможностях терапии или возможном участии в клинических исследованиях.\r\n\r\nРезультаты исследования будут использованы в докторской диссертации Улдиса Берзиньша и научной публикации в обобщённом и анонимизированном виде.",
+                            "label": "Цель исследования"
+                        }
+                    },
+                    "type": "explanatory_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Aptauja tiek veikta BioPhoT/DEPCELL projekta pakalpojuma ietvaros. Pakalpojuma tehniskā specifikācija paredz aptaujāt 125–175 pacientus ar psoriāzi, administrēt DLQI anketu un sagatavot anonimizētus materiālus līdz 2026. gada 31. oktobrim.\r\n\r\nJa Jūs piekritīsiet piedalīties pētījumā, Jums tiks piedāvāts aizpildīt anketu latviešu vai krievu valodā.\r\n\r\nAnketa ietver jautājumus par demogrāfisko informāciju, psoriāzes ārstēšanas pieredzi Latvijā, dzīves kvalitāti, pašreizējās vai iepriekšējās terapijas ietekmi, apmierinātību ar ārstēšanu un interesi saņemt informāciju par citām ārstēšanas iespējām vai klīniskajiem pētījumiem.\r\n\r\nAnketas aizpildīšana aizņems aptuveni 15–25 minūtes.\r\n\r\nPētījuma ietvaros netiks veiktas medicīniskas procedūras vai izmeklējumi un netiks mainīta Jūsu ārstēšana.\r\n\r\nAtbildes anketā nav medicīnisks lēmums, nosūtījums, informēta piekrišana ārstēšanai vai piekrišana dalībai klīniskajā pētījumā.",
+                    "display_order": 3,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Pētījuma norise",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "57ae54ea-df7e-4f8a-b91e-7a1ec01fdc77",
+                    "translations": {
+                        "lv": {
+                            "description": "Aptauja tiek veikta BioPhoT/DEPCELL projekta pakalpojuma ietvaros. Pakalpojuma tehniskā specifikācija paredz aptaujāt 125–175 pacientus ar psoriāzi, administrēt DLQI anketu un sagatavot anonimizētus materiālus līdz 2026. gada 31. oktobrim.\r\n\r\nJa Jūs piekritīsiet piedalīties pētījumā, Jums tiks piedāvāts aizpildīt anketu latviešu vai krievu valodā.\r\n\r\nAnketa ietver jautājumus par demogrāfisko informāciju, psoriāzes ārstēšanas pieredzi Latvijā, dzīves kvalitāti, pašreizējās vai iepriekšējās terapijas ietekmi, apmierinātību ar ārstēšanu un interesi saņemt informāciju par citām ārstēšanas iespējām vai klīniskajiem pētījumiem.\r\n\r\nAnketas aizpildīšana aizņems aptuveni 15–25 minūtes.\r\n\r\nPētījuma ietvaros netiks veiktas medicīniskas procedūras vai izmeklējumi un netiks mainīta Jūsu ārstēšana.\r\n\r\nAtbildes anketā nav medicīnisks lēmums, nosūtījums, informēta piekrišana ārstēšanai vai piekrišana dalībai klīniskajā pētījumā.",
+                            "label": "Pētījuma norise"
+                        },
+                        "ru": {
+                            "description": "Опрос проводится в рамках услуги проекта BioPhoT/DEPCELL.\r\n\r\nТехническая спецификация услуги предусматривает опрос 125–175 пациентов с псориазом, администрирование индекса качества жизни при дерматологических заболеваниях (DLQI) и подготовку анонимизированных материалов до 31 октября 2026 года.\r\n\r\nЕсли Вы согласитесь принять участие в исследовании, Вам будет предложено заполнить анкету на латышском или русском языке.\r\n\r\nАнкета включает вопросы о:\r\n\r\nдемографической информации;\r\nопыте лечения псориаза в Латвии;\r\nкачестве жизни;\r\nвлиянии текущей или предыдущей терапии;\r\nудовлетворённости лечением;\r\nинтересе к получению информации о других возможностях лечения;\r\nинтересе к возможному участию в клинических исследованиях.\r\n\r\nЗаполнение анкеты займёт примерно 15–25 минут.\r\n\r\nВ рамках исследования не будут проводиться медицинские процедуры или обследования и не будет изменяться Ваше текущее лечение.\r\n\r\nОтветы в анкете не являются медицинским решением, направлением, информированным согласием на лечение или согласием на участие в клиническом исследовании.",
+                            "label": "Ход исследования"
+                        }
+                    },
+                    "type": "explanatory_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Tiešs medicīnisks ieguvums no dalības pētījumā netiek garantēts.\r\n\r\nJūsu sniegtā informācija palīdzēs labāk izprast vidēji smagas vai smagas hroniskas psoriāzes pacientu vajadzības Latvijā.\r\n\r\nFiziski riski nav sagaidāmi. Atbildot uz jautājumiem par slimības ietekmi, dzīves kvalitāti, personīgo dzīvi vai ārstēšanas pieredzi, var rasties neliels psiholoģisks diskomforts.\r\n\r\nJūs varat pārtraukt anketas aizpildīšanu vai neatbildēt uz jautājumu, ja tas Jums rada diskomfortu.",
+                    "display_order": 4,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Ieguvumi un riski",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "3a2c7cf3-508d-4c18-b2b6-42fca692fef7",
+                    "translations": {
+                        "lv": {
+                            "description": "Tiešs medicīnisks ieguvums no dalības pētījumā netiek garantēts.\r\n\r\nJūsu sniegtā informācija palīdzēs labāk izprast vidēji smagas vai smagas hroniskas psoriāzes pacientu vajadzības Latvijā.\r\n\r\nFiziski riski nav sagaidāmi. Atbildot uz jautājumiem par slimības ietekmi, dzīves kvalitāti, personīgo dzīvi vai ārstēšanas pieredzi, var rasties neliels psiholoģisks diskomforts.\r\n\r\nJūs varat pārtraukt anketas aizpildīšanu vai neatbildēt uz jautājumu, ja tas Jums rada diskomfortu.",
+                            "label": "Ieguvumi un riski"
+                        },
+                        "ru": {
+                            "description": "Прямая медицинская польза от участия в исследовании не гарантируется.\r\n\r\nПредоставленная Вами информация поможет лучше понять потребности пациентов с хроническим псориазом средней или тяжёлой степени тяжести в Латвии.\r\n\r\nФизические риски в рамках исследования не ожидаются.\r\n\r\nОднако при ответах на вопросы о влиянии заболевания, качестве жизни, личной жизни или опыте лечения может возникнуть небольшой психологический дискомфорт.\r\n\r\nВы имеете право прекратить заполнение анкеты или не отвечать на вопрос, если он вызывает у Вас дискомфорт.",
+                            "label": "Польза и возможные риски"
+                        }
+                    },
+                    "type": "explanatory_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Informētās piekrišanas sākotnējās formas un sākotnējie aptaujas dati tiks glabāti pie aptaujas veicējas/Izpildītājas Ilonas Radionovas aizsargātā veidā.\r\n\r\nJūsu atbildēm tiks piešķirts kods.\r\n\r\nVārds, uzvārds, paraksts, kontaktinformācija un kodēšanas atslēga tiks glabāti atsevišķi no aptaujas atbildēm.\r\n\r\nUldis Bērziņš saņems tikai anonimizētus datus, pēc kuriem Jūs nebūs iespējams identificēt.\r\n\r\nTiks apstrādāti šādi dati: vārds, uzvārds, paraksts un datums informētās piekrišanas apstiprināšanai; vecums, dzimums, valoda, informācija par veselību un ārstēšanas pieredzi, atbildes par dzīves kvalitāti; pēc izvēles – kontaktinformācija, ja Jūs piekritīsiet saņemt papildu informāciju.\r\n\r\nKontaktinformācija, ja tā tiks sniegta, tiks izmantota tikai saziņai par papildu informāciju/konsultāciju vai iespējamu turpmāku izvērtēšanu un netiks iekļauta anonimizētajā datu kopā, ko saņems Uldis Bērziņš.",
+                    "display_order": 5,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Konfidencialitāte un personas datu aizsardzība",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "37bbc0a6-2943-48f1-8b32-ddf03291e340",
+                    "translations": {
+                        "lv": {
+                            "description": "Informētās piekrišanas sākotnējās formas un sākotnējie aptaujas dati tiks glabāti pie aptaujas veicējas/Izpildītājas Ilonas Radionovas aizsargātā veidā.\r\n\r\nJūsu atbildēm tiks piešķirts kods.\r\n\r\nVārds, uzvārds, paraksts, kontaktinformācija un kodēšanas atslēga tiks glabāti atsevišķi no aptaujas atbildēm.\r\n\r\nUldis Bērziņš saņems tikai anonimizētus datus, pēc kuriem Jūs nebūs iespējams identificēt.\r\n\r\nTiks apstrādāti šādi dati: vārds, uzvārds, paraksts un datums informētās piekrišanas apstiprināšanai; vecums, dzimums, valoda, informācija par veselību un ārstēšanas pieredzi, atbildes par dzīves kvalitāti; pēc izvēles – kontaktinformācija, ja Jūs piekritīsiet saņemt papildu informāciju.\r\n\r\nKontaktinformācija, ja tā tiks sniegta, tiks izmantota tikai saziņai par papildu informāciju/konsultāciju vai iespējamu turpmāku izvērtēšanu un netiks iekļauta anonimizētajā datu kopā, ko saņems Uldis Bērziņš.",
+                            "label": "Konfidencialitāte un personas datu aizsardzība"
+                        },
+                        "ru": {
+                            "description": "Первичные формы информированного согласия и первичные данные анкеты будут храниться у лица, проводящего опрос/Исполнителя Илоны Радионовой в защищённом виде.\r\n\r\nВашим ответам будет присвоен код.\r\n\r\nИмя, фамилия, подпись, контактная информация и ключ кодирования будут храниться отдельно от ответов анкеты.\r\n\r\nУлдис Берзиньш получит только анонимизированные данные, по которым Вас невозможно будет идентифицировать.\r\n\r\nВ рамках исследования могут обрабатываться следующие данные:\r\n\r\nимя;\r\nфамилия;\r\nподпись;\r\nдата;\r\nвозраст;\r\nпол;\r\nязык;\r\nсведения о здоровье;\r\nсведения об опыте лечения;\r\nответы о качестве жизни;\r\nпо желанию — контактная информация, если Вы согласитесь получить дополнительную информацию.\r\n\r\nЕсли Вы предоставите контактную информацию, она будет использована только для связи по поводу дополнительной информации, консультации или возможной дальнейшей оценки.\r\n\r\nКонтактная информация не будет включена в анонимизированный массив данных, который получит Улдис Берзиньш.\r\n\r\nРезультаты исследования будут опубликованы только в обобщённом или анонимизированном виде. Отдельные пациенты не будут идентифицированы в публикациях или докторской диссертации.",
+                            "label": "Конфиденциальность и защита персональных данных"
+                        }
+                    },
+                    "type": "explanatory_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Dalība pētījumā ir brīvprātīga.\r\n\r\nJums ir tiesības atteikties no dalības vai pārtraukt dalību jebkurā laikā līdz datu anonimizācijai.\r\n\r\nAtteikšanās vai dalības pārtraukšana neietekmēs Jums sniegtās medicīniskās palīdzības kvalitāti.\r\n\r\nJa Jūs atsauksiet savu piekrišanu pirms datu anonimizācijas, Jūsu dati tiks dzēsti/izslēgti, ja tas būs tehniski iespējams.\r\n\r\nPēc neatgriezeniskas anonimizācijas individuāla datu dzēšana var nebūt iespējama, jo dati vairs nebūs sasaistīti ar konkrētu personu.",
+                    "display_order": 6,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Brīvprātīga dalība un dalības pārtraukšana",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "a8a7a3ea-c9ef-4422-b9c1-a3bcfebc3553",
+                    "translations": {
+                        "lv": {
+                            "description": "Dalība pētījumā ir brīvprātīga.\r\n\r\nJums ir tiesības atteikties no dalības vai pārtraukt dalību jebkurā laikā līdz datu anonimizācijai.\r\n\r\nAtteikšanās vai dalības pārtraukšana neietekmēs Jums sniegtās medicīniskās palīdzības kvalitāti.\r\n\r\nJa Jūs atsauksiet savu piekrišanu pirms datu anonimizācijas, Jūsu dati tiks dzēsti/izslēgti, ja tas būs tehniski iespējams.\r\n\r\nPēc neatgriezeniskas anonimizācijas individuāla datu dzēšana var nebūt iespējama, jo dati vairs nebūs sasaistīti ar konkrētu personu.",
+                            "label": "Brīvprātīga dalība un dalības pārtraukšana"
+                        },
+                        "ru": {
+                            "description": "Участие в исследовании является добровольным.\r\n\r\nВы имеете право отказаться от участия или прекратить участие в любое время до анонимизации данных.\r\n\r\nОтказ или прекращение участия не повлияет на качество предоставляемой Вам медицинской помощи.\r\n\r\nЕсли Вы отзовёте своё согласие до анонимизации данных, Ваши данные будут удалены или исключены из исследования, если это технически возможно.\r\n\r\nПосле необратимой анонимизации индивидуальное удаление данных может быть невозможно, поскольку данные уже не будут связаны с конкретным лицом.",
+                            "label": "Добровольное участие и прекращение участия"
+                        }
+                    },
+                    "type": "explanatory_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Kontaktpersona jautājumos par pētījumu:\r\n\r\nUldis Bērziņš (Dr.biol., MD, asociētais profesors)\r\nE-pasts: Uldis.Berzins@turiba.lv\r\nTālrunis: +371 29252975\r\n\r\nKontaktpersona par aptaujas norisi:\r\n\r\nIlona Radionova\r\nE-pasts: dr.i.radionova@gmail.com\r\nTālrunis: +371 26288707\r\n\r\nPētījuma rezultāti tiks publicēti tikai apkopotā vai anonimizētā veidā. Atsevišķi pacienti netiks identificēti publikācijās vai promocijas darbā.",
+                    "display_order": 7,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Kontaktpersonas",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "ffc4c5f4-0145-4ccf-8ccd-c451cbea47ae",
+                    "translations": {
+                        "lv": {
+                            "description": "Kontaktpersona jautājumos par pētījumu:\r\n\r\nUldis Bērziņš (Dr.biol., MD, asociētais profesors)\r\nE-pasts: Uldis.Berzins@turiba.lv\r\nTālrunis: +371 29252975\r\n\r\nKontaktpersona par aptaujas norisi:\r\n\r\nIlona Radionova\r\nE-pasts: dr.i.radionova@gmail.com\r\nTālrunis: +371 26288707\r\n\r\nPētījuma rezultāti tiks publicēti tikai apkopotā vai anonimizētā veidā. Atsevišķi pacienti netiks identificēti publikācijās vai promocijas darbā.",
+                            "label": "Kontaktpersonas"
+                        },
+                        "ru": {
+                            "description": "Контактное лицо по вопросам исследования:\r\nУлдис Берзиньш (Dr. biol., MD, доцент)\r\nE-mail: Uldis.Berzins@turiba.lv\r\nТелефон: +371 29252975\r\n\r\nКонтактное лицо по проведению опроса:\r\nИлона Радионова\r\nE-mail: dr.i.radionova@gmail.com\r\nТелефон: +371 26288707\r\n\r\nИсследование будет проводиться после получения положительного заключения Комитета по этике исследований Бизнес-школы «Turība».",
+                            "label": "Контактная информация"
+                        }
+                    },
+                    "type": "explanatory_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": "Anketas jautājumu formulējumi var tikt precizēti vai pielāgoti, lai nodrošinātu labāku izpratni latviešu un krievu valodā.\r\n\r\nŠādas izmaiņas nemainīs pētījuma mērķi un netiks izmantotas, lai bez saskaņošanas ar Pētniecības ētikas komiteju paplašinātu iegūstamo datu apjomu vai palielinātu dalībnieku risku.",
+                    "display_order": 8,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Anketas satura pielāgošana",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "219108a8-d7b5-45a4-bfe2-e946c743acf6",
+                    "translations": {
+                        "lv": {
+                            "description": "Anketas jautājumu formulējumi var tikt precizēti vai pielāgoti, lai nodrošinātu labāku izpratni latviešu un krievu valodā.\r\n\r\nŠādas izmaiņas nemainīs pētījuma mērķi un netiks izmantotas, lai bez saskaņošanas ar Pētniecības ētikas komiteju paplašinātu iegūstamo datu apjomu vai palielinātu dalībnieku risku.",
+                            "label": "Anketas satura pielāgošana"
+                        },
+                        "ru": {
+                            "description": "Формулировки вопросов анкеты могут быть уточнены или адаптированы для лучшего понимания на латышском и русском языках.\r\n\r\nТакие изменения не изменят цель исследования и не будут использоваться для расширения объёма собираемых данных или повышения риска для участников без согласования с Комитетом по этике исследований.",
+                            "label": "Адаптация содержания анкеты"
+                        }
+                    },
+                    "type": "explanatory_text",
+                    "validation_rules": [],
+                    "visible": true
+                }
+            ],
+            "description": null,
+            "display_order": 0,
+            "stable_key": "ad6145b2-9c17-4aed-a0e2-2bd0e38ebfff",
+            "title": "Anketa par smagu hronisku psoriāzi.",
+            "translations": {
+                "lv": {
+                    "title": "Anketa par smagu hronisku psoriāzi."
+                },
+                "ru": {
+                    "title": "Анкета о тяжёлом хроническом псориазе."
+                }
+            },
+            "visible": true
+        },
+        {
+            "components": [
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 1,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Esmu iepazinies/-usies ar informāciju par pētījumu un saprotu tā mērķi, norisi, iespējamos riskus un iespējamos ieguvumus.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "132f6410-73fc-4da9-97c8-8bca40a9db3f",
+                    "translations": {
+                        "lv": {
+                            "label": "Esmu iepazinies/-usies ar informāciju par pētījumu un saprotu tā mērķi, norisi, iespējamos riskus un iespējamos ieguvumus."
+                        },
+                        "ru": {
+                            "label": "Я ознакомился/-ась с информацией об исследовании и понимаю его цель, ход, возможные риски и возможную пользу."
+                        }
+                    },
+                    "type": "consent_checkbox",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 2,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Man bija iespēja uzdot jautājumus un esmu saņēmis/-usi uz tiem saprotamas atbildes.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "2888686f-1a48-4bbb-a212-da73ba29bc65",
+                    "translations": {
+                        "lv": {
+                            "label": "Man bija iespēja uzdot jautājumus un esmu saņēmis/-usi uz tiem saprotamas atbildes."
+                        },
+                        "ru": {
+                            "label": "У меня была возможность задать вопросы, и я получил/-а на них понятные ответы."
+                        }
+                    },
+                    "type": "consent_checkbox",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 3,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Es saprotu, ka dalība pētījumā ir brīvprātīga un atteikšanās no dalības neradīs man nelabvēlīgas sekas.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "7b790e3d-b2f8-48e2-8311-bc0461d391af",
+                    "translations": {
+                        "lv": {
+                            "label": "Es saprotu, ka dalība pētījumā ir brīvprātīga un atteikšanās no dalības neradīs man nelabvēlīgas sekas."
+                        },
+                        "ru": {
+                            "label": "Я понимаю, что участие в исследовании является добровольным и отказ от участия не повлечёт неблагоприятных последствий."
+                        }
+                    },
+                    "type": "consent_checkbox",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 4,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Es piekrītu, ka manas anketas atbildes tiek izmantotas pētījumā apkopotā un anonimizētā veidā.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "5e68d5de-93f6-4cbe-b8d8-609003c99550",
+                    "translations": {
+                        "lv": {
+                            "label": "Es piekrītu, ka manas anketas atbildes tiek izmantotas pētījumā apkopotā un anonimizētā veidā."
+                        },
+                        "ru": {
+                            "label": "Я согласен/-на на использование данных анкеты в исследовании в обобщённом и анонимизированном виде."
+                        }
+                    },
+                    "type": "consent_checkbox",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 5,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Es saprotu, ka mana interese par jaunām ārstēšanas metodēm vai klīniskajiem pētījumiem nav uzskatāma par piekrišanu ārstēšanai vai dalībai klīniskajā pētījumā.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "fe5a7111-4b1b-4a96-b50e-62ddaab66b1b",
+                    "translations": {
+                        "lv": {
+                            "label": "Es saprotu, ka mana interese par jaunām ārstēšanas metodēm vai klīniskajiem pētījumiem nav uzskatāma par piekrišanu ārstēšanai vai dalībai klīniskajā pētījumā."
+                        },
+                        "ru": {
+                            "label": "Я понимаю, что интерес к новым методам лечения или клиническим исследованиям не является согласием на лечение или участие в клиническом исследовании."
+                        }
+                    },
+                    "type": "consent_checkbox",
+                    "validation_rules": [],
+                    "visible": true
+                }
+            ],
+            "description": "Ar savu piekrišanu apstiprinu, ka:",
+            "display_order": 1,
+            "stable_key": "6cfd2c83-74af-41a6-b804-27406567de18",
+            "title": "Piekrišana dalībai pētījumā",
+            "translations": {
+                "lv": {
+                    "description": "Ar savu piekrišanu apstiprinu, ka:",
+                    "title": "Piekrišana dalībai pētījumā"
+                },
+                "ru": {
+                    "description": "Своим согласием подтверждаю, что:",
+                    "title": "Согласие на участие в исследовании"
+                }
+            },
+            "visible": true
+        },
+        {
+            "components": [],
+            "description": "Kontaktpersona jautājumos par pētījumu:\r\nUldis Bērziņš (Dr. biol., MD, docents)\r\nE-pasts: Uldis.Berzins@turiba.lv\r\nTālrunis: +371 29252975\r\n\r\nKontaktpersona par aptaujas norisi:\r\nIlona Radionova\r\nE-pasts: dr.i.radionova@gmail.com\r\nTālrunis: +371 26288707\r\n\r\nPētījums tiks veikts pēc pozitīva Pētniecības ētikas komitejas atzinuma saņemšanas Biznesa augstskolā “Turība”.\r\n\r\nKontaktpersona par aptaujas norisi:\r\nIlona Radionova\r\nE-pasts: dr.i.radionova@gmail.com\r\nTālrunis: +371 26288707\r\n\r\nPētījums tiks veikts pēc pozitīva Pētījumu ētikas komitejas atzinuma saņemšanas Biznesa augstskolā “Turība”.",
+            "display_order": 2,
+            "stable_key": "d05f32b2-420b-415d-8ce8-0b90f854380a",
+            "title": "Kontakti jautājumu gadījumā",
+            "translations": {
+                "lv": {
+                    "description": "Kontaktpersona jautājumos par pētījumu:\r\nUldis Bērziņš (Dr. biol., MD, docents)\r\nE-pasts: Uldis.Berzins@turiba.lv\r\nTālrunis: +371 29252975\r\n\r\nKontaktpersona par aptaujas norisi:\r\nIlona Radionova\r\nE-pasts: dr.i.radionova@gmail.com\r\nTālrunis: +371 26288707\r\n\r\nPētījums tiks veikts pēc pozitīva Pētniecības ētikas komitejas atzinuma saņemšanas Biznesa augstskolā “Turība”.\r\n\r\nKontaktpersona par aptaujas norisi:\r\nIlona Radionova\r\nE-pasts: dr.i.radionova@gmail.com\r\nTālrunis: +371 26288707\r\n\r\nPētījums tiks veikts pēc pozitīva Pētījumu ētikas komitejas atzinuma saņemšanas Biznesa augstskolā “Turība”.",
+                    "title": "Kontakti jautājumu gadījumā"
+                },
+                "ru": {
+                    "description": "Контактное лицо по вопросам исследования:\r\nУлдис Берзиньш (Dr. biol., MD, доцент)\r\nE-mail: Uldis.Berzins@turiba.lv\r\nТелефон: +371 29252975\r\n\r\nКонтактное лицо по проведению опроса:\r\nИлона Радионова\r\nE-mail: dr.i.radionova@gmail.com\r\nТелефон: +371 26288707\r\n\r\nИсследование будет проводиться после получения положительного заключения Комитета по этике исследований Бизнес-школы «Turība».",
+                    "title": "Контактная информация"
+                }
+            },
+            "visible": true
+        },
+        {
+            "components": [
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 1,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Vārds, uzvārds:",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "max_length": null,
+                        "min_length": null
+                    },
+                    "stable_key": "f3f9f33f-96b5-4082-b9ca-62210ca1c4e2",
+                    "translations": {
+                        "lv": {
+                            "label": "Vārds, uzvārds:"
+                        },
+                        "ru": {
+                            "label": "Имя, фамилия:"
+                        }
+                    },
+                    "type": "short_text",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 2,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Datums:",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "maximum": null,
+                        "minimum": null
+                    },
+                    "stable_key": "a7744775-79d8-4573-b485-bf7d507dc8b3",
+                    "translations": {
+                        "lv": {
+                            "label": "Datums:"
+                        },
+                        "ru": {
+                            "label": "Дата:"
+                        }
+                    },
+                    "type": "date",
+                    "validation_rules": [],
+                    "visible": true
+                }
+            ],
+            "description": null,
+            "display_order": 3,
+            "stable_key": "ce4d7338-5b8d-4bdf-b09d-d3d4da0ac7a1",
+            "title": "Dalībnieka informācija",
+            "translations": {
+                "lv": {
+                    "title": "Dalībnieka informācija"
+                },
+                "ru": {
+                    "title": "Информация об участнике"
+                }
+            },
+            "visible": true
+        },
+        {
+            "components": [
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 1,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Piekrišana saziņai papildu informācijas, iespējamās konsultācijas vai turpmākas izvērtēšanas nolūkā ir brīvprātīga.",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": [],
+                    "stable_key": "3dc782e2-c610-4fc4-9a07-1db059dcfc41",
+                    "translations": {
+                        "lv": {
+                            "label": "Piekrišana saziņai papildu informācijas, iespējamās konsultācijas vai turpmākas izvērtēšanas nolūkā ir brīvprātīga."
+                        },
+                        "ru": {
+                            "label": "Согласие на связь для предоставления дополнительной информации, возможной консультации или дальнейшей оценки является добровольным."
+                        }
+                    },
+                    "type": "yes_no",
+                    "validation_rules": [],
+                    "visible": true
+                },
+                {
+                    "attachment_ref": null,
+                    "description": null,
+                    "display_order": 2,
+                    "help_text": null,
+                    "is_required": false,
+                    "label": "Tālrunis/e-pasts, ja piekrītat saziņai:",
+                    "manual_grading": false,
+                    "max_points": 0.0,
+                    "options": [],
+                    "scoring_rule": null,
+                    "settings": {
+                        "max_length": null,
+                        "min_length": null
+                    },
+                    "stable_key": "b62a7abe-e991-498d-9a98-74f0b5b2776d",
+                    "translations": {
+                        "lv": {
+                            "label": "Tālrunis/e-pasts, ja piekrītat saziņai:"
+                        },
+                        "ru": {
+                            "label": "Телефон/e-mail, если согласен/-на на связь:"
+                        }
+                    },
+                    "type": "short_text",
+                    "validation_rules": [],
+                    "visible": true
+                }
+            ],
+            "description": null,
+            "display_order": 4,
+            "stable_key": "0c63ef21-593c-4e38-8080-76f85e6f066f",
+            "title": "Piekrišana saziņai papildu informācijas sniegšanai",
+            "translations": {
+                "lv": {
+                    "title": "Piekrišana saziņai papildu informācijas sniegšanai"
+                },
+                "ru": {
+                    "title": "Согласие на связь для предоставления дополнительной информации"
+                }
+            },
+            "visible": true
+        },
+        {
+            "components": [],
+            "description": null,
+            "display_order": 5,
+            "stable_key": "fbeb2b19-bc15-4cc9-967e-93f8558715a9",
+            "title": "Aptaujas veicēja: Ilona Radionova",
+            "translations": {
+                "lv": {
+                    "title": "Aptaujas veicēja: Ilona Radionova"
+                },
+                "ru": {
+                    "title": "Лицо, проводящее опрос: Илона Радионова"
+                }
+            },
+            "visible": true
+        }
+    ],
+    "version": {
+        "description": null,
+        "settings": {
+            "anonymous_allowed": true,
+            "consent_required": true,
+            "result_visibility": "completion",
+            "scoring_enabled": false
+        },
+        "title": "Informēta piekrišana dalībai pētījumā",
+        "translations": {
+            "lv": {
+                "title": "Informēta piekrišana dalībai pētījumā"
+            },
+            "ru": {
+                "title": "ИНФОРМИРОВАННОЕ СОГЛАСИЕ НА УЧАСТИЕ В ИССЛЕДОВАНИИ"
+            }
+        }
+    }
+}

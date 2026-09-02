@@ -129,7 +129,7 @@ class PatientQuestionnaireAssignmentService
             ->with(['form', 'formVersion'])
             ->where('organisation_id', $organisationId)
             ->where('status', 'active')
-            ->whereIn('access_mode', ['invitation', 'public'])
+            ->where('access_mode', 'invitation')
             ->where(fn ($query) => $query->whereNull('opens_at')->orWhere('opens_at', '<=', now()))
             ->where(fn ($query) => $query->whereNull('closes_at')->orWhere('closes_at', '>=', now()))
             ->whereHas('form', fn ($query) => $query->where('status', 'published'))
