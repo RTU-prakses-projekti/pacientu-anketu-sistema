@@ -68,9 +68,22 @@ class SystemAdministrationController extends Controller
     {
         abort_unless($request->user()->canAdministerSystem(), 403);
 
+        $permissionGroups = [
+            ['key' => 'general', 'label' => __('messages.permission_group_general'), 'permissions' => ['organisation.view', 'organisation.manage', 'users.manage', 'audit.view']],
+            ['key' => 'forms', 'label' => __('messages.permission_group_forms'), 'permissions' => ['forms.view', 'forms.create', 'forms.update', 'forms.publish', 'forms.archive']],
+            ['key' => 'submissions', 'label' => __('messages.permission_group_submissions'), 'permissions' => ['submissions.view', 'exports.create', 'exports.download']],
+            ['key' => 'doctor', 'label' => __('messages.permission_group_doctor'), 'permissions' => ['doctor.dashboard.view', 'patients.view', 'patients.update', 'patient.questionnaires.view']],
+        ];
+        $permissionMap = Permission::whereIn('name', collect($permissionGroups)->pluck('permissions')->flatten()->all())
+            ->get()->keyBy('name');
+        $permissionGroups = collect($permissionGroups)->map(fn (array $group): array => [
+            ...$group,
+            'permissions' => collect($group['permissions'])->map(fn (string $name) => $permissionMap->get($name))->filter()->values(),
+        ])->all();
+
         return view('system.roles', [
             'roles' => Role::with('permissions')->where('name', '!=', 'platform_admin')->orderBy('scope')->orderBy('name')->get(),
-            'permissions' => Permission::orderBy('name')->get(),
+            'permissionGroups' => $permissionGroups,
         ]);
     }
 
@@ -79,6 +92,14 @@ class SystemAdministrationController extends Controller
         abort_unless($request->user()->canAdministerSystem(), 403);
         abort_if($role->name === 'platform_admin', 403);
         $data = $request->validate(['permissions' => 'nullable|array', 'permissions.*' => 'integer|exists:permissions,id']);
+        $doctorOnlyPermissionIds = Permission::whereIn('name', [
+            'doctor.dashboard.view', 'patients.view', 'patients.update', 'patient.questionnaires.view',
+        ])->pluck('id');
+        $submittedPermissionIds = collect($data['permissions'] ?? [])->map(fn ($id) => (int) $id);
+        if ($role->is_system && $role->name !== 'doctor'
+            && $submittedPermissionIds->intersect($doctorOnlyPermissionIds)->isNotEmpty()) {
+            throw ValidationException::withMessages(['permissions' => __('messages.doctor_permissions_system_role_denied')]);
+        }
         $role->permissions()->sync($data['permissions'] ?? []);
         $audit->record('role.permissions_updated', $role, null, ['permission_ids' => $data['permissions'] ?? []]);
 

@@ -44,6 +44,34 @@ class DynamicCustomRolesTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['actor_id' => $admin->id, 'action' => 'role.created', 'subject_id' => $role->id]);
     }
 
+    public function test_role_permission_ui_uses_ordered_groups_localized_labels_and_role_specific_doctor_controls(): void
+    {
+        $admin = $this->platformAdmin();
+        $page = $this->actingAs($admin)->get(route('system.roles'))->assertOk();
+        $html = $page->getContent();
+
+        $this->assertStringNotContainsString('permission_organisation.view', $html);
+        $this->assertStringContainsString('Vispārējās atļaujas', $html);
+        $this->assertStringContainsString('Anketu pārvaldība', $html);
+        $this->assertStringContainsString('Eksports / iesniegumi', $html);
+        $this->assertStringContainsString('Ārsta papildatļaujas', $html);
+        $this->assertLessThan(strpos($html, 'Anketu pārvaldība'), strpos($html, 'Vispārējās atļaujas'));
+        $this->assertLessThan(strpos($html, 'Eksports / iesniegumi'), strpos($html, 'Anketu pārvaldība'));
+        $this->assertLessThan(strpos($html, 'Ārsta papildatļaujas'), strpos($html, 'Eksports / iesniegumi'));
+        $this->assertStringContainsString('Skatīt pacientus', $html);
+        $this->assertStringContainsString('Pieejams tikai ārsta lomai.', $html);
+
+        $doctorPermission = Permission::where('name', 'patients.view')->value('id');
+        $this->assertMatchesRegularExpression('/value="'.$doctorPermission.'"[^>]*disabled/', $html);
+
+        $custom = Role::create(['name' => 'researcher', 'display_name' => 'Pētnieks', 'scope' => 'organisation', 'is_system' => false]);
+        $customPage = $this->actingAs($admin)->get(route('system.roles'))->assertOk();
+        $customHtml = $customPage->getContent();
+        $this->assertStringContainsString('Šīs atļaujas darbojas tikai lietotājam, kuram vienlaikus ir piešķirta sistēmas loma Ārsts.', $customHtml);
+        $this->assertGreaterThanOrEqual(2, substr_count($customHtml, 'value="'.$doctorPermission.'"'));
+        $this->assertStringContainsString('value="'.$doctorPermission.'"', $customHtml);
+    }
+
     public function test_duplicate_reserved_and_invalid_permission_role_creation_is_rejected(): void
     {
         $admin = $this->platformAdmin();
@@ -59,6 +87,33 @@ class DynamicCustomRolesTest extends TestCase
             'display_name' => 'Forged permission role', 'permissions' => [999999],
         ])->assertSessionHasErrors('permissions.0');
         $this->assertDatabaseMissing('roles', ['name' => 'forged_permission_role']);
+    }
+
+    public function test_doctor_only_permissions_are_server_side_restricted_for_non_doctor_system_roles(): void
+    {
+        $admin = $this->platformAdmin();
+        $doctorPermission = Permission::where('name', 'patients.view')->firstOrFail();
+        $administrator = Role::where('name', 'administrator')->firstOrFail();
+        $assistant = Role::where('name', 'organisation_admin')->firstOrFail();
+        $doctor = Role::where('name', 'doctor')->firstOrFail();
+        $custom = Role::create(['name' => 'clinical_custom', 'display_name' => 'Clinical custom', 'scope' => 'organisation', 'is_system' => false]);
+
+        foreach ([$administrator, $assistant] as $systemRole) {
+            $this->actingAs($admin)->from(route('system.roles'))->put(route('system.roles.update', $systemRole), [
+                'permissions' => [$doctorPermission->id],
+            ])->assertSessionHasErrors('permissions');
+            $this->assertFalse($systemRole->fresh()->permissions()->whereKey($doctorPermission->id)->exists());
+        }
+
+        $this->actingAs($admin)->put(route('system.roles.update', $doctor), [
+            'permissions' => [$doctorPermission->id],
+        ])->assertRedirect();
+        $this->assertTrue($doctor->fresh()->permissions()->whereKey($doctorPermission->id)->exists());
+
+        $this->actingAs($admin)->put(route('system.roles.update', $custom), [
+            'permissions' => [$doctorPermission->id],
+        ])->assertRedirect();
+        $this->assertTrue($custom->fresh()->permissions()->whereKey($doctorPermission->id)->exists());
     }
 
     public function test_non_admin_cannot_create_or_delete_custom_roles(): void
