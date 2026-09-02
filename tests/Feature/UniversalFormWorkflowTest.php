@@ -276,9 +276,9 @@ class UniversalFormWorkflowTest extends TestCase
         [$outsider]=$this->member('form_creator');$this->actingAs($outsider)->get(route('attachments.download',$attachment))->assertForbidden();
     }
 
-    public function test_reviewer_can_read_but_cannot_autosave_or_finalize_another_respondent_submission(): void
+    public function test_administrator_can_read_generic_submission_but_cannot_autosave_or_finalize_another_respondent_submission(): void
     {
-        [$creator,$organisation]=$this->member('form_creator');[$respondent]=$this->member('respondent',$organisation);[$reviewer]=$this->member('organisation_admin',$organisation);
+        [$creator,$organisation]=$this->member('form_creator');[$respondent]=$this->member('respondent',$organisation);$reviewer=User::factory()->create(['is_active'=>true]);$reviewer->globalRoles()->attach(Role::where('name','administrator')->firstOrFail());
         $authoring=app(FormAuthoringService::class);$form=$authoring->create($organisation->id,$creator,'Owned exam','test');$published=$authoring->publish($form->versions()->first());$publication=$this->publication($form,$published);$submission=app(SubmissionService::class)->start($publication,$respondent,null,null,'unused');$component=$published->components()->with('options')->first();$payload=['expected_revision'=>0,'client_mutation_id'=>(string)Str::uuid(),'answers'=>[$component->id=>$component->options->first()->value]];
         $this->actingAs($reviewer)->postJson(route('submissions.autosave',$submission),$payload)->assertForbidden();
         $payload['client_mutation_id']=(string)Str::uuid();$this->actingAs($reviewer)->postJson(route('submissions.finalize',$submission),$payload)->assertForbidden();

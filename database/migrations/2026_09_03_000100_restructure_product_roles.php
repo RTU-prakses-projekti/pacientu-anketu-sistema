@@ -75,6 +75,20 @@ return new class extends Migration
             DB::table('roles')->where('name', $name)->update(['display_name' => $label, 'updated_at' => $now]);
         }
 
+        $rolePermissionSets = [
+            'organisation_admin' => ['organisation.view', 'organisation.manage', 'forms.view', 'forms.create', 'forms.update', 'forms.publish', 'forms.archive', 'audit.view', 'users.manage'],
+            'form_creator' => ['organisation.view', 'forms.view', 'forms.create', 'forms.update', 'forms.publish', 'forms.archive'],
+            'doctor' => ['doctor.dashboard.view', 'patients.view', 'patients.update', 'patient.questionnaires.view'],
+        ];
+        foreach ($rolePermissionSets as $roleName => $rolePermissions) {
+            $roleId = DB::table('roles')->where('name', $roleName)->value('id');
+            if (!$roleId) continue;
+            DB::table('role_permissions')->where('role_id', $roleId)->delete();
+            foreach (DB::table('permissions')->whereIn('name', $rolePermissions)->pluck('id') as $permissionId) {
+                DB::table('role_permissions')->insert(['role_id' => $roleId, 'permission_id' => $permissionId]);
+            }
+        }
+
         $removedRoleIds = DB::table('roles')->whereIn('name', ['reviewer', 'respondent'])->pluck('id');
         if ($removedRoleIds->isNotEmpty()) {
             DB::table('membership_roles')->whereIn('role_id', $removedRoleIds)->delete();

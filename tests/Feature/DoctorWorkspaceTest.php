@@ -42,9 +42,10 @@ class DoctorWorkspaceTest extends TestCase
         $this->assertFalse(Role::where('name', 'platform_admin')->firstOrFail()->permissions()->whereIn('name', $doctorPermissions)->exists());
 
         $admin3 = Role::where('name', 'form_creator')->firstOrFail();
-        foreach (['forms.view', 'forms.create', 'forms.update', 'forms.publish', 'submissions.view'] as $permission) {
+        foreach (['forms.view', 'forms.create', 'forms.update', 'forms.publish'] as $permission) {
             $this->assertTrue($admin3->permissions()->where('name', $permission)->exists());
         }
+        $this->assertFalse($admin3->permissions()->where('name', 'submissions.view')->exists());
         foreach (['users.manage', 'organisation.manage', 'audit.view'] as $permission) {
             $this->assertFalse($admin3->permissions()->where('name', $permission)->exists());
         }

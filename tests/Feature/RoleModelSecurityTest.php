@@ -44,6 +44,14 @@ class RoleModelSecurityTest extends TestCase
         $this->assertTrue($root->canAdministerSystem());
         $this->assertTrue($administrator->isAdministrator());
         $this->assertTrue($administrator->canAdministerSystem());
+        foreach (['submissions.view', 'exports.create', 'exports.download'] as $permission) {
+            $this->assertTrue(Role::where('name', 'administrator')->firstOrFail()->permissions()->where('name', $permission)->exists());
+        }
+        foreach (['organisation_admin', 'form_creator', 'doctor'] as $roleName) {
+            foreach (['submissions.view', 'exports.create', 'exports.download'] as $permission) {
+                $this->assertFalse(Role::where('name', $roleName)->firstOrFail()->permissions()->where('name', $permission)->exists());
+            }
+        }
         $this->assertTrue(Gate::forUser($root)->allows('view', $patient));
         foreach ([$administrator, $assistant, $manager] as $user) {
             $this->assertTrue(Gate::forUser($user)->denies('view', $patient));
