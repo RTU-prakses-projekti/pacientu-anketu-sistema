@@ -23,7 +23,7 @@
                 <span class="text-slate-500">{{ auth()->user()->name }}</span>
                 <form method="POST" action="{{ route('logout') }}">@csrf<button class="link-button">{{ __('messages.logout') }}</button></form>
             @endauth
-            @guest<a href="{{ route('login') }}">{{ __('messages.login') }}</a><a href="{{ route('register') }}">{{ __('messages.register') }}</a>@endguest
+    @guest<a href="{{ route('login') }}">{{ __('messages.login') }}</a>@endguest
             <div class="flex gap-1" aria-label="{{ __('messages.language') }}">
                 @foreach(config('form_locales.supported') as $code)<form method="POST" action="{{ route('locale',$code) }}" data-locale-form data-locale="{{ $code }}">@csrf<button class="rounded px-2 py-1 {{ app()->getLocale()===$code?'bg-indigo-100 font-semibold':'' }}">{{ strtoupper($code) }}</button></form>@endforeach
             </div>

@@ -237,7 +237,7 @@ class DoctorWorkspaceTest extends TestCase
 
     private function member(string $roleName, Organisation $organisation): array
     {
-        $user = User::factory()->create(['student_id' => (string) Str::uuid(), 'is_active' => true]);
+        $user = User::factory()->create(['is_active' => true]);
         $membership = OrganisationMembership::create(['organisation_id' => $organisation->id, 'user_id' => $user->id, 'is_active' => true]);
         $membership->roles()->attach(Role::where('name', $roleName)->firstOrFail());
 

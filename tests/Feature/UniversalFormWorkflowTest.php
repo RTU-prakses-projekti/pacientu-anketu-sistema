@@ -42,15 +42,14 @@ class UniversalFormWorkflowTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
     }
 
-    public function test_registration_persists_identity_without_role_escalation_and_login_is_throttled(): void
+    public function test_public_registration_is_disabled_and_login_throttling_remains_active(): void
     {
-        $response=$this->post('/register',['name'=>'New Respondent','email'=>'new@example.test','student_id'=>'RESP-1','role'=>'platform_admin','permissions'=>['*'],'password'=>'LongPassword123','password_confirmation'=>'LongPassword123']);
-        $response->assertRedirect(route('dashboard'));
-        $user=User::where('email','new@example.test')->firstOrFail();
-        $this->assertSame('RESP-1',$user->student_id);$this->assertSame('student',$user->role);$this->assertFalse($user->isPlatformAdmin());
+        $this->get('/register')->assertNotFound();
+        $this->post('/register', ['name' => 'New Respondent', 'email' => 'new@example.test'])->assertNotFound();
+        $user = User::factory()->create(['email' => 'existing@example.test', 'password' => Hash::make('LongPassword123')]);
         auth()->logout();
-        for($i=0;$i<5;$i++)$this->post('/login',['email'=>'new@example.test','password'=>'wrong']);
-        $this->post('/login',['email'=>'new@example.test','password'=>'wrong'])->assertStatus(429);
+        for($i=0;$i<5;$i++)$this->post('/login',['email'=>$user->email,'password'=>'wrong']);
+        $this->post('/login',['email'=>$user->email,'password'=>'wrong'])->assertStatus(429);
     }
 
     public function test_first_platform_administrator_can_be_bootstrapped_once(): void
@@ -432,7 +431,7 @@ class UniversalFormWorkflowTest extends TestCase
 
     private function member(string $roleName, ?Organisation $organisation=null): array
     {
-        $organisation??=Organisation::create(['name'=>Str::random(8),'slug'=>Str::lower(Str::random(10)),'is_active'=>true]);$user=User::factory()->create(['student_id'=>Str::uuid()->toString(),'is_active'=>true]);$membership=OrganisationMembership::create(['organisation_id'=>$organisation->id,'user_id'=>$user->id,'is_active'=>true]);$membership->roles()->attach(Role::where('name', in_array($roleName, ['respondent', 'reviewer'], true) ? 'doctor' : $roleName)->firstOrFail());return [$user,$organisation];
+        $organisation??=Organisation::create(['name'=>Str::random(8),'slug'=>Str::lower(Str::random(10)),'is_active'=>true]);$user=User::factory()->create(['is_active'=>true]);$membership=OrganisationMembership::create(['organisation_id'=>$organisation->id,'user_id'=>$user->id,'is_active'=>true]);$membership->roles()->attach(Role::where('name', in_array($roleName, ['respondent', 'reviewer'], true) ? 'doctor' : $roleName)->firstOrFail());return [$user,$organisation];
     }
 
     private function bootstrapAdmin(string $name, string $email)

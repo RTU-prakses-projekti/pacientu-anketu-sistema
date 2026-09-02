@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Domain\Audit\AuditService;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Requests\Auth\RegisterRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -33,29 +30,6 @@ class AuthController extends Controller
         return back()->withErrors([
             'email' => 'Invalid credentials.'
         ]);
-    }
-
-    public function showRegister()
-    {
-        return view('auth.register');
-    }
-
-    public function register(RegisterRequest $request)
-    {
-        $validated = $request->validated();
-
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'student_id' => $validated['student_id'],
-            'password' => Hash::make($validated['password']),
-            'locale' => 'lv',
-            'is_active' => true,
-        ]);
-
-        Auth::login($user);
-
-        return redirect()->route('dashboard');
     }
 
     public function logout(Request $request)

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'student_id', 'locale', 'is_active'])]
+#[Fillable(['name', 'email', 'password', 'locale', 'is_active'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -136,13 +136,4 @@ class User extends Authenticatable
             ->whereHas('roles.permissions', fn ($query) => $query->where('permissions.name', $permission))
             ->exists();
     }
-    public function isAdmin()
-{
-    return $this->role === 'admin';
-}
-
-public function isStudent()
-{
-    return $this->role === 'student';
-}
 }

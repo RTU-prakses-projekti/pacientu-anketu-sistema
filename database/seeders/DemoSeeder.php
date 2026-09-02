@@ -17,7 +17,7 @@ class DemoSeeder extends Seeder
     public function run(): void
     {
         $organisation=Organisation::firstOrCreate(['slug'=>'demo-organisation'],['name'=>'Demonstrācijas organizācija','is_active'=>true]);
-        $creator=User::firstOrCreate(['email'=>'demo.creator@example.test'],['name'=>'Demo Creator','student_id'=>'DEMO-CREATOR','password'=>Hash::make(Str::random(48)),'is_active'=>true,'locale'=>'lv']);
+        $creator=User::firstOrCreate(['email'=>'demo.creator@example.test'],['name'=>'Demo Creator','password'=>Hash::make(Str::random(48)),'is_active'=>true,'locale'=>'lv']);
         $membership=OrganisationMembership::firstOrCreate(['organisation_id'=>$organisation->id,'user_id'=>$creator->id],['is_active'=>true]);
         $membership->roles()->syncWithoutDetaching([Role::where('name','form_creator')->value('id')]);
         if($organisation->forms()->exists())return;

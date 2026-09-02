@@ -234,7 +234,7 @@ class DynamicChoiceOptionsTest extends TestCase
     private function member(string $roleName, ?Organisation $organisation = null): array
     {
         $organisation ??= Organisation::create(['name' => Str::random(8), 'slug' => Str::lower(Str::random(10)), 'is_active' => true]);
-        $user = User::factory()->create(['student_id' => Str::uuid()->toString(), 'is_active' => true]);
+        $user = User::factory()->create(['is_active' => true]);
         $membership = OrganisationMembership::create(['organisation_id' => $organisation->id, 'user_id' => $user->id, 'is_active' => true]);
         $membership->roles()->attach(Role::where('name', $roleName === 'respondent' ? 'doctor' : $roleName)->firstOrFail());
         return [$user, $organisation];
