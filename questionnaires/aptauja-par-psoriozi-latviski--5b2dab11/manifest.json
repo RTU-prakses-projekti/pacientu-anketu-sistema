@@ -1,9 +1,9 @@
 {
     "attachments": [],
     "conditional_rules": [],
-    "content_hash": "1fbaa24ad7ffa3b377178d59f80273d66f6592cf991ab8a5adeb66ef255cba84",
+    "content_hash": "5b2dab11afcf7c679f42a64dfa45cff0b352e07817b31891b27f231a350d367a",
     "form": {
-        "name": "Aptauja",
+        "name": "Aptauja par psoriozi Latviski",
         "preset_key": "patient_questionnaire",
         "translations": {
             "lv": {
@@ -387,118 +387,7 @@
                 {
                     "attachment_ref": null,
                     "description": null,
-                    "display_order": 21,
-                    "help_text": null,
-                    "is_required": true,
-                    "label": "Kādi ir galvenie iemesli, kādēļ Jūs vēlētos pārrunāt citu terapiju? Varat atzīmēt vairākas atbildes",
-                    "manual_grading": false,
-                    "max_points": 0.0,
-                    "options": [
-                        {
-                            "display_order": 0,
-                            "label": "Nepietiekama simptomu mazināšanās",
-                            "stable_key": "f67c2802-d576-4367-b966-9f66b051fd42",
-                            "translations": {
-                                "lv": {
-                                    "label": "Nepietiekama simptomu mazināšanās"
-                                }
-                            },
-                            "value": "aa956889-adcc-4266-940a-2590dae147e9"
-                        },
-                        {
-                            "display_order": 1,
-                            "label": "Blakusparādības vai bažas par tām",
-                            "stable_key": "3f93aa4d-1548-4d18-be48-3abf33494545",
-                            "translations": {
-                                "lv": {
-                                    "label": "Blakusparādības vai bažas par tām"
-                                }
-                            },
-                            "value": "d0a9e35e-e4b2-4f7e-9892-78d82dc17ba8"
-                        },
-                        {
-                            "display_order": 2,
-                            "label": "Ārstēšana ierobežo ikdienu",
-                            "stable_key": "00a4969d-72ef-41d4-a657-32733a489c50",
-                            "translations": {
-                                "lv": {
-                                    "label": "Ārstēšana ierobežo ikdienu"
-                                }
-                            },
-                            "value": "a126ddca-2b08-40cf-bac3-d4016c6408e8"
-                        },
-                        {
-                            "display_order": 3,
-                            "label": "Pašlaik nevēlos mainīt terapiju",
-                            "stable_key": "4dc20710-12b2-4430-8a83-521a72dbce9e",
-                            "translations": {
-                                "lv": {
-                                    "label": "Pašlaik nevēlos mainīt terapiju"
-                                }
-                            },
-                            "value": "6674bb25-2758-4e9e-a0cb-0d7746ee5caa"
-                        },
-                        {
-                            "display_order": 4,
-                            "label": "Efekts laika gaitā mazinājies",
-                            "stable_key": "c7af82e8-3117-4993-a1c0-762cc68c4539",
-                            "translations": {
-                                "lv": {
-                                    "label": "Efekts laika gaitā mazinājies"
-                                }
-                            },
-                            "value": "99849a46-f07b-4edf-b2f8-7de217d96fcd"
-                        },
-                        {
-                            "display_order": 5,
-                            "label": "Terapijas lietošana ir apgrūtinoša",
-                            "stable_key": "8e3a28ea-c79a-4e68-add8-af6b3fe6ca93",
-                            "translations": {
-                                "lv": {
-                                    "label": "Terapijas lietošana ir apgrūtinoša"
-                                }
-                            },
-                            "value": "ada2c139-9fb7-44f7-84f9-cacf864963dd"
-                        },
-                        {
-                            "display_order": 6,
-                            "label": "Vēlos uzzināt par jaunām iespējām",
-                            "stable_key": "57fba010-2cd4-4cc5-a883-c289cb3e25c0",
-                            "translations": {
-                                "lv": {
-                                    "label": "Vēlos uzzināt par jaunām iespējām"
-                                }
-                            },
-                            "value": "3c32f1cb-5f57-474f-9f5d-7ef441c2fd57"
-                        },
-                        {
-                            "display_order": 7,
-                            "label": "Cits iemesls",
-                            "stable_key": "88eb5fe4-c58e-43e0-9a45-e0e96a871a11",
-                            "translations": {
-                                "lv": {
-                                    "label": "Cits iemesls"
-                                }
-                            },
-                            "value": "1f012ae3-1f08-4711-9f3c-506838a07d79"
-                        }
-                    ],
-                    "scoring_rule": null,
-                    "settings": [],
-                    "stable_key": "cfa1a272-a3d3-44ad-90d2-63578c26eee2",
-                    "translations": {
-                        "lv": {
-                            "label": "Kādi ir galvenie iemesli, kādēļ Jūs vēlētos pārrunāt citu terapiju? Varat atzīmēt vairākas atbildes"
-                        }
-                    },
-                    "type": "multiple_choice",
-                    "validation_rules": [],
-                    "visible": true
-                },
-                {
-                    "attachment_ref": null,
-                    "description": null,
-                    "display_order": 22,
+                    "display_order": 23,
                     "help_text": null,
                     "is_required": false,
                     "label": "Aptaujas veicēja: Ilona Radionova",
@@ -1437,16 +1326,16 @@
                     "scoring_rule": null,
                     "settings": {
                         "maximum": "118",
-                        "maximum_label": "118",
+                        "maximum_label": "118 gadi",
                         "minimum": "1",
-                        "minimum_label": "1"
+                        "minimum_label": "1 gads"
                     },
                     "stable_key": "35272bc4-548a-4644-8a98-237b2687b12d",
                     "translations": {
                         "lv": {
                             "label": "Vecums",
-                            "maximum_label": "118",
-                            "minimum_label": "1"
+                            "maximum_label": "118 gadi",
+                            "minimum_label": "1 gads"
                         }
                     },
                     "type": "linear_scale",
@@ -3407,28 +3296,6 @@
                 {
                     "attachment_ref": null,
                     "description": null,
-                    "display_order": 35,
-                    "help_text": null,
-                    "is_required": false,
-                    "label": "Ja atbildējāt “Jā”, norādiet vēlamo saziņas veidu atsevišķā kontaktinformācijas lapā. Kontaktinformācija netiek iekļauta Uldim Bērziņam nododamajā anonimizētajā datu kopā.",
-                    "manual_grading": false,
-                    "max_points": 0.0,
-                    "options": [],
-                    "scoring_rule": null,
-                    "settings": [],
-                    "stable_key": "dbbb9e3a-ed42-4cfb-93c7-731bc4996661",
-                    "translations": {
-                        "lv": {
-                            "label": "Ja atbildējāt “Jā”, norādiet vēlamo saziņas veidu atsevišķā kontaktinformācijas lapā. Kontaktinformācija netiek iekļauta Uldim Bērziņam nododamajā anonimizētajā datu kopā."
-                        }
-                    },
-                    "type": "explanatory_text",
-                    "validation_rules": [],
-                    "visible": true
-                },
-                {
-                    "attachment_ref": null,
-                    "description": null,
                     "display_order": 36,
                     "help_text": null,
                     "is_required": false,
@@ -3452,14 +3319,14 @@
             "description": null,
             "display_order": 2,
             "stable_key": "4a50a391-bca6-441b-95cb-309455e697cc",
-            "title": "Aptaujas daļa",
+            "title": "Aptaujas sadaļa",
             "translations": {
                 "en": {
                     "description": "Complete the final questionnaire part.",
                     "title": "Questionnaire section"
                 },
                 "lv": {
-                    "title": "Aptaujas daļa"
+                    "title": "Aptaujas sadaļa"
                 },
                 "ru": {
                     "description": "Завершите последнюю часть анкеты.",
@@ -3470,18 +3337,18 @@
         }
     ],
     "version": {
-        "description": "Aptauja ir par smagas hroniskas psoriāzes pacientu dzīves kvalitāte, terapijas pieredze un gatavība apsvērt jaunas ārstēšanas iespējas Latvijā.",
+        "description": "Šis pētījums ir vērsts uz dzīves kvalitāti, ārstēšanas pieredzi un gatavību apsvērt jaunas terapijas iespējas pacientiem ar smagu hronisku psoriāzi Latvijā.",
         "settings": {
             "anonymous_allowed": true,
             "consent_required": true,
             "result_visibility": "completion",
             "scoring_enabled": false
         },
-        "title": "Aptauja",
+        "title": "Aptauja par psoriozi Latviski",
         "translations": {
             "lv": {
-                "description": "Aptauja ir par smagas hroniskas psoriāzes pacientu dzīves kvalitāte, terapijas pieredze un gatavība apsvērt jaunas ārstēšanas iespējas Latvijā.",
-                "title": "Aptauja"
+                "description": "Šis pētījums ir vērsts uz dzīves kvalitāti, ārstēšanas pieredzi un gatavību apsvērt jaunas terapijas iespējas pacientiem ar smagu hronisku psoriāzi Latvijā.",
+                "title": "Aptauja par psoriozi Latviski"
             }
         }
     }

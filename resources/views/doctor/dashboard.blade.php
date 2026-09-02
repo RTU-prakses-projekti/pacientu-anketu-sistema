@@ -33,7 +33,7 @@
 <form id="bulk-selection-form" method="POST" action="{{ route('doctor.questionnaires.bulk.create') }}" class="actions mb-3">@csrf
     <label class="check"><input type="checkbox" data-patient-select-all> {{ __('messages.select_all_visible') }}</label>
     <button class="btn primary" type="submit">{{ __('messages.assign_questionnaire') }}</button>
-    <a class="btn" href="{{ route('doctor.patients.export', $selectedMembership->organisation) }}">{{ __('messages.export_answers') }}</a>
+    <a class="btn" href="{{ route('doctor.patients.export', $selectedMembership->organisation) }}" data-patient-export>{{ __('messages.export_answers') }}</a>
 </form>
 
 <div class="table-wrap doctor-overview-table"><table><thead><tr>
@@ -80,13 +80,18 @@
         const refresh = () => {
             const selected = patients.filter((checkbox) => checkbox.checked).length;
             selectAll.checked = patients.length > 0 && selected === patients.length;
-            selectAll.indeterminate = selected > 0 && selected < patients.length;
+            selectAll.indeterminate = false;
         };
         selectAll.addEventListener('change', () => {
             patients.forEach((checkbox) => { checkbox.checked = selectAll.checked; });
             refresh();
         });
         patients.forEach((checkbox) => checkbox.addEventListener('change', refresh));
+        document.querySelector('[data-patient-export]')?.addEventListener('click', (event) => {
+            const selectedIds = patients.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value);
+            if (selectedIds.length === 0) return;
+            event.currentTarget.href = `${event.currentTarget.href.split('?')[0]}?${new URLSearchParams(selectedIds.map((id) => ['patient_case_ids[]', id]))}`;
+        });
         refresh();
     });
 })();

@@ -14,6 +14,7 @@ class BuilderService
 
     public function updateVersion(\App\Models\FormVersion $version, array $data): void
     {
+        $defaultLocale = (string) config('form_locales.default', 'lv');
         $translations = $this->localized->normalize($data['translations'] ?? null, ['title', 'description', 'completion_text', 'result_text']);
         $settings = $version->settings ?? [];
         foreach (['completion_text', 'result_text'] as $field) {

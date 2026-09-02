@@ -53,7 +53,9 @@ class DoctorQuestionnaireController extends Controller
     {
         $this->authorize('update', $patientCase);
         $data = $request->validate(['expires_in_days' => ['required', Rule::in([7, 14, 30, 60, 90])]]);
-        abort_if($patientCase->assignments()->doesntExist(), 422, __('messages.assign_questionnaire_first'));
+        if (!$patientCase->assignments()->exists()) {
+            return back()->withErrors(['assignments' => __('messages.assign_questionnaire_first')]);
+        }
         [$package, $plainToken] = $access->issue($patientCase, $request->user()->id, (int) $data['expires_in_days']);
         return back()->with('success', __('messages.patient_link_created'))->with('patient_access_url', route('patient.access', $plainToken));
     }

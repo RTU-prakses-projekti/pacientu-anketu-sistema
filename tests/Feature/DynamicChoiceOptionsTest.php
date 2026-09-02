@@ -184,11 +184,13 @@ class DynamicChoiceOptionsTest extends TestCase
             'type' => 'multiple_choice', 'label' => 'Many choices', 'options' => ['One', 'Two', 'Three', 'Four', 'Five'],
         ]);
         $builder = $this->actingAs($creator)->get(route('forms.builder', $form))->assertOk();
-        $builder->assertSee('data-option-manager-key="new-component"', false)
+        $builder->assertSee('data-option-manager', false)
+            ->assertSee('data-option-add', false)
+            ->assertSee('data-option-remove', false)
+            ->assertSee('options[existing]['.$component->options()->firstOrFail()->id.'][translations][lv][label]', false)
             ->assertSee('options[0][translations][lv][label]', false)
-            ->assertSee('options[1][translations][lv][label]', false)
-            ->assertSee('options[new][__INDEX__][translations][lv][label]', false)
-            ->assertSee('component-'.$component->id.'-option-', false);
+            ->assertSee('options[__INDEX__][translations][lv][label]', false)
+            ->assertSee('options[new][__INDEX__][translations][lv][label]', false);
 
         $preview = $this->actingAs($creator)->get(route('forms.preview', $form))->assertOk();
         foreach (['One', 'Two', 'Three', 'Four', 'Five'] as $label) $preview->assertSee($label);
