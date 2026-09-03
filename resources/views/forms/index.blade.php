@@ -1,20 +1,20 @@
 @extends('layouts.app')
 @section('content')
 <div class="page-header">
-    <div><a href="{{ route('dashboard') }}">{{ __('messages.back') }}</a><h1>{{ $organisation->name }} · {{ __('messages.forms') }}</h1></div>
+    <div><a href="{{ route('dashboard') }}">{{ __('messages.back') }}</a><h1>{{ $organisation->name }} · {{ __('messages.questionnaires_label') }}</h1></div>
     <div class="actions">
         @can('create', [\App\Models\Form::class, $organisation->id])
             <a class="btn" href="{{ route('questionnaires.index', $organisation) }}">{{ __('messages.import_questionnaire_file') }}</a>
-            <a class="btn primary" href="{{ route('forms.create', $organisation) }}">{{ __('messages.new_form') }}</a>
+            <a class="btn primary" href="{{ route('forms.create', $organisation) }}">{{ __('messages.new_questionnaire') }}</a>
         @endcan
     </div>
 </div>
 <div class="grid-cards">
 @forelse($forms as $form)
     <article class="card">
-        <div class="badge">{{ $form->status }}</div>
+        <div class="badge">{{ __('messages.questionnaire_status_'.$form->status) }}</div>
         <h2>{{ $form->name }}</h2>
-        <p>{{ $form->preset_key }} · {{ $form->versions_count }} {{ __('messages.versions') }} · {{ $form->publications_count }} {{ __('messages.publications') }}</p>
+        <p>{{ __('messages.'.$form->preset_key) }} · {{ $form->versions_count }} {{ __('messages.versions') }} · {{ $form->publications_count }} {{ __('messages.publications') }}</p>
         <div class="actions">
             <a class="btn" href="{{ route('forms.show', $form) }}">{{ __('messages.view') }}</a>
             <a class="btn" href="{{ route('forms.builder', $form) }}">{{ __('messages.builder') }}</a>

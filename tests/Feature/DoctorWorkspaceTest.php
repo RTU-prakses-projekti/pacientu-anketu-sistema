@@ -154,7 +154,7 @@ class DoctorWorkspaceTest extends TestCase
             ->assertDontSee($patientB->patient_code);
         $this->actingAs($doctorA)->get(route('doctor.questionnaires.index', $patientA))
             ->assertOk()->assertSee(route('doctor.results.show', [$patientA, $assignmentA]), false);
-        $this->actingAs($doctorA)->get(route('doctor.results.show', [$patientA, $assignmentA]))->assertOk()->assertSee($submissionA->status);
+        $this->actingAs($doctorA)->get(route('doctor.results.show', [$patientA, $assignmentA]))->assertOk()->assertSee(__('messages.submission_status_'.$submissionA->status));
         $this->actingAs($doctorA)->get(route('doctor.results.show', [$patientA, $assignmentInProgress]))->assertNotFound();
         $this->actingAs($doctorA)->get(route('doctor.results.show', [$patientB, $assignmentB]))->assertForbidden();
         $this->assertTrue(Gate::forUser($doctorA)->denies('view', $patientB));
@@ -175,8 +175,10 @@ class DoctorWorkspaceTest extends TestCase
         $this->actingAs($admin1)->get(route('doctor.dashboard', ['organisation_id' => $organisation->id, 'doctor_id' => $doctorB->id]))->assertOk();
         $this->actingAs($admin1)->get(route('doctor.results.show', [$patientB, $assignmentB]))->assertOk();
         $this->actingAs($admin1)->get(route('admin.submissions.show', $submissionA))->assertOk();
-        $this->actingAs($admin1)->get(route('admin.submissions.index', $organisation))
+        $this->actingAs($admin1)->get(route('admin.submissions.index', $organisation).'?status=submitted')
             ->assertOk()
+            ->assertSee('value="submitted"', false)
+            ->assertSee(__('messages.submission_status_submitted'))
             ->assertDontSee($submissionA->public_id)
             ->assertDontSee('Doctor A patient');
     }

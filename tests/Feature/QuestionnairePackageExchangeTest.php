@@ -103,7 +103,7 @@ class QuestionnairePackageExchangeTest extends TestCase
     public function test_authorized_local_export_ui_shows_and_exports_the_selected_version(): void
     {
         [$creator, , $form, $version] = $this->graph();
-        $this->actingAs($creator)->get(route('forms.show', $form))->assertOk()->assertSee(__('messages.export_to_git'))->assertSee('v1 (draft)');
+        $this->actingAs($creator)->get(route('forms.show', $form))->assertOk()->assertSee(__('messages.export_to_git'))->assertSee('v1 ('.__('messages.questionnaire_status_draft').')');
         $response = $this->post(route('questionnaires.export', [$form, $version]))->assertRedirect();
         $response->assertSessionHas('success');
         $this->assertCount(1, $this->packages()->discover());

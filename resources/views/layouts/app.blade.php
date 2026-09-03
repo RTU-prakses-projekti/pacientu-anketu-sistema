@@ -4,13 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', __('messages.app_name'))</title>
+    <title>@yield('title', __('messages.product_name'))</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900">
 <header class="border-b border-slate-200 bg-white">
     <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <a class="text-lg font-bold text-indigo-700" href="{{ auth()->check() ? (auth()->user()->isDoctorOnly() ? route('doctor.dashboard') : route('dashboard')) : route('login') }}">{{ __('messages.app_name') }}</a>
+        <a class="text-lg font-bold text-indigo-700" href="{{ auth()->check() ? (auth()->user()->isDoctorOnly() ? route('doctor.dashboard') : route('dashboard')) : route('login') }}">{{ __('messages.product_name') }}</a>
         <nav class="flex flex-wrap items-center gap-3 text-sm" aria-label="Main navigation">
             @auth
                 @if(auth()->user()->isDoctorOnly())
