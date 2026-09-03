@@ -64,6 +64,33 @@ class AnonymizedResultHandoffTest extends TestCase
         $this->actingAs($doctor)->post(route('doctor.results.handoff', [$patient, $assignment]), ['recipient' => $researcher->id])->assertSessionHasErrors('recipient');
     }
 
+    public function test_recipient_can_export_csv_and_xlsx_without_sensitive_or_patient_data(): void
+    {
+        [$doctor, $organisation, , , $normal, $name, $email, $phone, $assignment, $submission, $patient] = $this->completedGraph();
+        $recipient = User::factory()->create(['is_active' => true]);
+        $membership = OrganisationMembership::create(['organisation_id' => $organisation->id, 'user_id' => $recipient->id, 'is_active' => true]);
+        $membership->roles()->attach(Role::where('name', 'administrator')->firstOrFail());
+        SubmissionAnswer::create(['form_submission_id' => $submission->id, 'form_component_id' => $normal->id, 'value' => '60', 'display_value' => '60', 'saved_at' => now()]);
+        foreach ([[$name, 'John Doe'], [$email, 'john@example.test'], [$phone, '+37120000000']] as [$component, $value]) SubmissionAnswer::create(['form_submission_id' => $submission->id, 'form_component_id' => $component->id, 'value' => $value, 'display_value' => $value, 'saved_at' => now()]);
+        $this->actingAs($doctor)->post(route('doctor.results.handoff', [$patient, $assignment]), ['recipient' => $recipient->id])->assertRedirect();
+        $handoff = \App\Models\AnonymizedResultHandoff::firstOrFail();
+
+        $csv = $this->actingAs($recipient)->post(route('anonymized-results.export'), ['format' => 'csv', 'handoff_ids' => [$handoff->public_id]])->assertDownload('anonymized-results-'.now()->format('Ymd-His').'.csv');
+        $csvContent = $csv->streamedContent();
+        $this->assertStringContainsString('PAT-', $csvContent);
+        $this->assertStringContainsString('60', $csvContent);
+        $this->assertStringNotContainsString('John Doe', $csvContent);
+        $this->assertStringNotContainsString('john@example.test', $csvContent);
+        $this->assertStringNotContainsString('+37120000000', $csvContent);
+        $this->assertStringNotContainsString('Secret', $csvContent);
+        $this->assertStringNotContainsString('Name', $csvContent);
+
+        $this->actingAs($recipient)->post(route('anonymized-results.export'), ['format' => 'xlsx', 'handoff_ids' => [$handoff->public_id]])->assertDownload();
+        $other = User::factory()->create(['is_active' => true]);
+        OrganisationMembership::create(['organisation_id' => $organisation->id, 'user_id' => $other->id, 'is_active' => true]);
+        $this->actingAs($other)->post(route('anonymized-results.export'), ['format' => 'csv', 'handoff_ids' => [$handoff->public_id]])->assertForbidden();
+    }
+
     public function test_incomplete_other_doctor_and_unpermissioned_recipient_are_denied(): void
     {
         [$doctor, $organisation, , , , , , , $assignment, $submission, $patient] = $this->completedGraph();
@@ -117,6 +144,7 @@ class AnonymizedResultHandoffTest extends TestCase
         $this->assertEmpty(app(\App\Domain\Results\AnonymizedResultHandoffService::class)->recipients($organisation));
         $this->actingAs($administrator)->get(route('anonymized-results.index'))->assertForbidden();
         $this->actingAs($administrator)->get(route('anonymized-results.show', $handoff))->assertForbidden();
+        $this->actingAs($administrator)->post(route('anonymized-results.export'), ['format' => 'csv', 'handoff_ids' => [$handoff->public_id]])->assertForbidden();
     }
 
     public function test_published_sensitive_component_is_preserved_in_new_draft(): void
@@ -139,9 +167,11 @@ class AnonymizedResultHandoffTest extends TestCase
         $handoff = \App\Models\AnonymizedResultHandoff::firstOrFail();
         $this->actingAs($root)->get(route('anonymized-results.index'))->assertOk()->assertSee($patient->patient_code);
         $this->actingAs($root)->get(route('anonymized-results.show', $handoff))->assertOk();
+        $this->actingAs($root)->post(route('anonymized-results.export'), ['format' => 'csv', 'handoff_ids' => [$handoff->public_id]])->assertDownload();
         $organisation->update(['is_active' => false]);
         $this->actingAs($root)->get(route('anonymized-results.index'))->assertForbidden();
         $this->actingAs($root)->get(route('anonymized-results.show', $handoff))->assertForbidden();
+        $this->actingAs($root)->post(route('anonymized-results.export'), ['format' => 'csv', 'handoff_ids' => [$handoff->public_id]])->assertForbidden();
     }
 
     public function test_generic_submission_and_export_permissions_do_not_grant_anonymized_result_access(): void
@@ -159,6 +189,7 @@ class AnonymizedResultHandoffTest extends TestCase
         $membership->roles()->attach($role);
         $this->actingAs($user)->get(route('anonymized-results.index'))->assertForbidden();
         $this->actingAs($user)->get(route('anonymized-results.show', $handoff))->assertForbidden();
+        $this->actingAs($user)->post(route('anonymized-results.export'), ['format' => 'csv', 'handoff_ids' => [$handoff->public_id]])->assertForbidden();
     }
 
     private function completedGraph(bool $complete = true): array

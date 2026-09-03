@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Results\AnonymizedResultHandoffService;
+use App\Domain\Results\AnonymizedResultExportService;
 use App\Models\AnonymizedResultHandoff;
 use App\Models\Organisation;
 use App\Models\PatientCase;
 use App\Models\PatientFormAssignment;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AnonymizedResultController extends Controller
 {
@@ -18,12 +20,13 @@ class AnonymizedResultController extends Controller
         $data = $request->validate(['recipient' => ['required', 'integer']]);
         $submission = $assignment->completedSubmission()->firstOrFail();
         $handoff = $service->handoff($request->user(), $assignment, $submission, (int) $data['recipient']);
-        return back()->with('success', __('messages.result_handed_off').' '.__('messages.handed_off', ['name' => $handoff->recipient->name]));
+        return back()->with('success', __('messages.result_handed_off').' '.__('messages.handed_off_to', ['name' => $handoff->recipient->name]));
     }
 
     public function index(Request $request)
     {
         $user = $request->user();
+        abort_unless($user->is_active, 403);
         abort_unless($user->canReceiveAnonymizedResults(), 403);
         $isRoot = $user->isBootstrapRoot();
         abort_unless($isRoot
@@ -38,6 +41,19 @@ class AnonymizedResultController extends Controller
         $handoffs = $query->with(['submission.publication.form', 'assignment.patientCase:id,patient_code'])
             ->latest('handed_off_at')->paginate(25);
         return view('anonymized-results.index', compact('handoffs'));
+    }
+
+    public function export(Request $request, AnonymizedResultExportService $service)
+    {
+        $data = $request->validate([
+            'format' => ['required', Rule::in(['csv', 'xlsx'])],
+            'handoff_ids' => ['required', 'array', 'min:1', 'max:500'],
+            'handoff_ids.*' => ['required', 'string', 'distinct', 'max:100'],
+        ]);
+        $handoffs = $this->accessibleHandoffs($request, $data['handoff_ids']);
+        abort_unless($handoffs->count() === count($data['handoff_ids']), 403);
+
+        return $service->download($handoffs, $data['format']);
     }
 
     public function show(Request $request, AnonymizedResultHandoff $handoff)
@@ -60,5 +76,25 @@ class AnonymizedResultController extends Controller
         $handedOffAt = $handoff->handed_off_at;
         $answers = $handoff->submission->answers->filter(fn ($answer) => !$answer->component->is_sensitive)->values();
         return view('anonymized-results.show', compact('patientCode', 'formName', 'submittedAt', 'handedOffAt', 'answers'));
+    }
+
+    private function accessibleHandoffs(Request $request, ?array $publicIds = null)
+    {
+        $user = $request->user();
+        abort_unless($user->is_active, 403);
+        abort_unless($user->canReceiveAnonymizedResults(), 403);
+        $isRoot = $user->isBootstrapRoot();
+        abort_unless($isRoot
+            ? Organisation::where('is_active', true)->exists()
+            : $user->memberships()->where('is_active', true)->whereHas('organisation', fn ($organisation) => $organisation->where('is_active', true))->exists(), 403);
+        $hasGlobalPermission = $user->globalRoles()->whereHas('permissions', fn ($permissions) => $permissions->where('permissions.name', 'anonymized_results.view'))->exists();
+        $query = AnonymizedResultHandoff::whereHas('organisation', fn ($organisation) => $organisation->where('organisations.is_active', true));
+        if (!$isRoot) $query->where('recipient_user_id', $user->id)->whereHas('organisation.memberships', function ($membership) use ($user, $hasGlobalPermission): void {
+            $membership->where('user_id', $user->id)->where('is_active', true)
+                ->when(!$hasGlobalPermission, fn ($membership) => $membership->whereHas('roles.permissions', fn ($permissions) => $permissions->where('permissions.name', 'anonymized_results.view')));
+        });
+        return $query->when($publicIds, fn ($query) => $query->whereIn('public_id', $publicIds))
+            ->with(['submission.publication.form', 'submission.answers.component.options', 'assignment.patientCase:id,patient_code'])
+            ->get();
     }
 }

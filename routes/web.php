@@ -60,6 +60,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/doctor/patients/{patientCase}/assignments/{assignment}/result', [DoctorDashboardController::class, 'result'])->name('doctor.results.show');
     Route::post('/doctor/patients/{patientCase}/assignments/{assignment}/result/handoff', [AnonymizedResultController::class, 'store'])->name('doctor.results.handoff');
     Route::get('/anonymized-results', [AnonymizedResultController::class, 'index'])->name('anonymized-results.index');
+    Route::post('/anonymized-results/export', [AnonymizedResultController::class, 'export'])->name('anonymized-results.export');
     Route::get('/anonymized-results/{handoff}', [AnonymizedResultController::class, 'show'])->name('anonymized-results.show');
     Route::get('/doctor/patients/{patientCase}/questionnaires', [DoctorQuestionnaireController::class, 'index'])->name('doctor.questionnaires.index');
     Route::post('/doctor/patients/{patientCase}/questionnaires', [DoctorQuestionnaireController::class, 'store'])->name('doctor.questionnaires.store');
