@@ -1,5 +1,31 @@
 const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content;
 
+const applyTheme = (mode) => {
+    const dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.dataset.themeMode = mode;
+    localStorage.setItem('pqs-theme', mode);
+    document.querySelectorAll('[data-theme-select]').forEach((select) => { select.value = mode; });
+};
+
+document.querySelectorAll('[data-theme-select]').forEach((select) => {
+    select.value = document.documentElement.dataset.themeMode || localStorage.getItem('pqs-theme') || 'system';
+    select.addEventListener('change', () => applyTheme(select.value));
+});
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => {
+    if ((localStorage.getItem('pqs-theme') || 'system') === 'system') applyTheme('system');
+});
+
+document.querySelectorAll('[data-nav-toggle]').forEach((toggle) => {
+    const navigation = document.getElementById(toggle.getAttribute('aria-controls'));
+    if (!navigation) return;
+    toggle.addEventListener('click', () => {
+        const open = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', open ? 'false' : 'true');
+        navigation.classList.toggle('is-open', !open);
+    });
+});
+
 document.querySelectorAll('[data-confirm]').forEach((form) => form.addEventListener('submit', (event) => {
     if (!window.confirm(form.dataset.confirm)) event.preventDefault();
 }));
