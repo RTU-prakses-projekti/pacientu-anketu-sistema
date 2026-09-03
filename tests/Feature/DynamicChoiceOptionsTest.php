@@ -47,6 +47,19 @@ class DynamicChoiceOptionsTest extends TestCase
         }
     }
 
+    public function test_component_save_redirects_to_component_anchor(): void
+    {
+        [$creator, $organisation] = $this->member('form_creator');
+        $form = $this->form($organisation, $creator, 'Anchor save');
+        $component = app(FormAuthoringService::class)->addComponent($form->versions()->firstOrFail(), $form->versions()->firstOrFail()->sections()->firstOrFail(), [
+            'type' => 'short_text', 'label' => 'Original', 'options' => [],
+        ]);
+
+        $this->actingAs($creator)->put(route('builder.components.update', [$form, $component]), $this->updatePayload($component, []))
+            ->assertRedirect(route('forms.builder', $form).'#component-'.$component->id)
+            ->assertSessionHas('success');
+    }
+
     public function test_edit_adds_multiple_options_and_preserves_existing_identifiers(): void
     {
         [$creator, $organisation] = $this->member('form_creator');

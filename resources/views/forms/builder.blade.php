@@ -95,6 +95,7 @@
     <div class="actions mb-3">@foreach(['up'=>'move_up','down'=>'move_down'] as $direction=>$key)<form method="POST" action="{{ route('builder.sections.move',[$form,$section]) }}">@csrf<input type="hidden" name="direction" value="{{ $direction }}"><button class="icon-btn" title="{{ __('messages.'.$key) }}">{{ $direction==='up'?'↑':'↓' }}</button></form>@endforeach @if($section->components->isEmpty())<form method="POST" action="{{ route('builder.sections.destroy',[$form,$section]) }}" data-confirm="{{ __('messages.confirm_delete') }}">@csrf @method('DELETE')<button class="btn danger">{{ __('messages.delete') }}</button></form>@endif</div>
 
     @foreach($section->components as $component)
+    <a id="component-{{ $component->id }}"></a>
     @php
         $correct=(array)data_get($component->scoringRule?->rules,'correct',[]);
         $componentFields=[
