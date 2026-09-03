@@ -1,7 +1,7 @@
 @extends('layouts.app')
-@section('title', __('messages.import_questionnaire_from_git'))
+@section('title', __('messages.import_questionnaire'))
 @section('content')
-<div class="page-header"><div><a href="{{ route('forms.index',$organisation) }}">{{ __('messages.back') }}</a><h1>{{ __('messages.import_questionnaire_from_git') }}</h1><p>{{ $organisation->name }}</p></div></div>
+<div class="page-header"><div><a href="{{ route('forms.index',$organisation) }}">{{ __('messages.back') }}</a><h1>{{ __('messages.import_questionnaire') }}</h1><p>{{ $organisation->name }}</p></div></div>
 <form method="POST" action="{{ route('questionnaires.import-file', $organisation) }}" enctype="multipart/form-data" class="card mb-6">@csrf<label>{{ __('messages.questionnaire_file') }}<input type="file" name="package_file" accept=".zip,application/zip" required></label><button class="btn primary mt-4">{{ __('messages.import_questionnaire_file') }}</button></form>
 <div class="stack">
 @forelse($packages as $package)

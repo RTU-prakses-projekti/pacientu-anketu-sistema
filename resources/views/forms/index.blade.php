@@ -4,7 +4,7 @@
     <div><a href="{{ route('dashboard') }}">{{ __('messages.back') }}</a><h1>{{ $organisation->name }} · {{ __('messages.forms') }}</h1></div>
     <div class="actions">
         @can('create', [\App\Models\Form::class, $organisation->id])
-            <a class="btn" href="{{ route('questionnaires.index', $organisation) }}">{{ __('messages.import_questionnaire_from_git') }}</a>
+            <a class="btn" href="{{ route('questionnaires.index', $organisation) }}">{{ __('messages.import_questionnaire_file') }}</a>
             <a class="btn primary" href="{{ route('forms.create', $organisation) }}">{{ __('messages.new_form') }}</a>
         @endcan
     </div>
