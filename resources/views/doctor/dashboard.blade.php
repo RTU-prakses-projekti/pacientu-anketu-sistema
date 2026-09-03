@@ -51,15 +51,7 @@
     <td>{{ trans_choice('messages.assigned_count', $patientCase->assignments_count, ['count' => $patientCase->assignments_count]) }}</td>
     <td><span class="patient-summary-status">{{ __('messages.completed_count', ['count' => $patientCase->completed_assignments_count]) }}</span><br><span class="text-sm text-slate-600">{{ __('messages.in_progress_count', ['count' => $patientCase->in_progress_assignments_count]) }} · {{ __('messages.not_started_count', ['count' => $notStarted]) }}</span></td>
     <td class="doctor-row-actions">
-        <details class="relative"><summary class="btn">{{ __('messages.edit') }}</summary>
-            <form method="POST" action="{{ route('doctor.patients.slots.update', [$selectedMembership->organisation, $selectedMembership->user, $patientCase->slot_number]) }}" class="stack doctor-inline-edit">@csrf @method('PUT')
-                <label>{{ __('messages.first_name') }}<input name="first_name" maxlength="100" value="{{ $patientCase->first_name }}"></label>
-                <label>{{ __('messages.last_name') }}<input name="last_name" maxlength="100" value="{{ $patientCase->last_name }}"></label>
-                <label>{{ __('messages.external_patient_code') }}<input name="external_patient_code" maxlength="100" value="{{ $patientCase->external_patient_code }}"></label>
-                <label>{{ __('messages.patient_note') }}<textarea name="note" rows="2" maxlength="10000">{{ $patientCase->note }}</textarea></label>
-                <button class="btn primary">{{ __('messages.save') }}</button>
-            </form>
-        </details>
+        <button class="btn" type="button" data-patient-edit-open="{{ $patientCase->public_id }}">{{ __('messages.edit') }}</button>
         <a class="btn" href="{{ route('doctor.questionnaires.index', $patientCase) }}">{{ __('messages.questionnaires') }}</a>
     </td>
 </tr>
@@ -67,6 +59,20 @@
 <tr><td colspan="8">{{ __('messages.no_patients') }}</td></tr>
 @endforelse
 </tbody></table></div>
+@foreach($patientCases as $patientCase)
+<dialog id="patient-edit-{{ $patientCase->public_id }}" class="patient-edit-modal">
+    <div class="patient-edit-content">
+        <div class="page-header"><h2>{{ __('messages.edit') }} · {{ __('messages.patient') }}</h2><button class="btn" type="button" data-patient-edit-close>{{ __('messages.cancel') }}</button></div>
+        <form method="POST" action="{{ route('doctor.patients.slots.update', [$selectedMembership->organisation, $selectedMembership->user, $patientCase->slot_number]) }}" class="stack">@csrf @method('PUT')
+            <label>{{ __('messages.first_name') }}<input name="first_name" maxlength="100" value="{{ $patientCase->first_name }}"></label>
+            <label>{{ __('messages.last_name') }}<input name="last_name" maxlength="100" value="{{ $patientCase->last_name }}"></label>
+            <label>{{ __('messages.external_patient_code') }}<input name="external_patient_code" maxlength="100" value="{{ $patientCase->external_patient_code }}"></label>
+            <label>{{ __('messages.patient_note') }}<textarea name="note" rows="3" maxlength="10000">{{ $patientCase->note }}</textarea></label>
+            <div class="actions"><button class="btn" type="button" data-patient-edit-close>{{ __('messages.cancel') }}</button><button class="btn primary" type="submit">{{ __('messages.save') }}</button></div>
+        </form>
+    </div>
+</dialog>
+@endforeach
 {{ $patientCases->links() }}
 @endif
 @endsection
@@ -93,6 +99,14 @@
             event.currentTarget.href = `${event.currentTarget.href.split('?')[0]}?${new URLSearchParams(selectedIds.map((id) => ['patient_case_ids[]', id]))}`;
         });
         refresh();
+    });
+
+    document.querySelectorAll('[data-patient-edit-open]').forEach((button) => {
+        const dialog = document.getElementById(`patient-edit-${button.dataset.patientEditOpen}`);
+        if (!dialog) return;
+        button.addEventListener('click', () => dialog.showModal());
+        dialog.querySelectorAll('[data-patient-edit-close]').forEach((close) => close.addEventListener('click', () => dialog.close()));
+        dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
     });
 })();
 </script>

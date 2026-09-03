@@ -110,7 +110,7 @@ class DoctorWorkspaceTest extends TestCase
         $this->assertSame('Bērziņa', $patient->last_name);
         $this->assertSame('KL-204', $patient->external_patient_code);
         $this->assertSame('Kontroles piezīme', $patient->note);
-        $this->actingAs($doctorA)->get(route('doctor.dashboard'))->assertOk()->assertSee('Anna')->assertSee('Bērziņa')->assertSee('KL-204')->assertSee($patient->patient_code);
+        $this->actingAs($doctorA)->get(route('doctor.dashboard'))->assertOk()->assertSee('Anna')->assertSee('Bērziņa')->assertSee('KL-204')->assertSee($patient->patient_code)->assertSee('data-patient-edit-open="'.$patient->public_id.'"', false)->assertSee('patient-edit-'.$patient->public_id, false)->assertSee('data-patient-edit-close', false)->assertDontSee('<details class="relative">', false);
 
         $this->actingAs($doctorA)->post(route('doctor.patients.store', $organisation), ['first_name' => 'Otra'])->assertRedirect();
         $this->assertDatabaseHas('patient_cases', ['doctor_id' => $doctorA->id, 'slot_number' => 2, 'first_name' => 'Otra']);
