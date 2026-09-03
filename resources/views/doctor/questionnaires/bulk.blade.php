@@ -10,7 +10,8 @@
 <form method="POST" action="{{ route('doctor.questionnaires.bulk.store') }}" class="stack">@csrf
     @foreach($patientCases as $patientCase)<input type="hidden" name="patient_case_ids[]" value="{{ $patientCase->id }}">@endforeach
     <label>{{ __('messages.publication') }}<select name="publication_id" required>@foreach($publications as $publication)<option value="{{ $publication->id }}">{{ $publication->name }} · {{ $publication->formVersion->localizedTitle() }}</option>@endforeach</select></label>
-    <p class="text-sm text-slate-600">{{ __('messages.bulk_assignment_help') }}</p>
+    <label>{{ __('messages.link_validity') }}<select name="expires_in_days">@foreach([7,14,30,60,90] as $days)<option value="{{ $days }}" @selected($days===30)>{{ trans_choice('messages.days_count',$days,['count'=>$days]) }}</option>@endforeach</select></label>
+    <p class="text-sm text-slate-600">{{ __('messages.bulk_links_copy_now') }}</p>
     <button class="btn primary">{{ __('messages.assign') }}</button>
 </form>
 @endif

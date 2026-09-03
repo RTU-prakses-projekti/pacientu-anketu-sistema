@@ -7,6 +7,7 @@ use App\Domain\Patients\PatientQuestionnaireAssignmentService;
 use App\Models\PatientAccessPackage;
 use App\Models\PatientCase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class DoctorQuestionnaireController extends Controller
@@ -39,14 +40,22 @@ class DoctorQuestionnaireController extends Controller
         return view('doctor.questionnaires.bulk', compact('patientCases', 'publications'));
     }
 
-    public function bulkStore(Request $request, PatientQuestionnaireAssignmentService $assignments)
+    public function bulkStore(Request $request, PatientQuestionnaireAssignmentService $assignments, PatientAccessService $access)
     {
         $patientCases = $this->selectedPatients($request);
-        $data = $request->validate(['publication_id' => ['required', 'integer']]);
-        $created = $assignments->assign($request->user(), $patientCases, (int) $data['publication_id']);
+        $data = $request->validate(['publication_id' => ['required', 'integer'], 'expires_in_days' => ['nullable', Rule::in([7, 14, 30, 60, 90])]]);
+        $links = DB::transaction(function () use ($request, $patientCases, $assignments, $access, $data) {
+            $created = $assignments->assign($request->user(), $patientCases, (int) $data['publication_id']);
+            return $created->load('patientCase')->map(function ($assignment) use ($request, $access, $data): array {
+                [, $plainToken] = $access->issue($assignment->patientCase, $request->user()->id, (int) ($data['expires_in_days'] ?? 30));
+                $patient = $assignment->patientCase;
+                return ['name' => trim($patient->first_name.' '.$patient->last_name) ?: $patient->patient_code, 'patient_code' => $patient->patient_code, 'url' => route('patient.access', $plainToken)];
+            })->values();
+        });
 
-        return redirect()->route('doctor.dashboard', ['organisation_id' => $patientCases->first()->organisation_id])
-            ->with('success', __('messages.questionnaire_assigned_to_patients', ['count' => $created->count()]));
+        return response()->view('doctor.questionnaires.bulk-result', ['links' => $links, 'organisationId' => $patientCases->first()->organisation_id])
+            ->header('Cache-Control', 'no-store, private')
+            ->header('Referrer-Policy', 'no-referrer');
     }
 
     public function issueLink(Request $request, PatientCase $patientCase, PatientAccessService $access)

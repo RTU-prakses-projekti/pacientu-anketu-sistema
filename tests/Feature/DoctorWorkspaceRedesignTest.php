@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Domain\Forms\FormAuthoringService;
+use App\Models\AuditLog;
 use App\Models\Form;
 use App\Models\Invitation;
 use App\Models\Organisation;
@@ -90,7 +91,7 @@ class DoctorWorkspaceRedesignTest extends TestCase
             ->assertSee($patientB->patient_code);
     }
 
-    public function test_bulk_assignment_is_atomic_and_creates_distinct_ordered_patient_records_without_links(): void
+    public function test_bulk_assignment_is_atomic_and_creates_distinct_ordered_patient_records_with_individual_links(): void
     {
         $organisation = $this->organisation();
         [$doctor] = $this->member('doctor', $organisation);
@@ -100,10 +101,11 @@ class DoctorWorkspaceRedesignTest extends TestCase
         $this->assignDirectly($patientA, $previous, 4);
         $publication = $this->publication($organisation, 'Bulk questionnaire');
 
-        $this->actingAs($doctor)->post(route('doctor.questionnaires.bulk.store'), [
+        $response = $this->actingAs($doctor)->post(route('doctor.questionnaires.bulk.store'), [
             'patient_case_ids' => [$patientA->id, $patientB->id],
             'publication_id' => $publication->id,
-        ])->assertRedirect(route('doctor.dashboard', ['organisation_id' => $organisation->id]));
+            'expires_in_days' => 30,
+        ])->assertOk()->assertHeader('Cache-Control', 'no-store, private')->assertHeader('Referrer-Policy', 'no-referrer')->assertSee($patientA->patient_code)->assertSee($patientB->patient_code);
 
         $created = PatientFormAssignment::where('publication_id', $publication->id)->orderBy('patient_case_id')->get();
         $this->assertCount(2, $created);
@@ -114,7 +116,17 @@ class DoctorWorkspaceRedesignTest extends TestCase
         $this->assertNotSame($created[0]->invitation->token_hash, $created[1]->invitation->token_hash);
         $this->assertSame($patientA->public_id, $created[0]->invitation->recipient_reference);
         $this->assertSame($patientB->public_id, $created[1]->invitation->recipient_reference);
-        $this->assertSame(0, PatientAccessPackage::count());
+        $this->assertSame(2, PatientAccessPackage::count());
+        $this->assertNotSame(PatientAccessPackage::first()->token_hash, PatientAccessPackage::latest('id')->first()->token_hash);
+        preg_match_all('#/patient-access/([A-Za-z0-9]+)#', $response->getContent(), $matches);
+        $this->assertCount(2, $matches[1]);
+        $this->assertNotSame($matches[1][0], $matches[1][1]);
+        foreach ($matches[1] as $token) {
+            $this->assertDatabaseMissing('patient_access_packages', ['token_hash' => $token]);
+            $package = PatientAccessPackage::where('token_hash', hash('sha256', $token))->firstOrFail();
+            $this->get(route('patient.access', $token))->assertRedirect(route('patient.portal', $package));
+            $this->assertStringNotContainsString($token, AuditLog::query()->get()->pluck('metadata')->toJson());
+        }
     }
 
     public function test_bulk_assignment_rejects_foreign_and_duplicate_patient_ids_without_partial_writes(): void
