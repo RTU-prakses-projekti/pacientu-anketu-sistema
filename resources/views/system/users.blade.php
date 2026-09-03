@@ -18,12 +18,12 @@
     <label>{{ __('messages.password_confirmation') }}<input type="password" name="password_confirmation" required autocomplete="new-password"></label>
     <button class="btn primary">{{ __('messages.create_user') }}</button>
 </form>
-<div class="card overflow-x-auto"><table><thead><tr><th>ID</th><th>{{ __('messages.name') }}</th><th>{{ __('messages.email') }}</th><th>{{ __('messages.global_role') }}</th><th>{{ __('messages.organisations_roles') }}</th><th>{{ __('messages.status') }}</th><th>{{ __('messages.actions') }}</th></tr></thead><tbody>
+<div class="card table-wrap mobile-card-table"><table><thead><tr><th>ID</th><th>{{ __('messages.name') }}</th><th>{{ __('messages.email') }}</th><th>{{ __('messages.global_role') }}</th><th>{{ __('messages.organisations_roles') }}</th><th>{{ __('messages.status') }}</th><th>{{ __('messages.actions') }}</th></tr></thead><tbody>
 @forelse($users as $user)
-<tr><td>{{ $user->id }}</td><td>{{ $user->name }}</td><td>{{ $user->email }}</td><td>{{ $user->globalRoles->reject(fn ($role) => $role->name === 'platform_admin')->map(fn ($role) => $role->label())->join(', ') ?: '—' }}</td><td>
+<tr><td data-label="ID">{{ $user->id }}</td><td data-label="{{ __('messages.name') }}">{{ $user->name }}</td><td data-label="{{ __('messages.email') }}">{{ $user->email }}</td><td data-label="{{ __('messages.global_role') }}">{{ $user->globalRoles->reject(fn ($role) => $role->name === 'platform_admin')->map(fn ($role) => $role->label())->join(', ') ?: '—' }}</td><td data-label="{{ __('messages.organisations_roles') }}">
     @php($activeMemberships = $user->memberships->where('is_active', true)->filter(fn ($membership) => $membership->organisation?->is_active && $membership->roles->isNotEmpty()))
     @forelse($activeMemberships as $membership)<div>{{ $membership->organisation->name }} — {{ $membership->roles->map(fn ($role) => $role->label())->join(', ') }}</div>@empty — @endforelse
-</td><td>{{ $user->is_active ? __('messages.active') : __('messages.inactive') }}</td><td><div class="actions">
+</td><td data-label="{{ __('messages.status') }}">{{ $user->is_active ? __('messages.active') : __('messages.inactive') }}</td><td data-label="{{ __('messages.actions') }}"><div class="actions">
     <a class="btn" href="{{ route('system.users.roles.edit', $user) }}">{{ __('messages.change_roles') }}</a>
     @unless(auth()->user()->is($user))
         <form method="POST" action="{{ route('users.toggle', $user) }}">@csrf<button class="btn">{{ $user->is_active ? __('messages.disable') : __('messages.enable') }}</button></form>

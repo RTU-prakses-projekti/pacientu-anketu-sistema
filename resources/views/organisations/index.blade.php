@@ -1,9 +1,9 @@
 @extends('layouts.app')
 @section('content')
 <div class="page-header"><h1>{{ __('messages.organisations') }}</h1><a class="btn primary" href="{{ route('organisations.create') }}">{{ __('messages.new_organisation') }}</a></div>
-<div class="table-wrap"><table><thead><tr><th>{{ __('messages.name') }}</th><th>{{ __('messages.members') }}</th><th>{{ __('messages.questionnaires_label') }}</th><th>{{ __('messages.actions') }}</th></tr></thead><tbody>
+<div class="table-wrap mobile-card-table"><table><thead><tr><th>{{ __('messages.name') }}</th><th>{{ __('messages.members') }}</th><th>{{ __('messages.questionnaires_label') }}</th><th>{{ __('messages.actions') }}</th></tr></thead><tbody>
 @foreach($organisations as $organisation)
-    <tr><td>{{ $organisation->name }}</td><td>{{ $organisation->memberships_count }}</td><td>{{ $organisation->forms_count }}</td><td>
+    <tr><td data-label="{{ __('messages.name') }}">{{ $organisation->name }}</td><td data-label="{{ __('messages.members') }}">{{ $organisation->memberships_count }}</td><td data-label="{{ __('messages.questionnaires_label') }}">{{ $organisation->forms_count }}</td><td data-label="{{ __('messages.actions') }}">
         <div class="actions">
             <a href="{{ route('organisations.edit', $organisation) }}">{{ __('messages.edit') }}</a>
             <a href="{{ route('forms.index', $organisation) }}">{{ __('messages.questionnaires_label') }}</a>

@@ -30,27 +30,27 @@
     </form>
 </details>
 
-<form id="bulk-selection-form" method="POST" action="{{ route('doctor.questionnaires.bulk.create') }}" class="actions mb-3">@csrf
+<form id="bulk-selection-form" method="POST" action="{{ route('doctor.questionnaires.bulk.create') }}" class="actions doctor-bulk-actions mb-3">@csrf
     <label class="check"><input type="checkbox" data-patient-select-all> {{ __('messages.select_all_visible') }}</label>
     <button class="btn primary" type="submit">{{ __('messages.assign_questionnaire') }}</button>
     <a class="btn" href="{{ route('doctor.patients.export', $selectedMembership->organisation) }}" data-patient-export>{{ __('messages.export_answers') }}</a>
 </form>
 
-<div class="table-wrap doctor-overview-table"><table><thead><tr>
+<div class="table-wrap doctor-overview-table mobile-card-table"><table><thead><tr>
     <th class="selection-column"><span class="sr-only">{{ __('messages.select_patient') }}</span></th>
     <th>{{ __('messages.slot_number') }}</th><th>{{ __('messages.patient') }}</th><th>{{ __('messages.patient_id') }}</th><th><span class="cursor-help" title="{{ __('messages.research_id_help') }}">{{ __('messages.research_id') }} <span aria-hidden="true">ⓘ</span><span class="sr-only">{{ __('messages.research_id_help') }}</span></span></th><th>{{ __('messages.questionnaires') }}</th><th>{{ __('messages.status') }}</th><th>{{ __('messages.actions') }}</th>
 </tr></thead><tbody>
 @forelse($patientCases as $patientCase)
 @php($notStarted = max(0, $patientCase->assignments_count - $patientCase->completed_assignments_count - $patientCase->in_progress_assignments_count))
 <tr data-patient-row="{{ $patientCase->public_id }}">
-    <td class="selection-column"><input type="checkbox" form="bulk-selection-form" name="patient_case_ids[]" value="{{ $patientCase->id }}" data-patient-select aria-label="{{ __('messages.select_patient') }} {{ $patientCase->slot_number }}"></td>
-    <td>{{ $patientCase->slot_number }}</td>
-    <td><strong>{{ trim($patientCase->first_name.' '.$patientCase->last_name) ?: '—' }}</strong></td>
-    <td>{{ $patientCase->external_patient_code ?: '—' }}</td>
-    <td><code>{{ $patientCase->patient_code }}</code></td>
-    <td>{{ trans_choice('messages.assigned_count', $patientCase->assignments_count, ['count' => $patientCase->assignments_count]) }}</td>
-    <td><span class="patient-summary-status">{{ __('messages.completed_count', ['count' => $patientCase->completed_assignments_count]) }}</span><br><span class="text-sm text-slate-600">{{ __('messages.in_progress_count', ['count' => $patientCase->in_progress_assignments_count]) }} · {{ __('messages.not_started_count', ['count' => $notStarted]) }}</span></td>
-    <td class="doctor-row-actions">
+    <td class="selection-column" data-label="{{ __('messages.select_patient') }}"><input type="checkbox" form="bulk-selection-form" name="patient_case_ids[]" value="{{ $patientCase->id }}" data-patient-select aria-label="{{ __('messages.select_patient') }} {{ $patientCase->slot_number }}"></td>
+    <td data-label="{{ __('messages.slot_number') }}">{{ $patientCase->slot_number }}</td>
+    <td data-label="{{ __('messages.patient') }}"><strong>{{ trim($patientCase->first_name.' '.$patientCase->last_name) ?: '—' }}</strong></td>
+    <td data-label="{{ __('messages.patient_id') }}">{{ $patientCase->external_patient_code ?: '—' }}</td>
+    <td data-label="{{ __('messages.research_id') }}"><code>{{ $patientCase->patient_code }}</code></td>
+    <td data-label="{{ __('messages.questionnaires') }}">{{ trans_choice('messages.assigned_count', $patientCase->assignments_count, ['count' => $patientCase->assignments_count]) }}</td>
+    <td data-label="{{ __('messages.status') }}"><span class="patient-summary-status">{{ __('messages.completed_count', ['count' => $patientCase->completed_assignments_count]) }}</span><br><span class="text-sm text-slate-600">{{ __('messages.in_progress_count', ['count' => $patientCase->in_progress_assignments_count]) }} · {{ __('messages.not_started_count', ['count' => $notStarted]) }}</span></td>
+    <td class="doctor-row-actions" data-label="{{ __('messages.actions') }}">
         <button class="btn" type="button" data-patient-edit-open="{{ $patientCase->public_id }}">{{ __('messages.edit') }}</button>
         <a class="btn" href="{{ route('doctor.questionnaires.index', $patientCase) }}">{{ __('messages.questionnaires') }}</a>
     </td>

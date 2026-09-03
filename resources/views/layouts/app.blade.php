@@ -11,7 +11,7 @@
 <header class="border-b border-slate-200 bg-white">
     <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <a class="text-lg font-bold text-indigo-700" href="{{ auth()->check() ? (auth()->user()->isDoctorOnly() ? route('doctor.dashboard') : route('dashboard')) : route('login') }}">{{ __('messages.product_name') }}</a>
-        <nav class="flex flex-wrap items-center gap-3 text-sm" aria-label="Main navigation">
+        <nav class="app-nav flex flex-wrap items-center gap-3 text-sm" aria-label="Main navigation">
             @auth
                 @if(auth()->user()->isDoctorOnly())
                     <a href="{{ route('doctor.dashboard') }}">{{ __('messages.doctor_dashboard') }}</a>
@@ -26,7 +26,7 @@
             @endauth
     @guest<a href="{{ route('login') }}">{{ __('messages.login') }}</a>@endguest
             <a href="{{ route('about') }}">{{ __('messages.about') }}</a>
-            <div class="flex gap-1" aria-label="{{ __('messages.language') }}">
+            <div class="language-switcher flex gap-1" aria-label="{{ __('messages.language') }}">
                 @foreach(config('form_locales.supported') as $code)<form method="POST" action="{{ route('locale',$code) }}" data-locale-form data-locale="{{ $code }}">@csrf<button class="rounded px-2 py-1 {{ app()->getLocale()===$code?'bg-indigo-100 font-semibold':'' }}">{{ strtoupper($code) }}</button></form>@endforeach
             </div>
         </nav>

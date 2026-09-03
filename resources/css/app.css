@@ -96,3 +96,50 @@
   .status-square.not-completed { @apply border-slate-300 bg-slate-100 text-slate-500; }
   .patient-status-complete { @apply bg-emerald-100 text-emerald-800; }
 }
+
+@media (max-width: 767px) {
+  html { overflow-x: hidden; }
+  .app-nav { width: 100%; justify-content: flex-start; gap: 0.75rem; }
+  .app-nav > a, .app-nav > span, .app-nav > form { max-width: 100%; overflow-wrap: anywhere; }
+  .app-nav .language-switcher { margin-left: auto; flex-shrink: 0; }
+  .page-header { align-items: stretch; }
+  .page-header > .actions { width: 100%; }
+  .page-header > .actions > a, .page-header > .actions > form,
+  .page-header > .actions > form > button { max-width: 100%; }
+  .actions > a.btn, .actions > form { flex: 1 1 auto; }
+  .actions > form > button.btn, .actions > a.btn { width: 100%; }
+  .form-grid { grid-template-columns: minmax(0, 1fr); }
+  input:not([type=checkbox]):not([type=radio]):not([type=range]), textarea, select { font-size: 16px; }
+  input:not([type=checkbox]):not([type=radio]):not([type=range]), select { min-height: 2.75rem; }
+  .card, .auth-card, .form-page { padding: 1rem; }
+  .form-page { overflow-wrap: anywhere; }
+  .form-component, .form-component legend, .help { overflow-wrap: anywhere; }
+  .list-row { flex-direction: column; gap: 0.5rem; }
+  .runner-nav { flex-direction: column; }
+  .runner-nav .btn { width: 100%; }
+  .runner-progress { top: 0; }
+  .table-wrap { max-width: 100%; }
+  .mobile-card-table { overflow: visible; }
+  .mobile-card-table table { min-width: 0; width: 100%; }
+  .mobile-card-table thead { display: none; }
+  .mobile-card-table tbody, .mobile-card-table tr, .mobile-card-table td { display: block; width: 100%; }
+  .mobile-card-table tr { @apply mb-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm; }
+  .mobile-card-table td { @apply grid grid-cols-[minmax(7rem,38%)_minmax(0,1fr)] gap-3 border-0 px-0 py-2; overflow-wrap: anywhere; }
+  .mobile-card-table td::before { content: attr(data-label); @apply font-semibold text-slate-600; }
+  .mobile-card-table td.selection-column { display: flex; align-items: center; gap: 0.75rem; }
+  .mobile-card-table td.selection-column::before { content: none; }
+  .mobile-card-table td[colspan] { display: block; }
+  .mobile-card-table td[colspan]::before { content: none; }
+  .table-wrap th, .table-wrap td { white-space: normal; }
+  code { overflow-wrap: anywhere; word-break: break-word; }
+  .doctor-row-actions { min-width: 0; }
+  .doctor-row-actions { display: block; }
+  .doctor-row-actions::before { content: attr(data-label); @apply mb-2 block font-semibold text-slate-600; }
+  .doctor-row-actions > * { display: block; width: 100%; max-width: 100%; margin-bottom: 0.5rem; }
+  .doctor-row-actions > *:last-child { margin-bottom: 0; }
+  .doctor-bulk-actions { display: grid; gap: 0.75rem; align-items: stretch; }
+  .doctor-bulk-actions .check { justify-self: start; }
+  .doctor-bulk-actions > .btn,
+  .doctor-bulk-actions > a.btn,
+  .doctor-bulk-actions > button.btn { width: 100%; }
+}
