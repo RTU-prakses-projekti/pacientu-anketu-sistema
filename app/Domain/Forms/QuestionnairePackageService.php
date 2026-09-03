@@ -38,7 +38,7 @@ class QuestionnairePackageService
         abort_unless($version->form_id === $form->id, 404);
         $manifest = $this->manifest($form, $version);
         $hash = $manifest['content_hash'];
-        $name = Str::limit(Str::slug($form->name) ?: 'anketa', 80, '').'--'.substr($hash, 0, 8);
+        $name = $this->packageName($form, $hash);
         $root = $this->root();
         $destination = $root.DIRECTORY_SEPARATOR.$name;
         File::ensureDirectoryExists($root);
@@ -70,6 +70,41 @@ class QuestionnairePackageService
 
         $this->audit->record('questionnaire_package.exported', $version, $form->organisation_id, ['content_hash' => $hash, 'package_name' => $name]);
         return ['package_name' => $name, 'relative_path' => 'questionnaires/'.$name, 'content_hash' => $hash, 'duplicate' => false];
+    }
+
+    /**
+     * Build a portable browser download without writing a Git package directory.
+     * The manifest and asset serialization remains the same as the Git export.
+     */
+    public function exportZip(Form $form, FormVersion $version): array
+    {
+        abort_unless($version->form_id === $form->id, 404);
+        $manifest = $this->manifest($form, $version);
+        $hash = $manifest['content_hash'];
+        $name = $this->packageName($form, $hash);
+        $directory = storage_path('framework/questionnaire-downloads');
+        $path = $directory.DIRECTORY_SEPARATOR.$name.'.zip';
+        File::ensureDirectoryExists($directory);
+
+        $zip = new \ZipArchive();
+        if ($zip->open($path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) $this->invalid('package');
+        try {
+            if (!$zip->addFromString('manifest.json', $this->prettyJson($manifest).PHP_EOL)) $this->invalid('package');
+            foreach ($manifest['attachments'] as $attachment) {
+                $source = $version->attachments->firstWhere('sha256', $attachment['sha256']);
+                if (!$source || !Storage::disk($source->disk)->exists($source->storage_path)) $this->invalid('attachments');
+                $sourcePath = Storage::disk($source->disk)->path($source->storage_path);
+                if (!hash_equals($attachment['sha256'], hash_file('sha256', $sourcePath))) $this->invalid('attachments');
+                if (!$zip->addFile($sourcePath, $attachment['asset_path'])) $this->invalid('attachments');
+            }
+            $zip->close();
+            $this->audit->record('questionnaire_package.downloaded', $version, $form->organisation_id, ['content_hash' => $hash, 'package_name' => $name]);
+            return ['path' => $path, 'filename' => $name.'.zip', 'content_hash' => $hash];
+        } catch (Throwable $exception) {
+            $zip->close();
+            if (File::exists($path)) File::delete($path);
+            throw $exception;
+        }
     }
 
     public function discover(?Organisation $organisation = null, bool $includeInvalid = false): array
@@ -565,6 +600,11 @@ class QuestionnairePackageService
         return $key;
     }
     private function root(): string { return rtrim((string) config('questionnaire_packages.root', base_path('questionnaires')), '\\/'); }
+
+    private function packageName(Form $form, string $hash): string
+    {
+        return Str::limit(Str::slug($form->name) ?: 'anketa', 80, '').'--'.substr($hash, 0, 8);
+    }
 
     private function uniqueSlug(int $organisationId, string $name): string
     {

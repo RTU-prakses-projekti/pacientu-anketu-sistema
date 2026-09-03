@@ -85,6 +85,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/organisations/{organisation}/forms', [FormController::class, 'index'])->name('forms.index');
     Route::get('/organisations/{organisation}/questionnaires/import', [QuestionnairePackageController::class, 'index'])->name('questionnaires.index');
     Route::post('/organisations/{organisation}/questionnaires/import', [QuestionnairePackageController::class, 'import'])->name('questionnaires.import');
+    Route::post('/organisations/{organisation}/questionnaires/import-file', [QuestionnairePackageController::class, 'importFile'])->name('questionnaires.import-file');
     Route::get('/organisations/{organisation}/forms/create', [FormController::class, 'create'])->name('forms.create');
     Route::post('/forms', [FormController::class, 'store'])->name('forms.store');
     Route::get('/forms/{form}', [FormController::class, 'show'])->name('forms.show');
@@ -95,6 +96,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/forms/{form}/versions/{version}', [BuilderController::class, 'updateVersion'])->name('builder.versions.update');
     Route::post('/forms/{form}/versions/{version}/publish', [FormController::class, 'publish'])->name('forms.publish');
     Route::post('/forms/{form}/versions/{version}/export-questionnaire', [QuestionnairePackageController::class, 'export'])->name('questionnaires.export');
+    Route::post('/forms/{form}/versions/{version}/export-questionnaire-file', [QuestionnairePackageController::class, 'exportFile'])->name('questionnaires.export-file');
     Route::get('/forms/{form}/versions/{version}/questionnaires/import-part', [QuestionnairePackageController::class, 'parts'])->name('questionnaires.parts');
     Route::post('/forms/{form}/versions/{version}/questionnaires/import-part', [QuestionnairePackageController::class, 'importPart'])->name('questionnaires.import-part');
     Route::post('/forms/{form}/versions/{version}/new-draft', [FormController::class, 'newDraft'])->name('forms.new-draft');

@@ -15,6 +15,8 @@ use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -94,6 +96,105 @@ class QuestionnairePackageExchangeTest extends TestCase
         $response = $this->post(route('questionnaires.export', [$form, $version]))->assertRedirect();
         $response->assertSessionHas('success');
         $this->assertCount(1, $this->packages()->discover());
+    }
+
+    public function test_browser_export_returns_a_valid_zip_with_the_existing_package_structure(): void
+    {
+        [$creator, , $form, $version] = $this->graph();
+        $response = $this->actingAs($creator)->post(route('questionnaires.export-file', [$form, $version]));
+        $response->assertDownload($form->slug.'--'.substr($this->packages()->manifest($form, $version)['content_hash'], 0, 8).'.zip');
+        $path = $response->baseResponse->getFile()->getPathname();
+        $zip = new \ZipArchive();
+        $this->assertTrue($zip->open($path) === true);
+        $this->assertSame(['manifest.json'], [$zip->getNameIndex(0)]);
+        $this->assertNotFalse($zip->getFromName('manifest.json'));
+        $zip->close();
+    }
+
+    public function test_production_browser_export_downloads_a_zip_without_git_filesystem_write_and_includes_assets(): void
+    {
+        Storage::fake('local');
+        [$creator, $organisation, $form, $version] = $this->graph();
+        Storage::disk('local')->put('attachments/production.png', 'production-asset');
+        $attachment = Attachment::create(['organisation_id' => $organisation->id, 'attachable_type' => $version->getMorphClass(), 'attachable_id' => $version->id,
+            'uploaded_by' => $creator->id, 'disk' => 'local', 'storage_path' => 'attachments/production.png', 'original_name' => 'production.png',
+            'mime_type' => 'image/png', 'size' => 15, 'sha256' => hash('sha256', 'production-asset'), 'status' => 'ready']);
+        app(FormAuthoringService::class)->addComponent($version, $version->sections()->first(), ['type' => 'image', 'label' => 'Production asset', 'settings' => ['attachment_id' => $attachment->id], 'options' => []]);
+        $original = app()->environment(); app()->detectEnvironment(fn () => 'production');
+        try {
+            $response = $this->withSession(['_token' => 'test-token'])->actingAs($creator)->post(route('questionnaires.export-file', [$form, $version]), ['_token' => 'test-token']);
+            $response->assertDownload();
+            $path = $response->baseResponse->getFile()->getPathname();
+            $zip = new \ZipArchive(); $this->assertTrue($zip->open($path) === true);
+            $this->assertNotFalse($zip->getFromName('manifest.json'));
+            $names = []; for ($index = 0; $index < $zip->numFiles; $index++) $names[] = $zip->getNameIndex($index);
+            $this->assertTrue(collect($names)->contains(fn ($name) => str_starts_with($name, 'assets/')));
+            $zip->close();
+            $this->assertFalse(File::isDirectory($this->packageRoot));
+            File::delete($path);
+        } finally { app()->detectEnvironment(fn () => $original); }
+    }
+
+    public function test_production_git_filesystem_export_remains_denied(): void
+    {
+        [$creator, , $form, $version] = $this->graph();
+        $original = app()->environment(); app()->detectEnvironment(fn () => 'production');
+        try {
+            $this->expectException(AuthorizationException::class);
+            $this->packages()->export($form, $version);
+        } finally { app()->detectEnvironment(fn () => $original); }
+    }
+
+    public function test_unauthorised_user_cannot_download_questionnaire_zip(): void
+    {
+        [$creator, $organisation, $form, $version] = $this->graph();
+        [$unauthorised] = $this->member('doctor', $organisation);
+        $this->actingAs($unauthorised)->post(route('questionnaires.export-file', [$form, $version]))->assertForbidden();
+    }
+
+    public function test_browser_import_of_exported_zip_creates_a_draft(): void
+    {
+        [$creator, , $form, $version] = $this->graph();
+        $export = $this->packages()->export($form, $version);
+        $zipPath = $this->zipPackage($export['package_name']);
+        $target = $this->organisation();
+        $membership = OrganisationMembership::create(['organisation_id' => $target->id, 'user_id' => $creator->id, 'is_active' => true]);
+        $membership->roles()->attach(Role::where('name', 'form_creator')->firstOrFail());
+        $response = $this->actingAs($creator)->post(route('questionnaires.import-file', $target), [
+            'package_file' => new UploadedFile($zipPath, 'questionnaire.zip', 'application/zip', null, true),
+        ]);
+        $response->assertRedirect();
+        $imported = Form::where('organisation_id', $target->id)->firstOrFail();
+        $this->assertSame('draft', $imported->status);
+        $this->assertSame('draft', $imported->versions()->firstOrFail()->status);
+        File::delete($zipPath);
+    }
+
+    public function test_invalid_and_traversal_zip_uploads_are_rejected_without_import(): void
+    {
+        [$creator, $organisation] = $this->member('form_creator', $this->organisation());
+        $before = Form::count();
+        $invalidPath = storage_path('framework/invalid-questionnaire.zip');
+        File::put($invalidPath, 'not a zip');
+        $this->actingAs($creator)->post(route('questionnaires.import-file', $organisation), [
+            'package_file' => new UploadedFile($invalidPath, 'invalid.zip', 'application/zip', null, true),
+        ])->assertSessionHasErrors('package_file');
+        File::delete($invalidPath);
+
+        $traversalPath = storage_path('framework/traversal-questionnaire.zip');
+        $zip = new \ZipArchive(); $zip->open($traversalPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE); $zip->addFromString('../manifest.json', '{}'); $zip->close();
+        $this->actingAs($creator)->post(route('questionnaires.import-file', $organisation), [
+            'package_file' => new UploadedFile($traversalPath, 'traversal.zip', 'application/zip', null, true),
+        ])->assertSessionHasErrors('package_file');
+        File::delete($traversalPath);
+        $this->assertSame($before, Form::count());
+    }
+
+    public function test_browser_file_import_requires_questionnaire_authoring_access(): void
+    {
+        $organisation = $this->organisation(); [$unauthorised] = $this->member('doctor', $organisation);
+        $file = UploadedFile::fake()->create('questionnaire.zip', 1, 'application/zip');
+        $this->actingAs($unauthorised)->post(route('questionnaires.import-file', $organisation), ['package_file' => $file])->assertForbidden();
     }
 
     public function test_attachment_exports_with_hash_and_import_remaps_it_to_private_storage(): void
@@ -330,6 +431,12 @@ class QuestionnairePackageExchangeTest extends TestCase
 
     private function packages(): QuestionnairePackageService { return app(QuestionnairePackageService::class); }
     private function manifest(string $packageName): array { return json_decode(File::get($this->packageRoot.DIRECTORY_SEPARATOR.$packageName.DIRECTORY_SEPARATOR.'manifest.json'), true, 512, JSON_THROW_ON_ERROR); }
+    private function zipPackage(string $packageName): string
+    {
+        $path = storage_path('framework/'.$packageName.'.zip'); $zip = new \ZipArchive(); $this->assertTrue($zip->open($path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true);
+        foreach (File::allFiles($this->packageRoot.DIRECTORY_SEPARATOR.$packageName) as $file) $zip->addFile($file->getPathname(), str_replace(DIRECTORY_SEPARATOR, '/', Str::after($file->getPathname(), $this->packageRoot.DIRECTORY_SEPARATOR.$packageName.DIRECTORY_SEPARATOR)));
+        $zip->close(); return $path;
+    }
     private function organisation(): Organisation { return Organisation::create(['name' => Str::random(8), 'slug' => Str::lower(Str::random(10)), 'is_active' => true]); }
     private function member(string $role, Organisation $organisation): array
     {
