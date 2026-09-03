@@ -70,6 +70,10 @@
   .help { @apply mb-2 text-sm text-slate-500; }
   .multiline-text { white-space: pre-wrap; }
   .runner-header { @apply mb-5 flex flex-wrap justify-between gap-4 rounded-xl bg-white p-5 shadow-sm; }
+  .runner-progress { @apply sticky top-0 z-10 mb-5 flex items-center gap-3 rounded-xl border border-slate-200 bg-white/95 p-3 shadow-sm backdrop-blur; }
+  .runner-progress .progress-track { @apply mt-0 flex-1; }
+  .form-component[data-invalid="1"] { @apply rounded-lg bg-red-50 p-3 ring-2 ring-red-200; }
+  .required-error { @apply mt-2 text-sm font-medium text-red-700; }
   .progress-track { @apply mt-3 h-2 w-64 max-w-full overflow-hidden rounded-full bg-slate-200; }
   .progress-track > div { @apply h-full bg-indigo-600 transition-all; width: 0; }
   .timer { @apply block text-3xl tabular-nums text-indigo-700; }

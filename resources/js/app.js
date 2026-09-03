@@ -183,6 +183,15 @@ if (runner) {
     let changeSequence = 0;
     let retryPending = false;
     const conditions = JSON.parse(runner.dataset.conditions || '[]');
+    const mutationId = () => {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+        const bytes = new Uint8Array(16);
+        if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') crypto.getRandomValues(bytes);
+        else for (let index = 0; index < bytes.length; index += 1) bytes[index] = Math.floor(Math.random() * 256);
+        bytes[6] = (bytes[6] & 0x0f) | 0x40; bytes[8] = (bytes[8] & 0x3f) | 0x80;
+        const hex = [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+        return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+    };
 
     const values = () => {
         const result = {};
@@ -271,7 +280,7 @@ if (runner) {
         const savedSequence = changeSequence;
         activeSave = (async () => { setStatus('saving');
         try {
-            const response = await fetch(runner.dataset.autosaveUrl, {method: 'POST', headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf()}, body: JSON.stringify({expected_revision: revision, client_mutation_id: crypto.randomUUID(), answers: values()})});
+            const response = await fetch(runner.dataset.autosaveUrl, {method: 'POST', headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf()}, body: JSON.stringify({expected_revision: revision, client_mutation_id: mutationId(), answers: values()})});
             const data = await response.json();
             if (!response.ok) throw new Error(Object.values(data.errors || {}).flat().join(' ') || data.message || 'Save failed');
             revision = Number(data.revision); runner.dataset.revision = String(revision); dirty = changeSequence !== savedSequence; retryPending = false; setStatus(dirty ? 'saving' : 'saved');
@@ -300,17 +309,59 @@ if (runner) {
     window.addEventListener('offline', () => setStatus('offline'));
     window.addEventListener('beforeunload', (event) => { if (dirty || activeSave) { event.preventDefault(); event.returnValue = ''; } });
     const visibleIndexes = () => pages.map((item,index)=>item.dataset.conditionVisible==='1'?index:null).filter((index)=>index!==null);
-    const pageIsValid = () => { const invalid=[...pages[page].querySelectorAll('[data-answer]')].find((control)=>!control.closest('[data-component]').hidden&&!control.checkValidity()); if(invalid){invalid.reportValidity();return false;}return true; };
+    const pageIsValid = (pageIndex = page, showError = true) => {
+        conditionalVisibility();
+        const components = [...pages[pageIndex].querySelectorAll('[data-component][data-required="1"]')].filter((component) => !component.hidden);
+        components.forEach((component) => { component.dataset.invalid = '0'; const error = component.querySelector('[data-required-error]'); if (error) error.hidden = true; component.querySelectorAll('[data-answer]').forEach((control) => control.removeAttribute('aria-invalid')); });
+        const invalid = components.find((component) => {
+            const controls = [...component.querySelectorAll('[data-answer]')];
+            if (!controls.length) return false;
+            const first = controls[0];
+            const answered = first.type === 'checkbox' && controls.length > 1 ? controls.some((control) => control.checked) : first.type === 'checkbox' ? first.checked : first.type === 'radio' ? controls.some((control) => control.checked) : String(first.value ?? '').trim() !== '';
+            if (answered) return false;
+            component.dataset.invalid = '1';
+            const error = component.querySelector('[data-required-error]');
+            if (error) { error.textContent = runner.dataset.requiredMessage; error.hidden = false; }
+            controls.forEach((control) => control.setAttribute('aria-invalid', 'true'));
+            return true;
+        });
+        if (!invalid || !showError) return !invalid;
+        const focusTarget = invalid.querySelector('[data-answer]');
+        focusTarget?.focus({preventScroll: true});
+        invalid.scrollIntoView({behavior: 'smooth', block: 'center'});
+        return false;
+    };
+    const allPagesAreValid = () => {
+        conditionalVisibility();
+        for (const pageIndex of visibleIndexes()) {
+            if (pageIsValid(pageIndex, false)) continue;
+            page = pageIndex;
+            showPage();
+            pageIsValid(pageIndex, true);
+            return false;
+        }
+        return true;
+    };
     previous.addEventListener('click', () => { const indexes=visibleIndexes();page=indexes[Math.max(0,indexes.indexOf(page)-1)]??page;showPage(); });
     next.addEventListener('click', async () => { if (!pageIsValid()) return; if (!(await saveNow())) return; const indexes=visibleIndexes();page=indexes[Math.min(indexes.length-1,indexes.indexOf(page)+1)]??page;showPage(); });
 
     const finalize = async () => {
+        if (!allPagesAreValid()) return false;
         clearTimeout(timer);
-        while (activeSave || (runner.dataset.autosaveEnabled === '1' && dirty)) { if (!(await saveNow())) return; }
+        while (activeSave || (runner.dataset.autosaveEnabled === '1' && dirty)) { if (!(await saveNow())) return false; }
         submit.disabled = true;
-        const response = await fetch(runner.dataset.finalizeUrl, {method: 'POST', headers: {'Content-Type':'application/json','Accept': 'application/json', 'X-CSRF-TOKEN': csrf()}, body:JSON.stringify({expected_revision:revision,client_mutation_id:crypto.randomUUID(),answers:values()})});
-        const data = await response.json(); if (!response.ok) { status.textContent = Object.values(data.errors || {}).flat().join(' ') || data.message; status.dataset.state = 'error'; return; }
-        revision=Number(data.revision);dirty = false; window.location.href = data.redirect;
+        try {
+            const response = await fetch(runner.dataset.finalizeUrl, {method: 'POST', headers: {'Content-Type':'application/json','Accept': 'application/json', 'X-CSRF-TOKEN': csrf()}, body:JSON.stringify({expected_revision:revision,client_mutation_id:mutationId(),answers:values()})});
+            const raw = await response.text();
+            let data;
+            try { data = JSON.parse(raw); } catch { const error = new Error(runner.dataset.statusUnexpectedResponse); error.status = response.status; throw error; }
+            if (!response.ok) { const error = new Error(Object.values(data.errors || {}).flat().join(' ') || data.message || runner.dataset.statusSubmitError); error.status = response.status; throw error; }
+            if (!data || !data.redirect) { const error = new Error(runner.dataset.statusUnexpectedResponse); error.status = response.status; throw error; }
+            revision=Number(data.revision); dirty = false; window.location.href = data.redirect; return true;
+        } catch (error) {
+            const message = error.status === 409 ? runner.dataset.statusRevisionConflict : error.status === 422 ? error.message : error.message || runner.dataset.statusSubmitError;
+            status.textContent = message; status.dataset.state = 'error'; status.removeAttribute('title'); status.scrollIntoView({behavior: 'smooth', block: 'center'}); return false;
+        } finally { submit.disabled = false; }
     };
     form.addEventListener('submit', async (event) => { event.preventDefault(); await finalize(); submit.disabled=false; });
 

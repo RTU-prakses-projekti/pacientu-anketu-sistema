@@ -114,7 +114,7 @@ class PatientQuestionnairePortalTest extends TestCase
         $this->postJson(route('submissions.autosave', $submission), ['expected_revision' => 0, 'client_mutation_id' => (string) Str::uuid(), 'answers' => [$component->id => 'Saglabāta atbilde']])->assertOk()->assertJsonPath('revision', 1);
         $this->flushSession(); $this->get(route('patient.access', $token));
         $this->post(route('patient.assignments.start', [$package, $assignment]))->assertRedirect(route('submissions.take', $submission));
-        $this->get(route('submissions.take', $submission))->assertOk()->assertSee('Saglabāta atbilde');
+        $this->get(route('submissions.take', $submission))->assertOk()->assertSee('Saglabāta atbilde')->assertSee('class="runner-progress"', false)->assertSee('data-progress-bar', false)->assertSee('data-required="1"', false)->assertSee(__('messages.required_question'));
         $this->assertDatabaseHas('submission_answers', ['form_submission_id' => $submission->id, 'form_component_id' => $component->id]);
     }
 

@@ -5,7 +5,7 @@
     $description = $component->localizedDescription($contentLocale);
     $helpText = $component->localizedHelpText($contentLocale);
 @endphp
-<div class="form-component" data-component="{{ $component->id }}" data-default-visible="{{ $component->visible ? 1 : 0 }}" @if(!$component->visible)hidden @endif>
+<div class="form-component" data-component="{{ $component->id }}" data-default-visible="{{ $component->visible ? 1 : 0 }}" data-required="{{ $component->is_required ? 1 : 0 }}" @if(!$component->visible)hidden @endif>
 @if($showFallbackIndicators && $component->usesContentFallback($contentLocale))<span class="fallback-indicator">{{ __('messages.fallback_used') }}</span>@endif
 @if($component->type==='form_title')<h1>{{ $label }}</h1>
 @elseif($component->type==='heading')<h3>{{ $label }}</h3>
@@ -37,6 +37,6 @@
 @php($rangeId='range-'.$component->id)
 <div class="scale-labels"><span>{{ $component->localizedMinimumLabel($contentLocale) }}</span><span>{{ $component->localizedMaximumLabel($contentLocale) }}</span></div><div data-range-control><input data-answer data-range-input class="scale-range" type="range" id="{{ $rangeId }}" name="{{ $name }}" value="{{ $rangeValue }}" min="{{ $rangeMinimum }}" max="{{ $rangeMaximum }}" step="1" aria-describedby="{{ $rangeId }}-value"><p class="scale-current">{{ __('messages.selected_value') }}: <output data-range-output id="{{ $rangeId }}-value" for="{{ $rangeId }}">{{ $rangeValue }}</output></p></div>@break
 @case('consent_checkbox')<label class="choice consent"><input data-answer type="checkbox" name="{{ $name }}" value="1" @checked((bool)$value) @required($component->is_required)> {{ $component->localizedConsentText($contentLocale) }}</label>@break
-@endswitch</fieldset>
+@endswitch<p data-required-error class="required-error" hidden>{{ __('messages.required_question', [], $contentLocale) }}</p></fieldset>
 @endif
 </div>
