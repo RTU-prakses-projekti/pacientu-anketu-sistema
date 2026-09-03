@@ -25,6 +25,7 @@
                 <form method="POST" action="{{ route('logout') }}">@csrf<button class="link-button">{{ __('messages.logout') }}</button></form>
             @endauth
     @guest<a href="{{ route('login') }}">{{ __('messages.login') }}</a>@endguest
+            <a href="{{ route('about') }}">{{ __('messages.about') }}</a>
             <div class="flex gap-1" aria-label="{{ __('messages.language') }}">
                 @foreach(config('form_locales.supported') as $code)<form method="POST" action="{{ route('locale',$code) }}" data-locale-form data-locale="{{ $code }}">@csrf<button class="rounded px-2 py-1 {{ app()->getLocale()===$code?'bg-indigo-100 font-semibold':'' }}">{{ strtoupper($code) }}</button></form>@endforeach
             </div>
@@ -37,7 +38,6 @@
     @if($errors->any())<div class="notice error" role="alert"><strong>{{ __('messages.validation_errors') }}</strong><ul class="list-disc pl-6">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
     @yield('content')
 </main>
-<footer class="mx-auto max-w-7xl px-4 py-8 text-xs text-slate-500"><p>{{ __('messages.security_warning') }}</p></footer>
 @stack('scripts')
 </body>
 </html>
