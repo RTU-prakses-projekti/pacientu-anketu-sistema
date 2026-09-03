@@ -38,7 +38,7 @@
 
 <div class="table-wrap doctor-overview-table"><table><thead><tr>
     <th class="selection-column"><span class="sr-only">{{ __('messages.select_patient') }}</span></th>
-    <th>{{ __('messages.slot_number') }}</th><th>{{ __('messages.patient') }}</th><th>{{ __('messages.patient_id') }}</th><th>{{ __('messages.research_id') }}</th><th>{{ __('messages.questionnaires') }}</th><th>{{ __('messages.status') }}</th><th>{{ __('messages.actions') }}</th>
+    <th>{{ __('messages.slot_number') }}</th><th>{{ __('messages.patient') }}</th><th>{{ __('messages.patient_id') }}</th><th><span class="cursor-help" title="{{ __('messages.research_id_help') }}">{{ __('messages.research_id') }} <span aria-hidden="true">ⓘ</span><span class="sr-only">{{ __('messages.research_id_help') }}</span></span></th><th>{{ __('messages.questionnaires') }}</th><th>{{ __('messages.status') }}</th><th>{{ __('messages.actions') }}</th>
 </tr></thead><tbody>
 @forelse($patientCases as $patientCase)
 @php($notStarted = max(0, $patientCase->assignments_count - $patientCase->completed_assignments_count - $patientCase->in_progress_assignments_count))

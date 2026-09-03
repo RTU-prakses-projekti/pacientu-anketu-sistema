@@ -28,6 +28,7 @@ class QuestionnairePackageExchangeTest extends TestCase
     use RefreshDatabase;
 
     private string $packageRoot;
+    private array $existingDownloadFiles = [];
 
     protected function setUp(): void
     {
@@ -36,11 +37,21 @@ class QuestionnairePackageExchangeTest extends TestCase
         $this->seed(RolePermissionSeeder::class);
         $this->packageRoot = storage_path('framework/testing/questionnaires-'.Str::uuid());
         config(['questionnaire_packages.root' => $this->packageRoot]);
+        $downloadDirectory = storage_path('framework/questionnaire-downloads');
+        $this->existingDownloadFiles = File::isDirectory($downloadDirectory)
+            ? collect(File::files($downloadDirectory))->map(fn ($file) => $file->getFilename())->all()
+            : [];
     }
 
     protected function tearDown(): void
     {
         if (isset($this->packageRoot) && File::isDirectory($this->packageRoot)) File::deleteDirectory($this->packageRoot);
+        $downloadDirectory = storage_path('framework/questionnaire-downloads');
+        if (File::isDirectory($downloadDirectory)) {
+            foreach (File::files($downloadDirectory) as $file) {
+                if (!in_array($file->getFilename(), $this->existingDownloadFiles, true)) File::delete($file->getPathname());
+            }
+        }
         parent::tearDown();
     }
 

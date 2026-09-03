@@ -89,7 +89,8 @@ class DoctorWorkspaceTest extends TestCase
             ->assertDontSee('data-doctor-scroll-top', false)
             ->assertSee('doctor-overview-table', false)
             ->assertSee('data-patient-select-all', false)
-            ->assertSeeInOrder(['Nr.', 'Pacients', 'Pacienta ID', 'Pētījuma ID', 'Anketas', 'Statuss', 'Darbības'])
+            ->assertSeeInOrder(['Nr.', 'Pacients', 'Pacienta ID / personas kods', 'Pētījuma ID', 'Anketas', 'Statuss', 'Darbības'])
+            ->assertSee(__('messages.research_id_help'))
             ->assertDontSee(route('system.roles'), false)
             ->assertDontSee(route('forms.index', $organisation), false);
         $this->actingAs($doctorA)->get(route('forms.create', $organisation))->assertForbidden();
