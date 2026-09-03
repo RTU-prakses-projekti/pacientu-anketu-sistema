@@ -20,6 +20,7 @@
                     @if(auth()->user()->hasDoctorWorkspace())<a href="{{ route('doctor.dashboard') }}">{{ __('messages.doctor_dashboard') }}</a>@endif
                 @endif
                 @if(auth()->user()->canAdministerSystem())<a href="{{ route('organisations.index') }}">{{ __('messages.organisations') }}</a><a href="{{ route('system.users') }}">{{ __('messages.users') }}</a><a href="{{ route('system.roles') }}">{{ __('messages.roles') }}</a><a href="{{ route('audit.system') }}">{{ __('messages.audit') }}</a>@endif
+                @if(auth()->user()->canReceiveAnonymizedResults())<a href="{{ route('anonymized-results.index') }}">{{ __('messages.anonymized_results') }}</a>@endif
                 <span class="text-slate-500">{{ auth()->user()->name }}</span>
                 <form method="POST" action="{{ route('logout') }}">@csrf<button class="link-button">{{ __('messages.logout') }}</button></form>
             @endauth

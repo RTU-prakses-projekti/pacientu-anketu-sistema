@@ -71,7 +71,7 @@ class SystemAdministrationController extends Controller
         $permissionGroups = [
             ['key' => 'general', 'label' => __('messages.permission_group_general'), 'permissions' => ['organisation.view', 'organisation.manage', 'users.manage', 'audit.view']],
             ['key' => 'forms', 'label' => __('messages.permission_group_forms'), 'permissions' => ['forms.view', 'forms.create', 'forms.update', 'forms.publish', 'forms.archive']],
-            ['key' => 'submissions', 'label' => __('messages.permission_group_submissions'), 'permissions' => ['submissions.view', 'exports.create', 'exports.download']],
+            ['key' => 'submissions', 'label' => __('messages.permission_group_submissions'), 'permissions' => ['submissions.view', 'exports.create', 'exports.download', 'anonymized_results.view']],
             ['key' => 'doctor', 'label' => __('messages.permission_group_doctor'), 'permissions' => ['doctor.dashboard.view', 'patients.view', 'patients.update', 'patient.questionnaires.view']],
         ];
         $permissionMap = Permission::whereIn('name', collect($permissionGroups)->pluck('permissions')->flatten()->all())

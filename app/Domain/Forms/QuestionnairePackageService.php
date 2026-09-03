@@ -210,7 +210,7 @@ class QuestionnairePackageService
                             'form_version_id' => $version->id, 'stable_key' => $portableComponent['stable_key'], 'type' => $portableComponent['type'],
                             'label' => $portableComponent['label'], 'description' => $portableComponent['description'], 'help_text' => $portableComponent['help_text'],
                             'display_order' => $portableComponent['display_order'], 'is_required' => $portableComponent['is_required'], 'visible' => $portableComponent['visible'],
-                            'max_points' => $portableComponent['max_points'], 'manual_grading' => $portableComponent['manual_grading'],
+                            'max_points' => $portableComponent['max_points'], 'manual_grading' => $portableComponent['manual_grading'], 'is_sensitive' => $portableComponent['is_sensitive'] ?? false,
                             'settings' => $settings, 'translations' => $portableComponent['translations'],
                         ]);
                         $componentMap[$portableComponent['stable_key']] = $component->id;
@@ -301,7 +301,7 @@ class QuestionnairePackageService
                         $component = $section->components()->create([
                             'form_version_id' => $version->id, 'stable_key' => $componentKey, 'type' => $portableComponent['type'],
                             'label' => $portableComponent['label'], 'description' => $portableComponent['description'], 'help_text' => $portableComponent['help_text'],
-                            'display_order' => $componentOffset + 1, 'is_required' => $portableComponent['is_required'], 'visible' => $portableComponent['visible'],
+                            'display_order' => $componentOffset + 1, 'is_required' => $portableComponent['is_required'], 'is_sensitive' => $portableComponent['is_sensitive'] ?? false, 'visible' => $portableComponent['visible'],
                             'max_points' => $portableComponent['max_points'], 'manual_grading' => $portableComponent['manual_grading'],
                             'settings' => $settings, 'translations' => $portableComponent['translations'],
                         ]);
@@ -381,7 +381,7 @@ class QuestionnairePackageService
                     return [
                         'stable_key' => $component->stable_key, 'type' => $component->type, 'label' => $component->label,
                         'description' => $component->description, 'help_text' => $component->help_text, 'display_order' => (int) $component->display_order,
-                        'is_required' => (bool) $component->is_required, 'visible' => (bool) $component->visible,
+                        'is_required' => (bool) $component->is_required, 'is_sensitive' => (bool) $component->is_sensitive, 'visible' => (bool) $component->visible,
                         'max_points' => (float) $component->max_points, 'manual_grading' => (bool) $component->manual_grading,
                         'settings' => $settings, 'translations' => $component->translations, 'attachment_ref' => $attachmentRef,
                         'options' => $component->options->sortBy(fn ($option) => sprintf('%010d|%s', $option->display_order, $option->stable_key))->map(fn ($option) => [
@@ -486,10 +486,11 @@ class QuestionnairePackageService
                 || ($section['description'] !== null && !is_string($section['description'])) || !is_int($section['display_order']) || $section['display_order'] < 0 || !is_bool($section['visible']) || !is_array($section['components'])) $this->invalid('sections');
             $sectionKeys[$section['stable_key']] = true; $this->translations($section['translations']);
             foreach ($section['components'] as $component) {
-                $this->exactKeys($component, ['stable_key','type','label','description','help_text','display_order','is_required','visible','max_points','manual_grading','settings','translations','attachment_ref','options','validation_rules','scoring_rule']);
+                $component['is_sensitive'] ??= false;
+                $this->exactKeys($component, ['stable_key','type','label','description','help_text','display_order','is_required','is_sensitive','visible','max_points','manual_grading','settings','translations','attachment_ref','options','validation_rules','scoring_rule']);
                 if (!$this->portableKey($component['stable_key']) || isset($componentKeys[$component['stable_key']]) || !is_string($component['type']) || !is_string($component['label']) || mb_strlen($component['label']) > 255
                     || ($component['description'] !== null && !is_string($component['description'])) || ($component['help_text'] !== null && !is_string($component['help_text'])) || !is_int($component['display_order']) || $component['display_order'] < 0
-                    || !is_bool($component['is_required']) || !is_bool($component['visible']) || !is_numeric($component['max_points']) || !is_bool($component['manual_grading']) || !is_array($component['settings'])
+                    || !is_bool($component['is_required']) || !is_bool($component['is_sensitive']) || !is_bool($component['visible']) || !is_numeric($component['max_points']) || !is_bool($component['manual_grading']) || !is_array($component['settings'])
                     || !is_array($component['options']) || !is_array($component['validation_rules'])) $this->invalid('components');
                 $this->registry->definition($component['type']);
                 if (array_key_exists('attachment_id', $component['settings'])) $this->invalid('settings');

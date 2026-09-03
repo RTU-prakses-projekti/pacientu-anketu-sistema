@@ -181,6 +181,26 @@ class QuestionnairePackageExchangeTest extends TestCase
         File::delete($zipPath);
     }
 
+    public function test_legacy_manifest_without_sensitive_flag_imports_as_false(): void
+    {
+        [$creator, , $form, $version] = $this->graph();
+        $export = $this->packages()->export($form, $version);
+        $manifestPath = $this->packageRoot.DIRECTORY_SEPARATOR.$export['package_name'].DIRECTORY_SEPARATOR.'manifest.json';
+        $manifest = $this->manifest($export['package_name']);
+        foreach ($manifest['sections'] as &$section) foreach ($section['components'] as &$component) unset($component['is_sensitive']);
+        unset($section, $component);
+        $manifest['content_hash'] = $this->hash($manifest);
+        File::put($manifestPath, json_encode($manifest, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT | JSON_PRESERVE_ZERO_FRACTION).PHP_EOL);
+        $legacyPackageName = $export['package_name'];
+        $legacyName = Str::beforeLast($legacyPackageName, '--').'--'.substr($manifest['content_hash'], 0, 8);
+        File::moveDirectory($this->packageRoot.DIRECTORY_SEPARATOR.$legacyPackageName, $this->packageRoot.DIRECTORY_SEPARATOR.$legacyName);
+        $target = $this->organisation();
+        $membership = OrganisationMembership::create(['organisation_id' => $target->id, 'user_id' => $creator->id, 'is_active' => true]);
+        $membership->roles()->attach(Role::where('name', 'form_creator')->firstOrFail());
+        $imported = $this->packages()->import($legacyName, $target, $creator);
+        $this->assertFalse($imported->versions()->firstOrFail()->components()->where('type', 'short_text')->firstOrFail()->is_sensitive);
+    }
+
     public function test_invalid_and_traversal_zip_uploads_are_rejected_without_import(): void
     {
         [$creator, $organisation] = $this->member('form_creator', $this->organisation());

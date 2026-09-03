@@ -10,7 +10,7 @@ class FormComponent extends Model
 {
     use HasLocalizedContent, ProtectsPublishedVersion;
     protected $guarded = [];
-    protected $casts = ['is_required' => 'boolean', 'visible' => 'boolean', 'manual_grading' => 'boolean', 'settings' => 'array', 'translations' => 'array', 'max_points' => 'decimal:2'];
+    protected $casts = ['is_required' => 'boolean', 'is_sensitive' => 'boolean', 'visible' => 'boolean', 'manual_grading' => 'boolean', 'settings' => 'array', 'translations' => 'array', 'max_points' => 'decimal:2'];
     public function formVersion() { return $this->belongsTo(FormVersion::class); }
     public function section() { return $this->belongsTo(FormSection::class, 'form_section_id'); }
     public function options() { return $this->hasMany(ComponentOption::class)->orderBy('display_order'); }

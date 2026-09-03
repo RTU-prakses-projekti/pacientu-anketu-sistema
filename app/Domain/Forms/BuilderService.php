@@ -82,7 +82,7 @@ class BuilderService
         DB::transaction(function () use ($component, $data, $settings, $translations) {
         $component->update([
             'label' => data_get($translations, 'lv.label'), 'description' => data_get($translations, 'lv.description'), 'help_text' => data_get($translations, 'lv.help_text'),
-            'is_required' => (bool) ($data['is_required'] ?? false), 'visible' => (bool) ($data['visible'] ?? false),
+            'is_required' => (bool) ($data['is_required'] ?? false), 'is_sensitive' => (bool) ($data['is_sensitive'] ?? false), 'visible' => (bool) ($data['visible'] ?? false),
             'max_points' => (float) ($data['max_points'] ?? 0), 'manual_grading' => (bool) ($data['manual_grading'] ?? false),
             'settings' => $settings, 'translations' => $translations,
         ]);

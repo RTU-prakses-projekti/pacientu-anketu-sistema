@@ -7,6 +7,7 @@ use App\Models\Organisation;
 use App\Models\OrganisationMembership;
 use App\Models\PatientCase;
 use App\Models\PatientFormAssignment;
+use App\Domain\Results\AnonymizedResultHandoffService;
 use App\Models\FormSubmission;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -134,7 +135,7 @@ class DoctorDashboardController extends Controller
             ->with('success', __('messages.patient_saved'));
     }
 
-    public function result(Request $request, PatientCase $patientCase, PatientFormAssignment $assignment)
+    public function result(Request $request, PatientCase $patientCase, PatientFormAssignment $assignment, AnonymizedResultHandoffService $handoffs)
     {
         $this->authorize('viewQuestionnaires', $patientCase);
         abort_unless($assignment->patient_case_id === $patientCase->id, 404);
@@ -142,7 +143,7 @@ class DoctorDashboardController extends Controller
         $submission = $assignment->completedSubmission()->firstOrFail();
         $submission->load('publication.form', 'formVersion', 'answers.component.options', 'answers.score');
 
-        return view('doctor.results.show', compact('patientCase', 'assignment', 'submission'));
+        return view('doctor.results.show', compact('patientCase', 'assignment', 'submission') + ['recipients' => $handoffs->recipients($patientCase->organisation)]);
     }
 
     public function exportForm(Request $request, Organisation $organisation)

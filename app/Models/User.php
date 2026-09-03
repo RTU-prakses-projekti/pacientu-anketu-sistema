@@ -136,4 +136,17 @@ class User extends Authenticatable
             ->whereHas('roles.permissions', fn ($query) => $query->where('permissions.name', $permission))
             ->exists();
     }
+
+    public function canViewAnonymizedResults(int $organisationId): bool
+    {
+        return $this->isBootstrapRoot()
+            || $this->hasOrganisationPermission($organisationId, 'anonymized_results.view');
+    }
+
+    public function canReceiveAnonymizedResults(): bool
+    {
+        return $this->isBootstrapRoot()
+            || $this->globalRoles()->whereHas('permissions', fn ($permissions) => $permissions->where('permissions.name', 'anonymized_results.view'))->exists()
+            || $this->memberships()->where('is_active', true)->whereHas('roles.permissions', fn ($permissions) => $permissions->where('permissions.name', 'anonymized_results.view'))->exists();
+    }
 }

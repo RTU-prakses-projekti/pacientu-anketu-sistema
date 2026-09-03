@@ -12,7 +12,7 @@ class RolePermissionSeeder extends Seeder
     {
         $permissions = [
             'organisation.view','organisation.manage','forms.view','forms.create','forms.update','forms.publish','forms.archive',
-            'submissions.view','exports.create','exports.download','audit.view','users.manage',
+            'submissions.view','exports.create','exports.download','anonymized_results.view','audit.view','users.manage',
             'doctor.dashboard.view','patients.view','patients.update','patient.questionnaires.view',
         ];
         foreach ($permissions as $name) Permission::updateOrCreate(['name'=>$name],['display_name'=>ucwords(str_replace(['.','_'],' ',$name))]);

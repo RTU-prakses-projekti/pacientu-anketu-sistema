@@ -5,6 +5,7 @@ use App\Http\Controllers\AttemptAdministrationController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AutosaveController;
+use App\Http\Controllers\AnonymizedResultController;
 use App\Http\Controllers\BuilderController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DoctorDashboardController;
@@ -57,6 +58,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/doctor/organisations/{organisation}/patients', [DoctorDashboardController::class, 'storePatient'])->name('doctor.patients.store');
     Route::put('/doctor/organisations/{organisation}/doctors/{doctor}/slots/{slot}', [DoctorDashboardController::class, 'updateSlot'])->name('doctor.patients.slots.update');
     Route::get('/doctor/patients/{patientCase}/assignments/{assignment}/result', [DoctorDashboardController::class, 'result'])->name('doctor.results.show');
+    Route::post('/doctor/patients/{patientCase}/assignments/{assignment}/result/handoff', [AnonymizedResultController::class, 'store'])->name('doctor.results.handoff');
+    Route::get('/anonymized-results', [AnonymizedResultController::class, 'index'])->name('anonymized-results.index');
+    Route::get('/anonymized-results/{handoff}', [AnonymizedResultController::class, 'show'])->name('anonymized-results.show');
     Route::get('/doctor/patients/{patientCase}/questionnaires', [DoctorQuestionnaireController::class, 'index'])->name('doctor.questionnaires.index');
     Route::post('/doctor/patients/{patientCase}/questionnaires', [DoctorQuestionnaireController::class, 'store'])->name('doctor.questionnaires.store');
     Route::post('/doctor/patients/bulk-questionnaires/create', [DoctorQuestionnaireController::class, 'bulkCreate'])->name('doctor.questionnaires.bulk.create');
