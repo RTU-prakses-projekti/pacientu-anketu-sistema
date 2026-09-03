@@ -39,6 +39,8 @@ Route::post('/locale/{locale}', function (Request $request, string $locale) {
     return back();
 })->name('locale');
 
+Route::view('/about', 'about')->name('about');
+
 Route::get('/f/{publication}', [RespondentController::class, 'show'])->name('publications.show');
 Route::get('/patient-access/{token}', [PatientPortalController::class, 'access'])->middleware('throttle:30,1')->name('patient.access');
 Route::get('/patient-portal/{patientAccessPackage}', [PatientPortalController::class, 'portal'])->name('patient.portal');
