@@ -1,0 +1,119 @@
+name: pacientu-anketu-sistema
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    image: pacientu-anketu-sistema:latest
+    pull_policy: build
+    restart: unless-stopped
+    env_file:
+      - ${DEPLOY_ENV_FILE:-.env.production}
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "9000"
+    volumes:
+      - app_private:/var/www/html/storage/app/private
+      - app_logs:/var/www/html/storage/logs
+    networks:
+      backend:
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: nginx
+    image: pacientu-anketu-sistema:nginx
+    pull_policy: build
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "${HTTP_BIND_ADDRESS:-127.0.0.1}:${HTTP_PORT:-8080}:80"
+    networks:
+      - edge
+      - backend
+
+  queue-worker:
+    image: pacientu-anketu-sistema:latest
+    pull_policy: never
+    restart: unless-stopped
+    env_file:
+      - ${DEPLOY_ENV_FILE:-.env.production}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=120"]
+    volumes:
+      - app_private:/var/www/html/storage/app/private
+      - app_logs:/var/www/html/storage/logs
+    networks:
+      - backend
+
+  scheduler:
+    image: pacientu-anketu-sistema:latest
+    pull_policy: never
+    restart: unless-stopped
+    env_file:
+      - ${DEPLOY_ENV_FILE:-.env.production}
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["php", "artisan", "schedule:work"]
+    volumes:
+      - app_private:/var/www/html/storage/app/private
+      - app_logs:/var/www/html/storage/logs
+    networks:
+      - backend
+
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MARIADB_USER: ${MARIADB_USER}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    profiles: ["tunnel"]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    command: ["tunnel", "--no-autoupdate", "run"]
+    depends_on:
+      - nginx
+    networks:
+      - edge
+
+volumes:
+  app_private:
+  app_logs:
+  db_data:
+
+networks:
+  edge:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+  backend:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.31.0.0/24

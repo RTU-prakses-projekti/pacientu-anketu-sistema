@@ -30,7 +30,7 @@ class AnonymizedResultController extends Controller
         abort_unless($user->canReceiveAnonymizedResults(), 403);
         $isRoot = $user->isBootstrapRoot();
         abort_unless($isRoot
-            ? Organisation::where('is_active', true)->exists()
+            ? (!Organisation::exists() || Organisation::where('is_active', true)->exists())
             : $user->memberships()->where('is_active', true)->whereHas('organisation', fn ($organisation) => $organisation->where('is_active', true))->exists(), 403);
         $hasGlobalPermission = $user->isBootstrapRoot() || $user->globalRoles()->whereHas('permissions', fn ($permissions) => $permissions->where('permissions.name', 'anonymized_results.view'))->exists();
         $query = AnonymizedResultHandoff::whereHas('organisation', fn ($organisation) => $organisation->where('organisations.is_active', true));
@@ -85,7 +85,7 @@ class AnonymizedResultController extends Controller
         abort_unless($user->canReceiveAnonymizedResults(), 403);
         $isRoot = $user->isBootstrapRoot();
         abort_unless($isRoot
-            ? Organisation::where('is_active', true)->exists()
+            ? (!Organisation::exists() || Organisation::where('is_active', true)->exists())
             : $user->memberships()->where('is_active', true)->whereHas('organisation', fn ($organisation) => $organisation->where('is_active', true))->exists(), 403);
         $hasGlobalPermission = $user->globalRoles()->whereHas('permissions', fn ($permissions) => $permissions->where('permissions.name', 'anonymized_results.view'))->exists();
         $query = AnonymizedResultHandoff::whereHas('organisation', fn ($organisation) => $organisation->where('organisations.is_active', true));

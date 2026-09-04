@@ -174,6 +174,14 @@ class AnonymizedResultHandoffTest extends TestCase
         $this->actingAs($root)->post(route('anonymized-results.export'), ['format' => 'csv', 'handoff_ids' => [$handoff->public_id]])->assertForbidden();
     }
 
+    public function test_root_can_open_anonymized_results_index_before_any_organisation_exists(): void
+    {
+        $root = User::factory()->create(['is_active' => true]);
+        $root->globalRoles()->attach(Role::where('name', 'platform_admin')->firstOrFail());
+
+        $this->actingAs($root)->get(route('anonymized-results.index'))->assertOk();
+    }
+
     public function test_generic_submission_and_export_permissions_do_not_grant_anonymized_result_access(): void
     {
         [$doctor, $organisation, , , , , , , $assignment, , $patient] = $this->completedGraph();

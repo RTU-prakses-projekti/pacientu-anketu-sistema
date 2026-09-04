@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
     $middleware->appendToGroup('web', [\App\Http\Middleware\SetLocale::class]);
+
+    $trustedProxies = trim((string) env('TRUSTED_PROXIES', ''));
+    if ($trustedProxies !== '') $middleware->trustProxies($trustedProxies);
 })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
