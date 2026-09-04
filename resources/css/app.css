@@ -73,23 +73,35 @@ html[data-theme='dark'] {
 
 @layer components {
   .app-header { position: sticky; top: 0; z-index: 30; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(14px); }
-  .app-shell { @apply mx-auto flex max-w-7xl items-center gap-6 px-4 py-3; min-height: 4.25rem; }
+  .app-header:not(.patient-header) .app-shell { max-width: 96rem; }
+  .app-shell { @apply mx-auto flex max-w-7xl items-center gap-4 px-4 py-3; min-height: 4.25rem; }
   .app-brand { display: inline-flex; align-items: center; gap: .7rem; color: var(--text); font-size: .98rem; font-weight: 750; letter-spacing: -.01em; text-decoration: none; white-space: nowrap; }
   .app-brand:hover { color: var(--primary); text-decoration: none; }
   .brand-mark { display: inline-grid; width: 2rem; height: 2rem; place-items: center; border-radius: .625rem; background: var(--primary); color: white; font-size: 1.35rem; line-height: 1; box-shadow: 0 5px 12px color-mix(in srgb, var(--primary) 30%, transparent); }
   .app-nav { display: flex; min-width: 0; flex: 1; align-items: center; justify-content: space-between; gap: 1rem; font-size: .875rem; }
   .app-nav-links, .app-nav-meta { display: flex; min-width: 0; align-items: center; gap: .25rem; }
-  .app-nav-links > a { border-radius: .5rem; padding: .45rem .6rem; color: var(--text-muted); text-decoration: none; white-space: nowrap; }
+  .app-nav-links { flex: 1 1 auto; flex-wrap: nowrap; gap: .1rem; }
+  .app-nav-links > a { border-radius: .5rem; padding: .4rem .45rem; color: var(--text-muted); text-decoration: none; white-space: nowrap; }
   .app-nav-links > a:hover, .app-nav-links > a[aria-current='page'] { background: var(--primary-soft); color: var(--primary); text-decoration: none; }
-  .app-nav-meta { margin-left: auto; gap: .65rem; }
-  .user-pill { display: inline-flex; max-width: 13rem; align-items: center; gap: .45rem; overflow: hidden; color: var(--text-muted); white-space: nowrap; text-overflow: ellipsis; }
+  .app-nav-meta { flex: 0 1 auto; margin-left: .5rem; gap: .45rem; border-left: 1px solid var(--border); padding-left: .75rem; }
+  .user-pill { display: inline-flex; max-width: none; align-items: center; gap: .45rem; overflow: hidden; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-muted); color: var(--text-muted); padding: .4rem .7rem; white-space: nowrap; text-overflow: ellipsis; }
   .user-dot { width: .45rem; height: .45rem; flex: none; border-radius: 999px; background: var(--success); }
   .link-button { border: 0; background: none; color: var(--primary); cursor: pointer; font: inherit; padding: .45rem .2rem; }
   .language-switcher { display: flex; align-items: center; gap: .15rem; border: 1px solid var(--border); border-radius: .625rem; padding: .15rem; background: var(--surface-muted); }
   .language-switcher button { border: 0; border-radius: .4rem; background: transparent; color: var(--text-muted); cursor: pointer; font-size: .72rem; font-weight: 700; padding: .3rem .4rem; }
   .language-switcher button:hover, .language-switcher button.bg-indigo-100 { background: var(--surface); color: var(--primary); }
-  .theme-control { display: block; min-width: 7.2rem; }
+  .theme-control { display: block; min-width: 6rem; }
   .theme-control select { min-height: 2.25rem; border-radius: .55rem; padding: .35rem .55rem; font-size: .75rem; }
+  .theme-menu { position: relative; display: inline-flex; flex: none; }
+  .theme-toggle { display: inline-grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid var(--border); border-radius: .625rem; background: var(--surface); color: var(--text-muted); cursor: pointer; }
+  .theme-toggle:hover, .theme-toggle:focus-visible { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent); }
+  .theme-icon { display: none; width: 1.2rem; height: 1.2rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+  .theme-menu[data-mode='light'] .theme-icon-light, .theme-menu[data-mode='dark'] .theme-icon-dark { display: block; }
+  .theme-popover { position: absolute; top: calc(100% + .55rem); right: 0; z-index: 60; display: grid; min-width: 10rem; gap: .2rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--surface); padding: .45rem; box-shadow: var(--shadow-md); }
+  .theme-popover[hidden] { display: none; }
+  .theme-popover > strong { padding: .45rem .6rem; color: var(--text); font-size: .8rem; }
+  .theme-popover > button { border: 0; border-radius: .5rem; background: transparent; color: var(--text-muted); cursor: pointer; padding: .55rem .6rem; text-align: left; font: inherit; font-size: .85rem; }
+  .theme-popover > button:hover, .theme-popover > button:focus-visible, .theme-popover > button[aria-checked='true'] { background: var(--primary-soft); color: var(--primary); outline: none; }
   .nav-toggle { display: none; margin-left: auto; border: 1px solid var(--border); border-radius: .625rem; background: var(--surface); color: var(--text); cursor: pointer; padding: .55rem; }
   .nav-toggle span { display: block; width: 1.15rem; height: 2px; margin: 3px; background: currentColor; }
   .app-main { min-height: calc(100vh - 4.25rem); }
@@ -191,7 +203,8 @@ html[data-theme='dark'] .border-slate-200, html[data-theme='dark'] .border-slate
   .app-nav-links, .app-nav-meta { width: 100%; align-items: stretch; flex-direction: column; gap: .35rem; }
   .app-nav-links > a, .app-nav-meta > a, .app-nav-meta > form, .app-nav-meta > .user-pill { width: 100%; }
   .app-nav-links > a, .app-nav-meta > form > button { display: block; padding: .7rem .75rem; }
-  .app-nav-meta { margin-left: 0; padding-top: .5rem; border-top: 1px solid var(--border); }
+  .app-nav-meta { flex: initial; margin-left: 0; border-left: 0; padding-top: .5rem; padding-left: 0; border-top: 1px solid var(--border); }
+  .user-pill { max-width: 100%; border: 0; border-radius: 0; background: transparent; padding: .7rem .75rem; }
   .language-switcher { width: fit-content; }
   .theme-control { width: 100%; }
   .theme-control select { width: 100%; }
@@ -210,7 +223,7 @@ html[data-theme='dark'] .border-slate-200, html[data-theme='dark'] .border-slate
   .patient-body { --patient-header-offset: 7.25rem; }
   .patient-header .app-shell { display: grid; grid-template-columns: minmax(0, 1fr); align-items: center; }
   .patient-header .app-nav-meta { grid-column: 1; width: 100%; flex-direction: row; justify-content: flex-end; align-items: center; border-top: 1px solid var(--border); padding-top: .5rem; }
-  .patient-header .theme-control { width: auto; min-width: 7.2rem; }
+  .patient-header .theme-control { width: auto; min-width: 6rem; }
   .runner-nav { flex-direction: column; }
   .runner-nav .btn { width: 100%; }
   .table-wrap { max-width: 100%; }
@@ -234,6 +247,22 @@ html[data-theme='dark'] .border-slate-200, html[data-theme='dark'] .border-slate
   .doctor-bulk-actions { display: grid; gap: .75rem; align-items: stretch; }
   .doctor-bulk-actions .check { justify-self: start; }
   .doctor-bulk-actions > .btn, .doctor-bulk-actions > a.btn, .doctor-bulk-actions > button.btn { width: 100%; }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .app-header:not(.patient-header) .app-nav { display: none; order: 3; width: 100%; flex-basis: 100%; align-items: stretch; flex-direction: column; padding-top: .5rem; }
+  .app-header:not(.patient-header) .app-nav.is-open { display: flex; }
+  .app-header:not(.patient-header) .app-nav-links,
+  .app-header:not(.patient-header) .app-nav-meta { width: 100%; align-items: stretch; flex-direction: column; gap: .35rem; }
+  .app-header:not(.patient-header) .app-nav-links > a,
+  .app-header:not(.patient-header) .app-nav-meta > a,
+  .app-header:not(.patient-header) .app-nav-meta > form,
+  .app-header:not(.patient-header) .app-nav-meta > .user-pill { width: 100%; }
+  .app-header:not(.patient-header) .app-nav-links > a,
+  .app-header:not(.patient-header) .app-nav-meta > form > button { display: block; padding: .7rem .75rem; }
+  .app-header:not(.patient-header) .app-nav-meta { flex: initial; margin-left: 0; border-left: 0; border-top: 1px solid var(--border); padding-top: .5rem; padding-left: 0; }
+  .app-header:not(.patient-header) .user-pill { max-width: 100%; border: 0; border-radius: 0; background: transparent; padding: .7rem .75rem; }
+  .app-header:not(.patient-header) .nav-toggle { display: block; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -7,8 +7,9 @@
     <title>@yield('title', __('messages.product_name'))</title>
     <script>
         (() => {
-            const mode = localStorage.getItem('pqs-theme') || 'system';
-            const dark = mode === 'dark' || (mode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+            const mode = localStorage.getItem('pqs-theme') === 'dark' ? 'dark' : 'light';
+            localStorage.setItem('pqs-theme', mode);
+            const dark = mode === 'dark';
             document.documentElement.dataset.theme = dark ? 'dark' : 'light';
             document.documentElement.dataset.themeMode = mode;
         })();
@@ -44,7 +45,17 @@
             <div class="language-switcher" aria-label="{{ __('messages.language') }}">
                 @foreach(config('form_locales.supported') as $code)<form method="POST" action="{{ route('locale',$code) }}" data-locale-form data-locale="{{ $code }}">@csrf<button class="rounded px-2 py-1 {{ app()->getLocale()===$code?'bg-indigo-100 font-semibold':'' }}">{{ strtoupper($code) }}</button></form>@endforeach
             </div>
-            <label class="theme-control"><span class="sr-only">{{ __('messages.appearance') }}</span><select data-theme-select aria-label="{{ __('messages.appearance') }}"><option value="system">{{ __('messages.theme_system') }}</option><option value="light">{{ __('messages.theme_light') }}</option><option value="dark">{{ __('messages.theme_dark') }}</option></select></label>
+            <div class="theme-menu" data-theme-menu data-mode="system">
+                <button class="theme-toggle" type="button" data-theme-toggle aria-expanded="false" aria-haspopup="menu" aria-label="{{ __('messages.appearance') }}">
+                    <svg class="theme-icon theme-icon-light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                    <svg class="theme-icon theme-icon-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.3A8.5 8.5 0 0 1 8.7 4 8.5 8.5 0 1 0 20 15.3Z"/></svg>
+                </button>
+                <div class="theme-popover" data-theme-popover role="menu" hidden>
+                    <strong>{{ __('messages.appearance') }}</strong>
+                    <button type="button" role="menuitemradio" data-theme-choice="light">{{ __('messages.theme_light_short') }}</button>
+                    <button type="button" role="menuitemradio" data-theme-choice="dark">{{ __('messages.theme_dark_short') }}</button>
+                </div>
+            </div>
             </div>
         </nav>
     </div>

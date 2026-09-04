@@ -1,20 +1,30 @@
 const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content;
 
 const applyTheme = (mode) => {
-    const dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    mode = mode === 'dark' ? 'dark' : 'light';
+    const dark = mode === 'dark';
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
     document.documentElement.dataset.themeMode = mode;
     localStorage.setItem('pqs-theme', mode);
-    document.querySelectorAll('[data-theme-select]').forEach((select) => { select.value = mode; });
+    document.querySelectorAll('[data-theme-menu]').forEach((menu) => {
+        menu.dataset.mode = mode;
+        menu.querySelectorAll('[data-theme-choice]').forEach((choice) => choice.setAttribute('aria-checked', choice.dataset.themeChoice === mode ? 'true' : 'false'));
+    });
 };
 
-document.querySelectorAll('[data-theme-select]').forEach((select) => {
-    select.value = document.documentElement.dataset.themeMode || localStorage.getItem('pqs-theme') || 'system';
-    select.addEventListener('change', () => applyTheme(select.value));
+document.querySelectorAll('[data-theme-menu]').forEach((menu) => {
+    const toggle = menu.querySelector('[data-theme-toggle]');
+    const popover = menu.querySelector('[data-theme-popover]');
+    if (!toggle || !popover) return;
+    const close = () => { popover.hidden = true; toggle.setAttribute('aria-expanded', 'false'); };
+    const open = () => { popover.hidden = false; toggle.setAttribute('aria-expanded', 'true'); menu.querySelector(`[data-theme-choice="${document.documentElement.dataset.themeMode || 'light'}"]`)?.focus(); };
+    toggle.addEventListener('click', () => popover.hidden ? open() : close());
+    menu.querySelectorAll('[data-theme-choice]').forEach((choice) => choice.addEventListener('click', () => { applyTheme(choice.dataset.themeChoice); close(); toggle.focus(); }));
+    toggle.addEventListener('keydown', (event) => { if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } });
+    popover.addEventListener('keydown', (event) => { if (event.key === 'Escape') { close(); toggle.focus(); } });
+    document.addEventListener('click', (event) => { if (!menu.contains(event.target)) close(); });
 });
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => {
-    if ((localStorage.getItem('pqs-theme') || 'system') === 'system') applyTheme('system');
-});
+applyTheme(document.documentElement.dataset.themeMode || localStorage.getItem('pqs-theme') || 'light');
 
 document.querySelectorAll('[data-nav-toggle]').forEach((toggle) => {
     const navigation = document.getElementById(toggle.getAttribute('aria-controls'));
