@@ -1,4 +1,11 @@
 $ErrorActionPreference = 'Stop'
+trap {
+    Write-Host ''
+    Write-Host 'BACKUP FAILED' -ForegroundColor Red
+    Write-Host $_.Exception.Message -ForegroundColor Red
+    exit 1
+}
+
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location $projectRoot
 $envFile = Join-Path $projectRoot '.env.production'
@@ -45,5 +52,19 @@ Copy-Item $envFile (Join-Path $configRoot '.env.production')
 Copy-Item (Join-Path $projectRoot 'docker-compose.yml') $configRoot
 Copy-Item (Join-Path $projectRoot 'Dockerfile') $configRoot
 Copy-Item (Join-Path $PSScriptRoot 'README.md') $configRoot
-Write-Host "Backup created: $backupRoot"
+Write-Host ''
+Write-Host '============================================================'
+Write-Host 'BACKUP COMPLETE' -ForegroundColor Green
+Write-Host '============================================================'
+Write-Host ''
+Write-Host 'Backup created successfully.'
+Write-Host ''
+Write-Host 'Backup location:'
+Write-Host $backupRoot
+Write-Host ''
+Write-Host 'Included:'
+Write-Host '- MariaDB database dump'
+Write-Host '- private application files'
+Write-Host '- deployment configuration'
+Write-Host ''
 Write-Host 'The backup contains secrets in the copied production env; protect the backup directory.'
