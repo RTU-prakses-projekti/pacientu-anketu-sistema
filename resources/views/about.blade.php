@@ -5,12 +5,11 @@
     <section class="card">
         <h1>{{ __('messages.about') }}</h1>
         <p>{{ __('messages.about_description') }}</p>
-        <p class="mt-4">{{ __('messages.about_customisation') }}</p>
+        <p class="mt-4">{{ __('messages.about_system_additional') }}</p>
     </section>
     <section class="card">
-        <h2>{{ __('messages.about_cta') }}</h2>
-        <p>{{ __('messages.about_contact_text') }}</p>
-        <a class="btn primary mt-4" href="mailto:ronalds.gigelis@gmail.com">ronalds.gigelis@gmail.com</a>
+        <h2>{{ __('messages.about_project') }}</h2>
+        <p>{{ __('messages.about_project_description') }}</p>
     </section>
 </div>
 @endsection
