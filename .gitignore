@@ -23,6 +23,9 @@
 /vendor
 /deployment/backups/
 /deployment/install.log
+/deployment/PUBLIC-DEMO-URL.txt
+/deployment/PUBLIC-DEMO-DIAGNOSTIC.txt
+/deployment/PUBLIC-DEMO-STATE.txt
 _ide_helper.php
 Homestead.json
 Homestead.yaml

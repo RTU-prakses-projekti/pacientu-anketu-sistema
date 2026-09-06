@@ -14,8 +14,22 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
     $middleware->appendToGroup('web', [\App\Http\Middleware\SetLocale::class]);
 
-    $trustedProxies = trim((string) env('TRUSTED_PROXIES', ''));
-    if ($trustedProxies !== '') $middleware->trustProxies($trustedProxies);
+    $configuredTrustedProxies = preg_split(
+        '/\s*,\s*/',
+        trim((string) env('TRUSTED_PROXIES', '')),
+        -1,
+        PREG_SPLIT_NO_EMPTY,
+    );
+    $configuredTrustedProxies = array_values(array_filter(
+        $configuredTrustedProxies,
+        static fn (string $proxy): bool => ! in_array($proxy, ['*', '**'], true),
+    ));
+    $trustedProxies = array_values(array_unique(array_merge(
+        ['172.30.0.0/24', '172.31.0.0/24'],
+        $configuredTrustedProxies,
+    )));
+
+    $middleware->trustProxies($trustedProxies, Request::HEADER_X_FORWARDED_FOR | Request::HEADER_X_FORWARDED_HOST | Request::HEADER_X_FORWARDED_PORT | Request::HEADER_X_FORWARDED_PROTO);
 })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

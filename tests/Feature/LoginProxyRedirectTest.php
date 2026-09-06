@@ -79,4 +79,24 @@ class LoginProxyRedirectTest extends TestCase
             'password' => 'LongPassword123',
         ])->assertRedirect('https://questionnaires.example.test');
     }
+
+    public function test_login_redirect_trusts_https_from_the_docker_edge_proxy_subnet(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'edge-login@example.test',
+            'password' => Hash::make('LongPassword123'),
+            'is_active' => true,
+        ]);
+
+        $this->withServerVariables([
+            'REMOTE_ADDR' => '172.30.0.3',
+            'HTTP_HOST' => 'nginx',
+            'HTTP_X_FORWARDED_HOST' => 'quick-demo.trycloudflare.com',
+            'HTTP_X_FORWARDED_PROTO' => 'https',
+            'HTTP_X_FORWARDED_PORT' => '443',
+        ])->post('/login', [
+            'email' => $user->email,
+            'password' => 'LongPassword123',
+        ])->assertRedirect('https://quick-demo.trycloudflare.com');
+    }
 }

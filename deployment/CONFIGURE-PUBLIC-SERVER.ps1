@@ -6,23 +6,28 @@ $envFile = Join-Path $projectRoot '.env.production'
 if (-not (Test-Path $envFile)) { throw 'Missing .env.production. Run INSTALL-SERVER.bat first.' }
 
 function Get-EnvValue([string] $key) {
-    $line = Get-Content $envFile | Where-Object { $_ -match "^$([regex]::Escape($key))=" } | Select-Object -First 1
-    if ($null -eq $line) { return '' }
-    return ($line -replace "^$([regex]::Escape($key))=", '').Trim().Trim('"')
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    $content = [System.IO.File]::ReadAllText($envFile, $utf8NoBom)
+    $line = [regex]::Match($content, "(?m)^$([regex]::Escape($key))=([^\r\n]*)")
+    if (-not $line.Success) { return '' }
+    return $line.Groups[2].Value.Trim().Trim('"')
 }
 
 function Set-EnvValue([string] $key, [string] $value) {
-    $content = Get-Content -Raw $envFile
-    $line = "$key=$value"
-    $pattern = "(?m)^$([regex]::Escape($key))=.*$"
-    if ($content -match $pattern) {
-        $content = [regex]::Replace($content, $pattern, [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $line })
-    } else {
-        if (-not $content.EndsWith("`n")) { $content += "`r`n" }
-        $content += "$line`r`n"
-    }
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText($envFile, $content, $utf8NoBom)
+    $content = [System.IO.File]::ReadAllText($envFile, $utf8NoBom)
+    $lines = [regex]::Split($content, "\r?\n")
+    $keyPattern = "^$([regex]::Escape($key))="
+    $updated = $false
+    for ($index = 0; $index -lt $lines.Length; $index++) {
+        if ($lines[$index] -match $keyPattern) {
+            $lines[$index] = "$key=$value"
+            $updated = $true
+            break
+        }
+    }
+    if (-not $updated) { $lines += "$key=$value" }
+    [System.IO.File]::WriteAllText($envFile, [string]::Join([Environment]::NewLine, $lines), $utf8NoBom)
 }
 
 function ConvertFrom-SecureStringPlain([Security.SecureString] $secureValue) {
@@ -54,6 +59,7 @@ if ([string]::IsNullOrWhiteSpace($tunnelToken)) { throw 'A non-empty Cloudflare 
 
 Set-EnvValue 'APP_URL' $publicUrl.TrimEnd('/')
 Set-EnvValue 'SESSION_SECURE_COOKIE' 'true'
+Set-EnvValue 'SESSION_COOKIE' 'pacientu_anketu_sistema_session'
 Set-EnvValue 'CLOUDFLARE_TUNNEL_TOKEN' $tunnelToken
 Set-EnvValue 'TRUSTED_PROXIES' '172.31.0.0/24'
 $env:DEPLOY_ENV_FILE = '.env.production'
@@ -63,8 +69,8 @@ Invoke-Compose @('up', '-d', '--force-recreate')
 Invoke-Compose @('exec', '-T', 'app', 'php', 'artisan', 'config:cache')
 Invoke-Compose @('restart')
 
-$portLine = Get-Content $envFile | Where-Object { $_ -match '^HTTP_PORT=' } | Select-Object -First 1
-$port = if ($portLine) { ($portLine -replace '^HTTP_PORT=', '').Trim() } else { '8080' }
+$port = Get-EnvValue 'HTTP_PORT'
+if ([string]::IsNullOrWhiteSpace($port)) { $port = '8080' }
 $healthOk = $false
 for ($attempt = 1; $attempt -le 60; $attempt++) {
     try {

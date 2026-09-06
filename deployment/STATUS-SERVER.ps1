@@ -6,9 +6,11 @@ $envFile = Join-Path $projectRoot '.env.production'
 
 function Get-EnvValue([string] $key) {
     if (-not (Test-Path -LiteralPath $envFile)) { return '' }
-    $line = Get-Content -LiteralPath $envFile | Where-Object { $_ -match "^$([regex]::Escape($key))=" } | Select-Object -First 1
-    if ($null -eq $line) { return '' }
-    return ($line -replace "^$([regex]::Escape($key))=", '').Trim().Trim('"')
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    $content = [System.IO.File]::ReadAllText($envFile, $utf8NoBom)
+    $line = [regex]::Match($content, "(?m)^$([regex]::Escape($key))=([^\r\n]*)")
+    if (-not $line.Success) { return '' }
+    return $line.Groups[2].Value.Trim().Trim('"')
 }
 
 function Get-ServiceState([string[]] $composeArguments, [string] $service) {

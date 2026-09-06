@@ -20,24 +20,29 @@ function Write-InstallProgress([int] $step, [int] $percent, [string] $message) {
 }
 
 function Set-EnvValue([string] $key, [string] $value) {
-    $content = if (Test-Path $envFile) { Get-Content -Raw $envFile } else { '' }
-    $line = "$key=$value"
-    $pattern = "(?m)^$([regex]::Escape($key))=.*$"
-    if ($content -match $pattern) {
-        $content = [regex]::Replace($content, $pattern, [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $line })
-    } else {
-        if ($content.Length -gt 0 -and -not $content.EndsWith("`n")) { $content += "`r`n" }
-        $content += "$line`r`n"
-    }
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText($envFile, $content, $utf8NoBom)
+    $content = if (Test-Path $envFile) { [System.IO.File]::ReadAllText($envFile, $utf8NoBom) } else { '' }
+    $lines = [regex]::Split($content, "\r?\n")
+    $keyPattern = "^$([regex]::Escape($key))="
+    $updated = $false
+    for ($index = 0; $index -lt $lines.Length; $index++) {
+        if ($lines[$index] -match $keyPattern) {
+            $lines[$index] = "$key=$value"
+            $updated = $true
+            break
+        }
+    }
+    if (-not $updated) { $lines += "$key=$value" }
+    [System.IO.File]::WriteAllText($envFile, [string]::Join([Environment]::NewLine, $lines), $utf8NoBom)
 }
 
 function Get-EnvValue([string] $key) {
     if (-not (Test-Path $envFile)) { return '' }
-    $line = Get-Content $envFile | Where-Object { $_ -match "^$([regex]::Escape($key))=" } | Select-Object -First 1
-    if ($null -eq $line) { return '' }
-    return ($line -replace "^$([regex]::Escape($key))=", '').Trim().Trim('"')
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    $content = [System.IO.File]::ReadAllText($envFile, $utf8NoBom)
+    $line = [regex]::Match($content, "(?m)^$([regex]::Escape($key))=([^\r\n]*)")
+    if (-not $line.Success) { return '' }
+    return $line.Groups[2].Value.Trim().Trim('"')
 }
 
 function New-RandomSecret([int] $bytes = 32) {
@@ -96,6 +101,8 @@ if ([string]::IsNullOrWhiteSpace((Get-EnvValue 'APP_KEY'))) {
 } else {
     Write-Host 'Existing APP_KEY preserved.'
 }
+
+Set-EnvValue 'SESSION_COOKIE' 'pacientu_anketu_sistema_session'
 
 if ([string]::IsNullOrWhiteSpace((Get-EnvValue 'DB_DATABASE'))) { Set-EnvValue 'DB_DATABASE' 'patient_questionnaires' }
 if ([string]::IsNullOrWhiteSpace((Get-EnvValue 'DB_USERNAME'))) { Set-EnvValue 'DB_USERNAME' 'patient_app' }

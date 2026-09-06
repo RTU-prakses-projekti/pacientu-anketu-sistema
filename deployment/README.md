@@ -52,9 +52,10 @@ Cloudflare Zero Trust / Cloudflare Tunnel konfigurācijai:
 6. Palaid `deployment\CONFIGURE-PUBLIC-SERVER.bat` un ievadi URL/tokenu tikai interaktīvi. Skripts tokenu saglabā tikai ignorētajā `.env.production` laukā `CLOUDFLARE_TUNNEL_TOKEN` un iestata `APP_URL=https://<hostname>`.
 7. Turpmāk izmanto tikai `deployment\START-SERVER.bat`; ja token nav tukšs, START automātiski aktivizē tunnel profilu. Manuālā Compose alternatīva ir `docker compose --env-file .env.production --profile tunnel up -d`.
 
+
 Cloudflared savienojas ar iekšējo `nginx` servisu; router port forwarding nav vajadzīgs. Tokenu neieraksti Git, dokumentācijā vai shell skriptā.
 
-`TRUSTED_PROXIES` pēc noklusējuma norāda uz Compose privāto backend subnet `172.31.0.0/24`. Tas nav wildcard `*`; nemaini to uz plašāku tīklu bez atsevišķa drošības pamatojuma.
+`TRUSTED_PROXIES` pēc noklusējuma norāda uz Compose privātajiem edge/backend subnetiem `172.30.0.0/24,172.31.0.0/24`. Tas nav wildcard `*`; nemaini to uz plašāku tīklu bez atsevišķa drošības pamatojuma.
 
 ## Backup
 

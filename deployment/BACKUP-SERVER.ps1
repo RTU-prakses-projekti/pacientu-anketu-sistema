@@ -12,9 +12,11 @@ $envFile = Join-Path $projectRoot '.env.production'
 if (-not (Test-Path $envFile)) { throw 'Missing .env.production. Run INSTALL-SERVER.bat first.' }
 
 function Get-EnvValue([string] $key) {
-    $line = Get-Content $envFile | Where-Object { $_ -match "^$([regex]::Escape($key))=" } | Select-Object -First 1
-    if ($null -eq $line) { return '' }
-    return ($line -replace "^$([regex]::Escape($key))=", '').Trim().Trim('"')
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    $content = [System.IO.File]::ReadAllText($envFile, $utf8NoBom)
+    $line = [regex]::Match($content, "(?m)^$([regex]::Escape($key))=([^\r\n]*)")
+    if (-not $line.Success) { return '' }
+    return $line.Groups[2].Value.Trim().Trim('"')
 }
 
 $env:DEPLOY_ENV_FILE = '.env.production'
