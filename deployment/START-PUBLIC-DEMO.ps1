@@ -236,8 +236,7 @@ try {
     Write-Host 'Local server:'
     Write-Host "http://localhost:$port"
     Write-Host ''
-    Write-Host 'Starting Cloudflare Quick Tunnel...'
-    Write-Host 'Waiting for public HTTPS address...'
+    Write-Host 'Checking local server readiness...'
     Write-Host ''
 
     $localHealth = Get-HttpCheck "http://localhost:$port/up"
@@ -286,7 +285,7 @@ try {
         Write-Diagnostic ("Local /up after app-only refresh: HTTP={0}; /login: HTTP={1}" -f (Get-HttpStatusText $localHealthAfterApp), (Get-HttpStatusText $localLoginAfterApp))
         if (-not $localHealthAfterApp.Success -or -not $localLoginAfterApp.Success) { throw 'Local /up or /login failed after app-only refresh.' }
     } else {
-        Write-Diagnostic 'App bootstrap hash matches; app was not rebuilt or recreated.'
+        Write-Diagnostic 'Application bootstrap hash matches; app was not rebuilt or recreated.'
     }
 
     $nginxId = Get-NginxId
@@ -316,6 +315,10 @@ try {
         if ($hostNginxHash -ne $containerNginxHashAfter) { throw 'Host and running nginx configuration SHA256 values still differ after nginx-only recreate.' }
         if (-not (Get-HttpCheck "http://localhost:$port/up").Success -or -not (Get-HttpCheck "http://localhost:$port/login").Success) { throw 'Local /up or /login failed after nginx-only refresh.' }
     } else { Write-Diagnostic 'Nginx configuration hash matches; nginx was not rebuilt or recreated.' }
+
+    Write-Host ''
+    Write-Host 'Starting Cloudflare Quick Tunnel...'
+    Write-Host 'Waiting for public HTTPS address...'
 
     $edgeNetwork = Get-EdgeNetwork $nginxId
     Write-Diagnostic "Using nginx container: $nginxId"
