@@ -5,6 +5,7 @@ namespace App\Domain\Patients;
 use App\Domain\Audit\AuditService;
 use App\Models\FormSubmission;
 use App\Models\Invitation;
+use App\Models\Organisation;
 use App\Models\PatientAccessPackage;
 use App\Models\PatientCase;
 use Illuminate\Http\Request;
@@ -20,8 +21,11 @@ class PatientAccessService
 
     public function issue(PatientCase $patientCase, int $createdBy, int $days): array
     {
+        abort_unless($this->organisationIsAvailable((int) $patientCase->organisation_id), 403);
+
         return DB::transaction(function () use ($patientCase, $createdBy, $days) {
             $patientCase = PatientCase::lockForUpdate()->findOrFail($patientCase->id);
+            abort_unless($this->organisationIsAvailable((int) $patientCase->organisation_id), 403);
             $patientCase->accessPackages()->whereNull('revoked_at')->update(['revoked_at' => now()]);
             $plainToken = Str::random(64);
             $package = $patientCase->accessPackages()->create([
@@ -56,7 +60,7 @@ class PatientAccessService
     public function consumeToken(Request $request, string $plainToken): ?PatientAccessPackage
     {
         $package = PatientAccessPackage::where('token_hash', hash('sha256', $plainToken))->first();
-        if (!$package?->isUsable()) return null;
+        if (!$package?->isUsable() || !$this->packageOrganisationIsAvailable($package)) return null;
         $request->session()->regenerate();
         $request->session()->put(self::SESSION_KEY, $package->id);
         return $package;
@@ -64,7 +68,9 @@ class PatientAccessService
 
     public function assertPackage(Request $request, PatientAccessPackage $package): void
     {
-        abort_unless($package->isUsable() && (int) $request->session()->get(self::SESSION_KEY) === $package->id, 403);
+        abort_unless($package->isUsable()
+            && $this->packageOrganisationIsAvailable($package)
+            && (int) $request->session()->get(self::SESSION_KEY) === $package->id, 403);
     }
 
     public function packageForSubmission(Request $request, FormSubmission $submission): ?PatientAccessPackage
@@ -72,7 +78,23 @@ class PatientAccessService
         $packageId = (int) $request->session()->get(self::SESSION_KEY);
         if (!$packageId || !$submission->invitation_id) return null;
         $package = PatientAccessPackage::find($packageId);
-        if (!$package?->isUsable() || $package->consent_refused_at) return null;
+        if (!$package?->isUsable() || !$this->packageOrganisationIsAvailable($package) || $package->consent_refused_at) return null;
         return $package->assignments()->where('invitation_id', $submission->invitation_id)->exists() ? $package : null;
+    }
+
+    private function packageOrganisationIsAvailable(PatientAccessPackage $package): bool
+    {
+        $organisationId = $package->patientCase()->value('organisation_id');
+
+        return $organisationId !== null && $this->organisationIsAvailable((int) $organisationId);
+    }
+
+    private function organisationIsAvailable(int $organisationId): bool
+    {
+        return Organisation::withTrashed()
+            ->whereKey($organisationId)
+            ->where('is_active', true)
+            ->whereNull('deleted_at')
+            ->exists();
     }
 }

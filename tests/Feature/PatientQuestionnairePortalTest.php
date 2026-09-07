@@ -71,6 +71,33 @@ class PatientQuestionnairePortalTest extends TestCase
         $this->get(route('patient.access', $revokedToken))->assertNotFound();
     }
 
+    public function test_inactive_organisation_blocks_patient_token_portal_and_submission_access(): void
+    {
+        [$doctor, $patient, $publication, $organisation, $component] = $this->base(true); $assignment = $this->assign($patient, $publication, 'One', 1);
+        [, $token] = $this->actingAs($doctor)->issue($patient); $package = $patient->accessPackages()->latest('id')->firstOrFail(); $this->flushSession(); $this->get(route('patient.access', $token));
+        $this->post(route('patient.assignments.start', [$package, $assignment])); $submission = FormSubmission::firstOrFail();
+
+        $organisation->update(['is_active' => false]);
+        $this->get(route('patient.access', $token))->assertNotFound();
+        $this->get(route('patient.portal', $package))->assertForbidden();
+        $this->get(route('submissions.take', $submission))->assertForbidden();
+        $payload = ['expected_revision' => 0, 'client_mutation_id' => (string) Str::uuid(), 'answers' => [$component->id => 'blocked']];
+        $this->postJson(route('submissions.autosave', $submission), $payload)->assertForbidden();
+        $payload['client_mutation_id'] = (string) Str::uuid();
+        $this->postJson(route('submissions.finalize', $submission), $payload)->assertForbidden();
+    }
+
+    public function test_soft_deleted_organisation_blocks_patient_token_and_portal_access(): void
+    {
+        [$doctor, $patient, $publication] = $this->base(); $this->assign($patient, $publication, 'One', 1);
+        [, $token] = $this->actingAs($doctor)->issue($patient); $package = $patient->accessPackages()->latest('id')->firstOrFail();
+        $this->flushSession(); $this->get(route('patient.access', $token))->assertRedirect(route('patient.portal', $package));
+
+        $patient->organisation()->firstOrFail()->delete();
+        $this->get(route('patient.access', $token))->assertNotFound();
+        $this->get(route('patient.portal', $package))->assertForbidden();
+    }
+
     public function test_portal_lists_dynamic_parts_in_order_without_research_identity_or_admin_navigation(): void
     {
         [$doctor, $patient, $first, $organisation] = $this->base(); $second = $this->publication($organisation, 'Second');
