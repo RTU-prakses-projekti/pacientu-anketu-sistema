@@ -141,7 +141,8 @@ class DoctorDashboardController extends Controller
         abort_unless($assignment->patient_case_id === $patientCase->id, 404);
         abort_unless($assignment->invitation_id, 404);
         $submission = $assignment->completedSubmission()->firstOrFail();
-        $submission->load('publication.form', 'formVersion', 'answers.component.options', 'answers.score');
+        $submission->load('publication.form', 'formVersion', 'answers.component.section', 'answers.component.options', 'answers.score');
+        $submission->setRelation('answers', $submission->orderedAnswers());
 
         return view('doctor.results.show', compact('patientCase', 'assignment', 'submission') + ['recipients' => $handoffs->recipients($patientCase->organisation)]);
     }
@@ -170,7 +171,7 @@ class DoctorDashboardController extends Controller
         $patientCases = PatientCase::query()->visibleTo($actor)
             ->where('organisation_id', $organisation->id)
             ->when($data['patient_case_ids'] ?? null, fn ($query, $ids) => $query->whereIn('id', $ids))
-            ->with(['assignments.completedSubmission.answers.component'])
+            ->with(['assignments.completedSubmission.answers.component.section'])
             ->orderBy('slot_number')
             ->get();
 
@@ -181,7 +182,7 @@ class DoctorDashboardController extends Controller
             foreach ($patientCase->assignments as $assignment) {
                 $submission = $assignment->completedSubmission;
                 if (!$submission) continue;
-                foreach ($submission->answers as $answer) {
+                foreach ($submission->orderedAnswers() as $answer) {
                     $rows[] = [$patientCase->patient_code, $patientName, $assignment->label, $answer->component->label, $answer->display_value];
                     $hasAnswers = true;
                 }

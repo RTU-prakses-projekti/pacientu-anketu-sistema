@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class FormSubmission extends Model
 {
@@ -18,6 +19,17 @@ class FormSubmission extends Model
     public function answers() { return $this->hasMany(SubmissionAnswer::class); }
     public function consentRecords() { return $this->hasMany(ConsentRecord::class); }
     public function patientAssignment() { return $this->hasOne(PatientFormAssignment::class, 'invitation_id', 'invitation_id'); }
+    public function orderedAnswers(): Collection
+    {
+        $this->loadMissing('answers.component.section');
+
+        return $this->answers->sortBy(fn ($answer) => [
+            $answer->component?->section?->display_order ?? PHP_INT_MAX,
+            $answer->component?->display_order ?? PHP_INT_MAX,
+            $answer->component?->id ?? PHP_INT_MAX,
+            $answer->id ?? PHP_INT_MAX,
+        ])->values();
+    }
     public function scopeWithoutPatientAssignment(Builder $query): Builder { return $query->whereDoesntHave('patientAssignment'); }
     public function isPatientLinked(): bool { return $this->invitation_id !== null && $this->patientAssignment()->exists(); }
     public function getRouteKeyName(): string { return 'public_id'; }

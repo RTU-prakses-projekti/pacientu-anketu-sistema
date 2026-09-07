@@ -45,6 +45,74 @@ class AnonymizedResultHandoffTest extends TestCase
         $this->assertTrue($portable[$phone->stable_key]['is_sensitive']);
     }
 
+    public function test_builder_http_save_persists_sensitive_flag_and_unchecking_clears_it(): void
+    {
+        [, , $form, $published, $normal] = $this->graph();
+        $draft = app(FormAuthoringService::class)->createDraftFrom($published, $form->creator);
+        $component = $draft->components()->where('stable_key', $normal->stable_key)->firstOrFail();
+        $this->assertFalse($component->is_sensitive);
+        $payload = ['visible' => 1, 'is_sensitive' => 1, 'translations' => ['lv' => ['label' => $component->label]], 'scoring_strategy' => 'none'];
+
+        $this->actingAs($form->creator)->put(route('builder.components.update', [$form, $component]), $payload)->assertRedirect()->assertSessionHasNoErrors();
+        $component->refresh();
+        $this->assertTrue($component->is_sensitive);
+        $this->actingAs($form->creator)->get(route('forms.builder', $form))->assertOk()->assertSee('name="is_sensitive" value="1" checked', false);
+
+        $payload['is_sensitive'] = 0;
+        $this->actingAs($form->creator)->put(route('builder.components.update', [$form, $component]), $payload)->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertFalse($component->fresh()->is_sensitive);
+    }
+
+    public function test_doctor_anonymized_result_and_export_follow_questionnaire_order(): void
+    {
+        $organisation = Organisation::create(['name' => 'Ordered research', 'slug' => Str::lower(Str::random(10)), 'is_active' => true]);
+        [$doctor] = $this->member('doctor', $organisation);
+        [$creator] = $this->member('form_creator', $organisation);
+        $authoring = app(FormAuthoringService::class);
+        $form = $authoring->create($organisation->id, $creator, 'Ordered study', 'blank');
+        $version = $form->versions()->firstOrFail();
+        $firstSection = $version->sections()->firstOrFail();
+        $secondSection = $authoring->addSection($version, 'Second section');
+        $firstLate = $authoring->addComponent($version, $firstSection, ['type' => 'short_text', 'label' => 'First late', 'options' => []]);
+        $firstEarly = $authoring->addComponent($version, $firstSection, ['type' => 'short_text', 'label' => 'First early', 'options' => []]);
+        $secondLate = $authoring->addComponent($version, $secondSection, ['type' => 'short_text', 'label' => 'Second late', 'options' => []]);
+        $secondEarly = $authoring->addComponent($version, $secondSection, ['type' => 'short_text', 'label' => 'Second early', 'options' => []]);
+        $firstSection->update(['display_order' => 20]);
+        $secondSection->update(['display_order' => 10]);
+        $firstLate->update(['display_order' => 20]);
+        $firstEarly->update(['display_order' => 10]);
+        $secondLate->update(['display_order' => 20]);
+        $secondEarly->update(['display_order' => 10]);
+        $published = $authoring->publish($version);
+
+        $patient = PatientCase::create(['organisation_id' => $organisation->id, 'doctor_id' => $doctor->id, 'slot_number' => 1, 'first_name' => 'Ordered', 'last_name' => 'Patient']);
+        $publication = Publication::create(['organisation_id' => $organisation->id, 'form_id' => $form->id, 'form_version_id' => $published->id, 'public_key' => Str::random(20), 'name' => 'Ordered study', 'status' => 'active', 'access_mode' => 'invitation', 'identified_required' => true, 'attempt_limit' => 1]);
+        $invitation = Invitation::create(['publication_id' => $publication->id, 'token_hash' => hash('sha256', Str::random(64))]);
+        $assignment = PatientFormAssignment::create(['patient_case_id' => $patient->id, 'publication_id' => $publication->id, 'invitation_id' => $invitation->id, 'label' => 'Ordered study', 'display_order' => 1]);
+        $submission = FormSubmission::create(['public_id' => Str::uuid(), 'organisation_id' => $organisation->id, 'publication_id' => $publication->id, 'form_version_id' => $published->id, 'invitation_id' => $invitation->id, 'attempt_number' => 1, 'status' => 'submitted', 'started_at' => now(), 'submitted_at' => now()]);
+        foreach ([$firstLate, $secondLate, $firstEarly, $secondEarly] as $component) SubmissionAnswer::create(['form_submission_id' => $submission->id, 'form_component_id' => $component->id, 'value' => $component->label, 'display_value' => $component->label, 'saved_at' => now()]);
+        $labels = ['Second early', 'Second late', 'First early', 'First late'];
+        $assertOrder = function (string $content) use ($labels): void {
+            $positions = array_map(fn ($label) => strpos($content, $label), $labels);
+            foreach ($positions as $position) $this->assertIsInt($position);
+            $sorted = $positions;
+            sort($sorted);
+            $this->assertSame($sorted, $positions);
+        };
+
+        $doctorContent = $this->actingAs($doctor)->get(route('doctor.results.show', [$patient, $assignment]))->assertOk()->getContent();
+        $assertOrder($doctorContent);
+        $recipient = User::factory()->create(['is_active' => true]);
+        $membership = OrganisationMembership::create(['organisation_id' => $organisation->id, 'user_id' => $recipient->id, 'is_active' => true]);
+        $membership->roles()->attach(Role::where('name', 'administrator')->firstOrFail());
+        $this->actingAs($doctor)->post(route('doctor.results.handoff', [$patient, $assignment]), ['recipient' => $recipient->id])->assertRedirect();
+        $handoff = \App\Models\AnonymizedResultHandoff::firstOrFail();
+        $anonymousContent = $this->actingAs($recipient)->get(route('anonymized-results.show', $handoff))->assertOk()->getContent();
+        $assertOrder($anonymousContent);
+        $csvContent = $this->actingAs($recipient)->post(route('anonymized-results.export'), ['format' => 'csv', 'handoff_ids' => [$handoff->public_id]])->assertDownload()->streamedContent();
+        $assertOrder($csvContent);
+    }
+
     public function test_custom_recipient_can_receive_only_anonymised_completed_result(): void
     {
         [$doctor, $organisation, , , $normal, $name, $email, $phone, $assignment, $submission, $patient] = $this->completedGraph();

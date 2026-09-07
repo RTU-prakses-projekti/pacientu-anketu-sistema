@@ -27,7 +27,7 @@ class AnonymizedResultExportService
             $formName = $handoff->submission?->publication?->form?->name;
             if (!$patientCode || !$formName || !$handoff->submission) continue;
 
-            foreach ($handoff->submission->answers as $answer) {
+            foreach ($handoff->submission->orderedAnswers() as $answer) {
                 $component = $answer->component;
                 if (!$component || $component->is_sensitive) continue;
                 $rows[] = [

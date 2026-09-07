@@ -67,6 +67,7 @@ class AnonymizedResultController extends Controller
             'organisation',
             'submission.publication.form',
             'submission.answers' => fn ($answers) => $answers->whereHas('component', fn ($component) => $component->where('is_sensitive', false)),
+            'submission.answers.component.section',
             'submission.answers.component.options',
             'assignment.patientCase:id,patient_code',
         ]);
@@ -74,7 +75,7 @@ class AnonymizedResultController extends Controller
         $formName = $handoff->submission->publication->form->name;
         $submittedAt = $handoff->submission->submitted_at;
         $handedOffAt = $handoff->handed_off_at;
-        $answers = $handoff->submission->answers->filter(fn ($answer) => !$answer->component->is_sensitive)->values();
+        $answers = $handoff->submission->orderedAnswers()->filter(fn ($answer) => !$answer->component->is_sensitive)->values();
         return view('anonymized-results.show', compact('patientCode', 'formName', 'submittedAt', 'handedOffAt', 'answers'));
     }
 
@@ -94,7 +95,7 @@ class AnonymizedResultController extends Controller
                 ->when(!$hasGlobalPermission, fn ($membership) => $membership->whereHas('roles.permissions', fn ($permissions) => $permissions->where('permissions.name', 'anonymized_results.view')));
         });
         return $query->when($publicIds, fn ($query) => $query->whereIn('public_id', $publicIds))
-            ->with(['submission.publication.form', 'submission.answers.component.options', 'assignment.patientCase:id,patient_code'])
+            ->with(['submission.publication.form', 'submission.answers.component.section', 'submission.answers.component.options', 'assignment.patientCase:id,patient_code'])
             ->get();
     }
 }
