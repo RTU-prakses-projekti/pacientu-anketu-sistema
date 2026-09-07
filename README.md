@@ -1,184 +1,174 @@
-# Universālais veidlapu veidotājs
+# Patient Questionnaire System
 
-Laravel projekts testu, anketu un veidlapu izveidei un aizpildīšanai. Anketas var manuāli izveidot sistēmas builderī pēc PDF parauga.
+## Overview
 
-## Kas nepieciešams
+Patient Questionnaire System is a Laravel-based web application for creating, publishing, completing and managing patient questionnaires. It supports a doctor workspace, account-free patient access and privacy-preserving result handoff.
 
-- Git
-- PHP 8.4.1 vai jaunāks
-  - projekts pārbaudīts ar PHP 8.5
-- Composer 2
-- Node.js un npm
-  - projekts pārbaudīts ar Node.js 24
-- XAMPP ar MySQL/MariaDB
+This is an RTU professional internship and demonstration project. It is not presented as a certified clinical product. Before using real medical data in production, an independent security, privacy and compliance audit would be required.
 
-XAMPP komplektā esošais PHP 8.2 šim projektam neder. XAMPP var izmantot MySQL/MariaDB serverim, bet Laravel aplikācija jāpalaiž terminālī ar PHP 8.4.1 vai jaunāku versiju.
+## Main Features
 
-## 1. Lejupielādēt projektu
+- Doctor workspace with an organisation-scoped patient registry.
+- Pseudonymous \`PAT-*\` research IDs for patient questionnaire workflows.
+- Questionnaire assignment and individual expiring/revocable patient access links.
+- Patient completion without a patient User account.
+- Autosave, resume, sequential questionnaire parts and final submission.
+- Questionnaire builder with sections, components, validation and conditional logic.
+- LV/EN/RU localized questionnaire and application content.
+- Consent recording and published form-version immutability.
+- Completed result view for the responsible doctor.
+- Permission-controlled anonymized result handoff.
+- Sensitive-answer filtering for anonymized views and exports.
+- CSV/XLSX export for anonymized results.
+- Questionnaire package import/export with manifest and asset compatibility.
+- Audit logging and organisation isolation.
 
-Ja projekts tiek klonēts ar Git:
+## User Roles
 
-```powershell
-git clone https://github.com/RTU-prakses-projekti/Kontroldarbu-sistema.git
-cd Kontroldarbu-sistema
-git checkout universal-form-builder
-```
+The product roles are:
 
-## 2. Instalēt projekta atkarības
+- **Administrator** — system and organisation administration without automatic doctor-patient ownership access.
+- **Administrator assistant** — scoped organisation administration.
+- **Questionnaire manager** — questionnaire builder, publishing and package exchange.
+- **Doctor** — own patient workspace, assignments and completed results.
 
-```powershell
-composer install
-npm.cmd install
-```
+\`platform_admin\` is a hidden bootstrap/root account used for initial administration and recovery. It is not an assignable product role.
 
-## 3. Izveidot `.env`
+Patients do not have system accounts. They use the protected patient-access link workflow.
 
-Windows CMD:
+## Patient Workflow
 
-```cmd
-copy .env.example .env
-```
+\`\`\`mermaid
+flowchart LR
+    D[Doctor] --> P[Create patient case]
+    P --> A[Assign questionnaire parts]
+    A --> L[Issue expiring patient link]
+    L --> R[Patient opens link without account]
+    R --> S[Autosave and resume]
+    S --> F[Sequential parts and consent]
+    F --> C[Finalize submission]
+    C --> V[Doctor views completed result]
+    V --> H[Anonymized handoff]
+    H --> X[Recipient views filtered result/export]
+\`\`\`
 
-PowerShell:
+Patient links are bearer credentials. The plaintext token is displayed only for link delivery; the database stores only a SHA-256 token hash. Active links expire and can be revoked or regenerated.
 
-```powershell
-Copy-Item .env.example .env
-```
+## Security & Privacy
 
-Pēc tam izveido aplikācijas atslēgu:
+- Patient cases are isolated by doctor ownership in the Doctor Workspace.
+- Active organisation and membership checks scope staff access.
+- Generic submission/export permissions do not grant access to patient-linked submissions or anonymized handoffs.
+- Anonymized recipients see only their own handoffs, PAT IDs, metadata and non-sensitive answers.
+- Patient identity fields and sensitive component answers are excluded from anonymized views and exports.
+- \`platform_admin\` is hidden from role-assignment UI and protected by bootstrap safeguards.
+- Audit records avoid plaintext patient access tokens.
+- Private attachments and application storage are kept outside nginx public content.
 
-```powershell
-php artisan key:generate
-```
+These controls are application-level protections for a demonstration project. They are not a claim of medical certification or regulatory compliance.
 
-`.env` fails GitHub netiek glabāts, tāpēc katram tas jāizveido lokāli.
+## Architecture
 
-## 4. Datubāze
+\`\`\`mermaid
+flowchart LR
+    DA[Local doctor/admin] --> N[nginx]
+    RP[Remote patient] --> CF[Cloudflare Quick Tunnel<br/>public HTTPS demo/test transport]
+    CF --> N
+    N --> PHP[Laravel PHP-FPM]
+    PHP --> DB[(MariaDB)]
+    PHP --> Q[Queue worker]
+    PHP --> SCH[Scheduler]
+    PHP --> PS[(Private storage volume)]
+\`\`\`
 
-1. Atver XAMPP.
-2. Palaid MySQL.
-3. phpMyAdmin izveido tukšu datubāzi:
+Docker Compose separates the edge and backend networks. nginx serves the Laravel public directory and proxies PHP requests to the app container. The database is backend-only; private storage and logs use persistent volumes.
 
-```text
-kontroldarbu_sistema
-```
+## Tech Stack
 
-Izmanto `utf8mb4` charset.
+- Laravel 13.20
+- PHP 8.4 FPM
+- MariaDB 10.11
+- Docker Compose
+- nginx
+- Vite 8 and Node 24 for frontend builds
+- PHPUnit feature and unit tests
+- OpenSpout for CSV/XLSX generation
+- Cloudflare Quick Tunnel for public HTTPS demo/test transport without a custom domain
 
-`.env` failā norādi:
+## Deployment
 
-```dotenv
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=kontroldarbu_sistema
-DB_USERNAME=root
-DB_PASSWORD=
-```
+For a local Docker demonstration:
 
-Ja lokālajam MySQL ir cita parole vai ports, ievadi savus datus.
+1. Start Docker Desktop with Linux containers.
+2. Run \`deployment\\\\INSTALL-SERVER.bat\` once on a fresh server.
+3. Use \`deployment\\\\START-SERVER.bat\`, \`STATUS-SERVER.bat\` and \`STOP-SERVER.bat\` for daily operation.
+4. Use \`deployment\\\\START-PUBLIC-DEMO.bat\` for a temporary public HTTPS demo URL through Cloudflare Quick Tunnel.
+5. Use \`deployment\\\\STOP-PUBLIC-DEMO.bat\` to stop only the public demo tunnel.
 
-Pēc tam izpildi migrācijas:
+The Quick Tunnel is a temporary public HTTPS demo/test transport and may receive a new random \`trycloudflare.com\` hostname when recreated. No custom domain is required. The deployment scripts keep secrets in ignored local files and preserve database/private-storage volumes.
 
-```powershell
-php artisan migrate
-```
+Backups are created with \`deployment\\\\BACKUP-SERVER.bat\`. Test/staging uninstall is available through \`deployment\\\\UNINSTALL-SERVER.bat\` and is destructive for this project’s Docker data only.
 
-Datubāzei ar saglabājamiem datiem neizmanto `migrate:fresh`, `db:wipe` vai rollback komandas.
+## Testing
 
-## 5. Frontend
+The repository contains feature coverage for:
 
-```powershell
+- patient token hashing, expiry, revoke/regenerate and sequential access;
+- autosave, resume, finalization and consent;
+- doctor ownership and organisation isolation;
+- role assignment and bootstrap root protection;
+- anonymized handoff, sensitive-answer filtering and CSV/XLSX export;
+- questionnaire ZIP/Git package exchange, assets and legacy manifest compatibility;
+- login throttling and proxy redirect behavior;
+- Docker bootstrap status commands.
+
+Run the full checks inside the application Docker environment:
+
+\`\`\`powershell
+docker compose --env-file .env.production exec -T app php artisan test
+docker compose --env-file .env.production exec -T app php artisan questionnaires:validate
 npm.cmd run build
-```
+git diff --check
+\`\`\`
 
-## 6. Izveidot pirmo administratoru
+The project should be treated as a demonstration/practice system until the complete Docker runtime checks and an independent security/privacy/compliance review are completed.
 
-Tukšai datubāzei izpildi:
+## Project Structure
 
-```powershell
-php artisan app:create-admin
-```
+\`\`\`text
+app/                 Laravel application, policies and domain services
+database/            migrations, factories and seeders
+deployment/          Docker/Windows server scripts and nginx configuration
+docker/              PHP runtime configuration
+questionnaires/      portable questionnaire packages
+resources/views/     Blade UI
+resources/css/       application styles
+resources/js/         questionnaire and UI behavior
+routes/               web and console routes
+tests/                feature and unit regression tests
+docs/screenshots/     planned portfolio screenshots
+\`\`\`
 
-Ievadi administratora vārdu un e-pastu. Parole tiks prasīta terminālī, un tai jābūt vismaz 12 simbolus garai, ar burtiem un cipariem.
+## Screenshots
 
-## 7. Palaist projektu
+Planned screenshots are listed below. Actual images are intentionally not included yet.
 
-XAMPP panelī MySQL jābūt ieslēgtam. Laravel aplikāciju palaid projekta mapē:
+- \`docs/screenshots/doctor-workspace.png\` — Doctor Workspace with synthetic patients and PAT IDs.
+- \`docs/screenshots/patient-management.png\` — patient assignment and secure-link management with fake data.
+- \`docs/screenshots/questionnaire-builder.png\` — sections, components and conditional logic.
+- \`docs/screenshots/patient-portal-mobile.png\` — account-free patient portal on a phone-sized viewport.
+- \`docs/screenshots/questionnaire-runner-mobile.png\` — questionnaire runner with progress and validation.
+- \`docs/screenshots/result-handoff.png\` — doctor’s completed result and anonymized recipient selection.
+- \`docs/screenshots/anonymized-results.png\` — recipient result list and export controls.
+- \`docs/screenshots/roles-permissions.png\` — product roles with hidden bootstrap root.
+- \`docs/screenshots/public-demo.png\` — public HTTPS Quick Tunnel demo, with the temporary URL redacted if necessary.
 
-```powershell
-php artisan serve
-```
+Use only synthetic data. Never show plaintext patient tokens, names, personal IDs, notes, emails, database credentials, \`.env.production\`, diagnostics or real medical answers.
 
-Pārlūkā atver:
+## Project Context
 
-```text
-http://127.0.0.1:8000
-```
+The project was developed during an RTU professional internship in the context of a group project. It combines application development, questionnaire authoring, patient workflow, access-control work, testing and Docker-based deployment preparation.
 
-Neizmanto `localhost/Kontroldarbu-sistema/public`, ja XAMPP Apache izmanto PHP 8.2. Aplikācija jāpalaiž ar `php artisan serve` no PHP 8.4.1 vai jaunākas vides.
+## My Contribution
 
-## 8. Ja `php -v` rāda nepareizu PHP
-
-```powershell
-php -v
-where.exe php
-```
-
-Aktīvajai PHP versijai jābūt vismaz 8.4.1.
-
-## 9. Kā izveidot anketu
-
-1. Ielogojies administratora profilā.
-2. Izvēlies vai izveido organizāciju.
-3. Atver sadaļu “Formas”.
-4. Izveido jaunu formu vai anketu.
-5. Builderī manuāli pievieno sadaļas un jautājumus pēc dotā PDF parauga.
-6. Saglabā un pārbaudi anketu ar Preview.
-7. Kad anketa ir gatava, publicē to.
-
-Anketu tekstus var ievadīt latviešu, angļu un krievu valodā (LV/EN/RU).
-
-## 10. Testi (pēc izvēles)
-
-```powershell
-php artisan test
-npm.cmd run build
-```
-
-## Anketas nodošana caur Git
-
-1. Izveido savu branch ar savu vārdu, piemēram, `laura`, `gustavs` vai `janis`.
-2. Savā branch palaid projektu, izveido anketu un pārbaudi to ar Preview.
-3. Formas skatā pie vajadzīgās versijas nospied “Eksportēt uz Git”.
-4. Veic commit savā branch — nav nepieciešams manuāli atlasīt tikai `questionnaires/` failus.
-5. Push savu branch uz GitHub.
-6. `.env`, MySQL datubāzes failus, SQL dumpus un `storage` runtime failus Git nepievieno.
-
-## Biežākās problēmas
-
-### Composer prasa jaunāku PHP
-
-Pārbaudi versiju:
-
-```powershell
-php -v
-```
-
-Nepieciešams PHP 8.4.1 vai jaunāks.
-
-### `php artisan migrate` nevar pieslēgties datubāzei
-
-Pārbaudi:
-
-- XAMPP MySQL ir ieslēgts;
-- datubāze `kontroldarbu_sistema` ir izveidota;
-- `.env` datubāzes dati ir pareizi.
-
-### Pēc `.env` izmaiņām joprojām tiek izmantota vecā konfigurācija
-
-```powershell
-php artisan config:clear
-```
-
-> Projekts ir izstrādes/prakses projekts. Reālus sensitīvus pacientu datus bez atsevišķa drošības un privātuma novērtējuma neizmantot.
+My contribution included significant implementation work on the Laravel application, patient workflow, access-control logic, anonymized result handling, Docker deployment, public HTTPS demo setup and system testing.
