@@ -188,17 +188,72 @@ function Get-EdgeNetwork([string] $NginxContainerId) {
 }
 
 function Get-DnsProbe([string] $Hostname, [string] $Server) {
-    if (-not (Get-Command Resolve-DnsName -ErrorAction SilentlyContinue)) { return [pscustomobject]@{ Success = $false; Text = 'Resolve-DnsName is not available in this PowerShell environment.' } }
+    if (-not (Get-Command Resolve-DnsName -ErrorAction SilentlyContinue)) { return [pscustomobject]@{ Success = $false; Text = 'Resolve-DnsName is not available in this PowerShell environment.'; Addresses = @() } }
     try {
         if ([string]::IsNullOrWhiteSpace($Server)) { $records = Resolve-DnsName -Name $Hostname -Type A -ErrorAction Stop } else { $records = Resolve-DnsName -Name $Hostname -Type A -Server $Server -ErrorAction Stop }
-        return [pscustomobject]@{ Success = $true; Text = (($records | Select-Object Name, Type, IPAddress | Out-String).Trim()) }
-    } catch { return [pscustomobject]@{ Success = $false; Text = (Get-ShortText $_.Exception.Message) } }
+        $addresses = @($records | Where-Object { $_.Type -eq 'A' -and -not [string]::IsNullOrWhiteSpace([string] $_.IPAddress) } | ForEach-Object { [string] $_.IPAddress } | Select-Object -Unique)
+        return [pscustomobject]@{ Success = ($addresses.Count -gt 0); Text = (($records | Select-Object Name, Type, IPAddress | Out-String).Trim()); Addresses = $addresses }
+    } catch { return [pscustomobject]@{ Success = $false; Text = (Get-ShortText $_.Exception.Message); Addresses = @() } }
 }
 
 function Get-DnsReadiness([string] $Hostname) {
     $defaultProbe = Get-DnsProbe $Hostname ''
-    $publicProbe = Get-DnsProbe $Hostname '1.1.1.1'
-    return [pscustomobject]@{ Ready = $defaultProbe.Success; Default = $defaultProbe; Public = $publicProbe }
+    $cloudflareProbe = Get-DnsProbe $Hostname '1.1.1.1'
+    $googleProbe = Get-DnsProbe $Hostname '8.8.8.8'
+    $quad9Probe = Get-DnsProbe $Hostname '9.9.9.9'
+    $publicProbesReady = $defaultProbe.Success -and $cloudflareProbe.Success -and $googleProbe.Success -and $quad9Probe.Success
+    $ipAddress = @($cloudflareProbe.Addresses + $googleProbe.Addresses + $quad9Probe.Addresses | Where-Object { -not [string]::IsNullOrWhiteSpace([string] $_) } | Select-Object -First 1)
+    return [pscustomobject]@{
+        Ready = $publicProbesReady
+        Default = $defaultProbe
+        Cloudflare = $cloudflareProbe
+        Google = $googleProbe
+        Quad9 = $quad9Probe
+        IpAddress = if ($ipAddress.Count -gt 0) { [string] $ipAddress[0] } else { '' }
+    }
+}
+
+function Get-PublicHttpCheck([string] $Url, [string] $Hostname, [string] $IpAddress) {
+    $curlCommand = Get-Command curl.exe -ErrorAction SilentlyContinue
+    if ($null -eq $curlCommand) { return [pscustomobject]@{ Success = $false; StatusCode = ''; ContentType = ''; Content = ''; Error = 'curl.exe is not available for public HTTPS readiness checks.' } }
+    $tempRoot = [System.IO.Path]::GetTempPath()
+    $suffix = [guid]::NewGuid().ToString('N')
+    $headersPath = Join-Path $tempRoot ("pacientu-public-demo-$suffix.headers")
+    $bodyPath = Join-Path $tempRoot ("pacientu-public-demo-$suffix.body")
+    $curlArgs = @('--silent', '--show-error', '--location', '--proto', '=https', '--proto-redir', '=https', '--connect-timeout', '10', '--max-time', '20', '--resolve', ("{0}:443:{1}" -f $Hostname, $IpAddress), '--dump-header', $headersPath, '--output', $bodyPath, $Url)
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $curlOutput = & $curlCommand.Source @curlArgs 2>&1
+        $exitCode = $LASTEXITCODE
+    } catch {
+        $curlOutput = $_.Exception.Message
+        $exitCode = 1
+    } finally { $ErrorActionPreference = $previousErrorActionPreference }
+    try {
+        $headers = if (Test-Path -LiteralPath $headersPath) { [System.IO.File]::ReadAllText($headersPath) } else { '' }
+        $content = if (Test-Path -LiteralPath $bodyPath) { [System.IO.File]::ReadAllText($bodyPath) } else { '' }
+        $statusMatches = [regex]::Matches($headers, '(?im)^HTTP/\S+\s+(\d{3})')
+        $statusCode = if ($statusMatches.Count -gt 0) { [int] $statusMatches[$statusMatches.Count - 1].Groups[1].Value } else { '' }
+        $contentTypeMatches = [regex]::Matches($headers, '(?im)^Content-Type:\s*([^;\r\n]+)')
+        $contentType = if ($contentTypeMatches.Count -gt 0) { $contentTypeMatches[$contentTypeMatches.Count - 1].Groups[1].Value.Trim() } else { '' }
+        $errorText = if ($exitCode -eq 0) { '' } else { Get-ShortText (@($curlOutput | ForEach-Object { [string] $_ }) -join ' ') }
+        return [pscustomobject]@{ Success = ($exitCode -eq 0 -and $statusCode -eq 200); StatusCode = $statusCode; ContentType = $contentType; Content = $content; Error = $errorText }
+    } finally {
+        Remove-Item -LiteralPath $headersPath, $bodyPath -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Wait-PublicHttp200Until([string] $Url, [string] $Label, [string] $Hostname, [string] $IpAddress, [datetime] $Deadline) {
+    $attempt = 0
+    while ((Get-Date) -lt $Deadline) {
+        $attempt++
+        $check = Get-PublicHttpCheck $Url $Hostname $IpAddress
+        if ($check.Success) { return $check }
+        if ($attempt -eq 1 -or $attempt % 5 -eq 0) { Write-Host "Waiting for $Label... $([int] ((Get-Date) - $script:readinessStartedAt).TotalSeconds)s, HTTPS $(Get-HttpStatusText $check)" }
+        Start-Sleep -Seconds 2
+    }
+    throw "$Label did not return HTTPS 200 within the five-minute readiness window: $Url"
 }
 
 function Collect-FailureDiagnostics {
@@ -323,123 +378,145 @@ try {
     $edgeNetwork = Get-EdgeNetwork $nginxId
     Write-Diagnostic "Using nginx container: $nginxId"
     Write-Diagnostic "Using existing Docker edge network: $edgeNetwork"
-    $existingQuery = Invoke-DockerSafe -Arguments @('ps', '-aq', '--filter', "name=^/$containerName$")
-    if ($existingQuery.ExitCode -ne 0) { throw 'Could not inspect the existing Quick Tunnel container.' }
-    $existingIds = @($existingQuery.Text -split '\s+' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-    foreach ($existingId in $existingIds) {
-        $removeExisting = Invoke-DockerSafe -Arguments @('rm', '-f', $existingId)
-        Write-DiagnosticBlock "Removed previous public-demo container: $existingId" $removeExisting.Text
-        if ($removeExisting.ExitCode -ne 0) { throw 'Could not remove the previous Quick Tunnel container.' }
-    }
+    $maxQuickTunnelAttempts = 5
+    $quickTunnelReady = $false
+    $lastQuickTunnelFailure = ''
 
-    $runResult = Invoke-DockerSafe -Arguments @('run', '-d', '--name', $containerName, '--restart', 'unless-stopped', '--label', 'com.pacientu-anketu-sistema.component=public-demo', '--network', $edgeNetwork, $cloudflaredImage, 'tunnel', '--no-autoupdate', '--url', 'http://nginx:80')
-    Write-DiagnosticBlock 'Quick Tunnel container creation/start result' $runResult.Text
-    if ($runResult.ExitCode -ne 0) { throw 'Could not start the Cloudflare Quick Tunnel container.' }
-    $containerId = (($runResult.Text -split '\r?\n' | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^[0-9a-f]{12,64}$' } | Select-Object -Last 1))
-    if ([string]::IsNullOrWhiteSpace($containerId)) { throw 'Quick Tunnel started without a readable container ID.' }
+    for ($quickAttempt = 1; $quickAttempt -le $maxQuickTunnelAttempts -and -not $quickTunnelReady; $quickAttempt++) {
+        $containerId = ''
+        $publicUrl = ''
+        $hostname = ''
+        $script:readinessStartedAt = Get-Date
+        $readinessDeadline = $script:readinessStartedAt.AddMinutes(5)
+        Write-Diagnostic "Quick Tunnel attempt $quickAttempt/$maxQuickTunnelAttempts started."
+        try {
+            $existingQuery = Invoke-DockerSafe -Arguments @('ps', '-aq', '--filter', "name=^/$containerName$")
+            if ($existingQuery.ExitCode -ne 0) { throw 'Could not inspect the existing Quick Tunnel container.' }
+            $existingIds = @($existingQuery.Text -split '\s+' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+            foreach ($existingId in $existingIds) {
+                $removeExisting = Invoke-DockerSafe -Arguments @('rm', '-f', $existingId)
+                Write-DiagnosticBlock "Removed previous public-demo container: $existingId" $removeExisting.Text
+                if ($removeExisting.ExitCode -ne 0) { throw 'Could not remove the previous Quick Tunnel container.' }
+            }
 
-    $script:readinessStartedAt = Get-Date
-    $readinessDeadline = $script:readinessStartedAt.AddMinutes(5)
-    $logs = ''
-    while ((Get-Date) -lt $readinessDeadline) {
-        $logsResult = Invoke-DockerSafe -Arguments @('logs', $containerId)
-        if ($logsResult.ExitCode -ne 0) { throw 'Could not read the Cloudflare Quick Tunnel container logs.' }
-        $logs = $logsResult.Text
-        $urlMatch = [regex]::Match($logs, 'https://[a-z0-9-]+\.trycloudflare\.com')
-        if ($urlMatch.Success) {
-            $publicUrl = $urlMatch.Value.TrimEnd('/')
-            Save-PublicDemoUrlFile 'URL FOUND - waiting for Registered tunnel connection'
-            Write-Diagnostic "Found trycloudflare.com URL immediately: $publicUrl"
-            Write-Host "Cloudflare URL found: $publicUrl"
-            break
+            $runResult = Invoke-DockerSafe -Arguments @('run', '-d', '--name', $containerName, '--restart', 'unless-stopped', '--label', 'com.pacientu-anketu-sistema.component=public-demo', '--network', $edgeNetwork, $cloudflaredImage, 'tunnel', '--no-autoupdate', '--url', 'http://nginx:80')
+            Write-DiagnosticBlock "Quick Tunnel attempt $quickAttempt container creation/start result" $runResult.Text
+            if ($runResult.ExitCode -ne 0) { throw 'Could not start the Cloudflare Quick Tunnel container.' }
+            $containerId = (($runResult.Text -split '\r?\n' | ForEach-Object { $_.Trim() } | Where-Object { $_ -match '^[0-9a-f]{12,64}$' } | Select-Object -Last 1))
+            if ([string]::IsNullOrWhiteSpace($containerId)) { throw 'Quick Tunnel started without a readable container ID.' }
+
+            $logs = ''
+            while ((Get-Date) -lt $readinessDeadline) {
+                $logsResult = Invoke-DockerSafe -Arguments @('logs', $containerId)
+                if ($logsResult.ExitCode -ne 0) { throw 'Could not read the Cloudflare Quick Tunnel container logs.' }
+                $logs = $logsResult.Text
+                $urlMatch = [regex]::Match($logs, 'https://[a-z0-9-]+\.trycloudflare\.com')
+                if ($urlMatch.Success) {
+                    $publicUrl = $urlMatch.Value.TrimEnd('/')
+                    Write-Diagnostic "Attempt $quickAttempt found trycloudflare.com URL: $publicUrl"
+                    Write-Host "Cloudflare URL found (attempt $quickAttempt/$maxQuickTunnelAttempts): $publicUrl"
+                    break
+                }
+                if ((Get-ContainerState $containerId) -ne 'running') { throw 'The Quick Tunnel container stopped before publishing a public URL.' }
+                $elapsed = [int] ((Get-Date) - $script:readinessStartedAt).TotalSeconds
+                if ($elapsed -eq 0 -or $elapsed % 5 -eq 0) { Write-Host "Waiting for Cloudflare URL... ${elapsed}s" }
+                Start-Sleep -Seconds 2
+            }
+            if ([string]::IsNullOrWhiteSpace($publicUrl)) { throw 'Quick Tunnel did not publish a public URL within the five-minute readiness window.' }
+
+            $registered = $false
+            while ((Get-Date) -lt $readinessDeadline) {
+                $logsResult = Invoke-DockerSafe -Arguments @('logs', $containerId)
+                if ($logsResult.ExitCode -ne 0) { throw 'Could not read the Cloudflare Quick Tunnel container logs.' }
+                $logs = $logsResult.Text
+                if ($logs -match '(?i)Registered tunnel connection') { $registered = $true; break }
+                if ((Get-ContainerState $containerId) -ne 'running') { throw 'The Quick Tunnel container stopped before registering a connection.' }
+                $elapsed = [int] ((Get-Date) - $script:readinessStartedAt).TotalSeconds
+                if ($elapsed -eq 0 -or $elapsed % 5 -eq 0) { Write-Host "Waiting for Registered tunnel connection... ${elapsed}s" }
+                Start-Sleep -Seconds 2
+            }
+            if (-not $registered) { throw 'Quick Tunnel did not register a connection within the five-minute readiness window.' }
+            Write-Diagnostic "Attempt $quickAttempt tunnel registration: PASS"
+            Write-DiagnosticBlock "Quick Tunnel attempt $quickAttempt cloudflared logs after registration" $logs
+
+            $hostname = ([Uri] $publicUrl).Host
+            $dnsReady = $false
+            $lastDnsReadiness = $null
+            $lastDnsLogAt = [datetime]::MinValue
+            while ((Get-Date) -lt $readinessDeadline) {
+                $lastDnsReadiness = Get-DnsReadiness $hostname
+                $now = Get-Date
+                if (($now - $lastDnsLogAt).TotalSeconds -ge 10 -or $lastDnsReadiness.Ready) {
+                    Write-DiagnosticBlock "Attempt $quickAttempt DNS $hostname (Windows default resolver)" $lastDnsReadiness.Default.Text
+                    Write-DiagnosticBlock "Attempt $quickAttempt DNS $hostname (1.1.1.1)" $lastDnsReadiness.Cloudflare.Text
+                    Write-DiagnosticBlock "Attempt $quickAttempt DNS $hostname (8.8.8.8)" $lastDnsReadiness.Google.Text
+                    Write-DiagnosticBlock "Attempt $quickAttempt DNS $hostname (9.9.9.9)" $lastDnsReadiness.Quad9.Text
+                    $lastDnsLogAt = $now
+                }
+                if ($lastDnsReadiness.Ready) { $dnsReady = $true; break }
+                $elapsed = [int] ($now - $script:readinessStartedAt).TotalSeconds
+                if ($elapsed -eq 0 -or $elapsed % 5 -eq 0) {
+                    Write-Host ("Waiting for DNS readiness... {0}s (default={1}; 1.1.1.1={2}; 8.8.8.8={3}; 9.9.9.9={4})" -f $elapsed, $(if ($lastDnsReadiness.Default.Success) { 'PASS' } else { 'WAIT' }), $(if ($lastDnsReadiness.Cloudflare.Success) { 'PASS' } else { 'WAIT' }), $(if ($lastDnsReadiness.Google.Success) { 'PASS' } else { 'WAIT' }), $(if ($lastDnsReadiness.Quad9.Success) { 'PASS' } else { 'WAIT' }))
+                }
+                Start-Sleep -Seconds 2
+            }
+            if (-not $dnsReady) {
+                Write-Diagnostic "Attempt $quickAttempt DNS readiness: FAIL; Windows/default plus all three public resolvers did not resolve before timeout."
+                throw "DNS readiness failed for $hostname on the Windows/default resolver and/or 1.1.1.1, 8.8.8.8, or 9.9.9.9."
+            }
+            Write-Diagnostic "Attempt $quickAttempt DNS readiness: PASS; HTTPS readiness IP=$($lastDnsReadiness.IpAddress)"
+            Write-DiagnosticBlock "Attempt $quickAttempt FINAL DNS $hostname (Windows default resolver)" $lastDnsReadiness.Default.Text
+            Write-DiagnosticBlock "Attempt $quickAttempt FINAL DNS $hostname (1.1.1.1)" $lastDnsReadiness.Cloudflare.Text
+            Write-DiagnosticBlock "Attempt $quickAttempt FINAL DNS $hostname (8.8.8.8)" $lastDnsReadiness.Google.Text
+            Write-DiagnosticBlock "Attempt $quickAttempt FINAL DNS $hostname (9.9.9.9)" $lastDnsReadiness.Quad9.Text
+            if ([string]::IsNullOrWhiteSpace($lastDnsReadiness.IpAddress)) { throw 'Public DNS resolved without a usable IPv4 address for HTTPS readiness.' }
+
+            $publicHealth = Wait-PublicHttp200Until "$publicUrl/up" 'public /up' $hostname $lastDnsReadiness.IpAddress $readinessDeadline
+            $login = Wait-PublicHttp200Until "$publicUrl/login" 'public /login' $hostname $lastDnsReadiness.IpAddress $readinessDeadline
+            Write-Diagnostic ("Attempt {0} public HTTPS /up HTTP={1}; /login HTTP={2}" -f $quickAttempt, (Get-HttpStatusText $publicHealth), (Get-HttpStatusText $login))
+            $loginHtml = [string] $login.Content
+            $insecureHtmlUrls = @([regex]::Matches($loginHtml, '(?i)http://[^"\s<>]+') | ForEach-Object { $_.Value } | Select-Object -Unique)
+            Write-Diagnostic "Attempt $quickAttempt public login insecure HTTP URLs: $($insecureHtmlUrls -join ', ')"
+            if ($insecureHtmlUrls.Count -gt 0) { throw 'Public login HTML contains insecure http:// URL(s); mixed content is not allowed.' }
+            $formActions = @([regex]::Matches($loginHtml, '(?is)<form\b[^>]*\baction="([^"]+)"') | ForEach-Object { $_.Groups[1].Value })
+            if ($formActions | Where-Object { $_ -match '^http://' }) { throw 'Public login form action uses insecure http://.' }
+            $cssMatch = [regex]::Match($loginHtml, '(?i)(?:href|src)="([^"\s]+/build/[^"\s]+\.css(?:\?[^"\s]*)?)"')
+            $jsMatch = [regex]::Match($loginHtml, '(?i)(?:href|src)="([^"\s]+/build/[^"\s]+\.js(?:\?[^"\s]*)?)"')
+            if (-not $cssMatch.Success -or -not $jsMatch.Success) { throw 'Public login page did not expose both CSS and JS asset URLs.' }
+            $cssPath = $cssMatch.Groups[1].Value
+            $cssUrl = if ($cssPath -match '^https?://') { $cssPath } else { "$publicUrl/$($cssPath.TrimStart('/'))" }
+            $jsPath = $jsMatch.Groups[1].Value
+            $jsUrl = if ($jsPath -match '^https?://') { $jsPath } else { "$publicUrl/$($jsPath.TrimStart('/'))" }
+            Write-Diagnostic "Attempt $quickAttempt generated CSS URL: $cssUrl"
+            Write-Diagnostic "Attempt $quickAttempt generated JS URL: $jsUrl"
+            if ($cssUrl -notmatch '^https://' -or -not $cssUrl.StartsWith("$publicUrl/") -or $jsUrl -notmatch '^https://' -or -not $jsUrl.StartsWith("$publicUrl/")) { throw 'Public CSS/JS URL is not HTTPS/current-host scoped.' }
+            $cssCheck = Wait-PublicHttp200Until $cssUrl 'public CSS asset' $hostname $lastDnsReadiness.IpAddress $readinessDeadline
+            $jsCheck = Wait-PublicHttp200Until $jsUrl 'public JS asset' $hostname $lastDnsReadiness.IpAddress $readinessDeadline
+            Write-Diagnostic ("Attempt {0} CSS HTTP={1}; Content-Type={2}; JS HTTP={3}; Content-Type={4}" -f $quickAttempt, (Get-HttpStatusText $cssCheck), $cssCheck.ContentType, (Get-HttpStatusText $jsCheck), $jsCheck.ContentType)
+            if ($cssCheck.ContentType -notmatch '(?i)text/css') { throw "Public CSS asset check failed: Content-Type $($cssCheck.ContentType)" }
+            if ($jsCheck.ContentType -notmatch '(?i)(javascript|ecmascript)') { throw "Public JS asset check failed: Content-Type $($jsCheck.ContentType)" }
+
+            Save-PublicDemoUrlFile 'READY'
+            Write-Diagnostic "Attempt ${quickAttempt}: FULL READINESS PASS"
+            $quickTunnelReady = $true
+        } catch {
+            $lastQuickTunnelFailure = $_.Exception.Message
+            Write-DiagnosticBlock "Quick Tunnel attempt $quickAttempt/$maxQuickTunnelAttempts FAILED" $lastQuickTunnelFailure
+            Collect-FailureDiagnostics
+            Remove-PublicDemoUrlFile
+            if (-not [string]::IsNullOrWhiteSpace($containerId)) {
+                $removeFailed = Invoke-DockerSafe -Arguments @('rm', '-f', $containerId)
+                Write-DiagnosticBlock "Removed failed Quick Tunnel attempt $quickAttempt container" $removeFailed.Text
+            }
+            if ($quickAttempt -lt $maxQuickTunnelAttempts) {
+                Write-Host "Quick Tunnel attempt $quickAttempt failed. Starting a fresh tunnel attempt $($quickAttempt + 1)/$maxQuickTunnelAttempts..." -ForegroundColor Yellow
+                Start-Sleep -Seconds 2
+            }
         }
-        if ((Get-ContainerState $containerId) -ne 'running') { throw 'The Quick Tunnel container stopped before publishing a public URL.' }
-        $elapsed = [int] ((Get-Date) - $script:readinessStartedAt).TotalSeconds
-        if ($elapsed -eq 0 -or $elapsed % 5 -eq 0) { Write-Host "Waiting for Cloudflare URL... ${elapsed}s" }
-        Start-Sleep -Seconds 2
-    }
-    if ([string]::IsNullOrWhiteSpace($publicUrl)) { throw 'Quick Tunnel did not publish a public URL within the five-minute readiness window.' }
-
-    $registered = $false
-    while ((Get-Date) -lt $readinessDeadline) {
-        $logsResult = Invoke-DockerSafe -Arguments @('logs', $containerId)
-        if ($logsResult.ExitCode -ne 0) { throw 'Could not read the Cloudflare Quick Tunnel container logs.' }
-        $logs = $logsResult.Text
-        if ($logs -match '(?i)Registered tunnel connection') { $registered = $true; break }
-        if ((Get-ContainerState $containerId) -ne 'running') { throw 'The Quick Tunnel container stopped before registering a connection.' }
-        $elapsed = [int] ((Get-Date) - $script:readinessStartedAt).TotalSeconds
-        if ($elapsed -eq 0 -or $elapsed % 5 -eq 0) { Write-Host "Waiting for Registered tunnel connection... ${elapsed}s" }
-        Start-Sleep -Seconds 2
-    }
-    if (-not $registered) { throw 'Quick Tunnel did not register a connection within the five-minute readiness window.' }
-    Write-DiagnosticBlock 'cloudflared logs after registration' $logs
-
-    $hostname = ([Uri] $publicUrl).Host
-    $dnsReady = $false
-    $lastDnsReadiness = $null
-    $lastDnsLogAt = [datetime]::MinValue
-    while ((Get-Date) -lt $readinessDeadline) {
-        $lastDnsReadiness = Get-DnsReadiness $hostname
-        if ($lastDnsReadiness.Ready) { $dnsReady = $true; break }
-        $now = Get-Date
-        if (($now - $lastDnsLogAt).TotalSeconds -ge 10) {
-            Write-DiagnosticBlock "DNS readiness for $hostname (Windows default resolver)" $lastDnsReadiness.Default.Text
-            Write-DiagnosticBlock "DNS readiness for $hostname (public resolver 1.1.1.1)" $lastDnsReadiness.Public.Text
-            $lastDnsLogAt = $now
-        }
-        $elapsed = [int] ($now - $script:readinessStartedAt).TotalSeconds
-        if ($elapsed -eq 0 -or $elapsed % 5 -eq 0) { Write-Host "Waiting for DNS readiness... ${elapsed}s" }
-        Start-Sleep -Seconds 2
-    }
-    if (-not $dnsReady) {
-        if ($null -ne $lastDnsReadiness) {
-            Write-DiagnosticBlock "FINAL DNS result for $hostname (Windows default resolver)" $lastDnsReadiness.Default.Text
-            Write-DiagnosticBlock "FINAL DNS result for $hostname (public resolver 1.1.1.1)" $lastDnsReadiness.Public.Text
-        }
-        Save-PublicDemoUrlFile 'DNS NOT READY YET'
-        Write-Diagnostic 'FINAL: DNS NOT READY YET; Quick Tunnel container intentionally left running.'
-        Write-Host ''
-        Write-Host '============================================================'
-        Write-Host 'PUBLIC DEMO DNS NOT READY YET' -ForegroundColor Yellow
-        Write-Host '============================================================'
-        Write-Host ''
-        Write-Host 'Public URL:'
-        Write-Host $publicUrl
-        Write-Host 'DNS NOT READY YET - the Quick Tunnel remains running.'
-        Write-Host "Diagnostics saved to: $diagnosticDisplay"
-        exit 0
-    }
-    if ($null -ne $lastDnsReadiness) {
-        Write-DiagnosticBlock "FINAL DNS result for $hostname (Windows default resolver)" $lastDnsReadiness.Default.Text
-        Write-DiagnosticBlock "FINAL DNS result for $hostname (public resolver 1.1.1.1)" $lastDnsReadiness.Public.Text
     }
 
-    $publicHealth = Wait-Http200Until "$publicUrl/up" 'public /up' $readinessDeadline
-    $login = Wait-Http200Until "$publicUrl/login" 'public /login' $readinessDeadline
-    Write-Diagnostic ("Public /up HTTP={0}; public /login HTTP={1}" -f (Get-HttpStatusText $publicHealth), (Get-HttpStatusText $login))
-    $loginHtml = [string] $login.Content
-    $insecureHtmlUrls = @([regex]::Matches($loginHtml, '(?i)http://[^"\s<>]+') | ForEach-Object { $_.Value } | Select-Object -Unique)
-    Write-Diagnostic "Public login insecure HTTP URLs: $($insecureHtmlUrls -join ', ')"
-    if ($insecureHtmlUrls.Count -gt 0) { throw 'Public login HTML contains insecure http:// URL(s); mixed content is not allowed.' }
-    $formActions = @([regex]::Matches($loginHtml, '(?is)<form\b[^>]*\baction="([^"]+)"') | ForEach-Object { $_.Groups[1].Value })
-    if ($formActions | Where-Object { $_ -match '^http://' }) { throw 'Public login form action uses insecure http://.' }
-    $cssMatch = [regex]::Match($loginHtml, '(?i)(?:href|src)="([^"\s]+/build/[^"\s]+\.css(?:\?[^"\s]*)?)"')
-    $jsMatch = [regex]::Match($loginHtml, '(?i)(?:href|src)="([^"\s]+/build/[^"\s]+\.js(?:\?[^"\s]*)?)"')
-    if (-not $cssMatch.Success -or -not $jsMatch.Success) { throw 'Public login page did not expose both CSS and JS asset URLs.' }
-    $cssPath = $cssMatch.Groups[1].Value
-    $cssUrl = if ($cssPath -match '^https?://') { $cssPath } else { "$publicUrl/$($cssPath.TrimStart('/'))" }
-    $jsPath = $jsMatch.Groups[1].Value
-    $jsUrl = if ($jsPath -match '^https?://') { $jsPath } else { "$publicUrl/$($jsPath.TrimStart('/'))" }
-    Write-Diagnostic "Generated CSS URL: $cssUrl"
-    Write-Diagnostic "Generated JS URL: $jsUrl"
-    if ($cssUrl -notmatch '^https://' -or -not $cssUrl.StartsWith("$publicUrl/") -or $jsUrl -notmatch '^https://' -or -not $jsUrl.StartsWith("$publicUrl/")) { throw 'Public CSS/JS URL is not HTTPS/current-host scoped.' }
-    $cssCheck = Get-HttpCheck $cssUrl
-    $jsCheck = Get-HttpCheck $jsUrl
-    Write-Diagnostic ("CSS HTTP={0}; Content-Type={1}; JS HTTP={2}; Content-Type={3}" -f (Get-HttpStatusText $cssCheck), $cssCheck.ContentType, (Get-HttpStatusText $jsCheck), $jsCheck.ContentType)
-    if (-not $cssCheck.Success -or $cssCheck.ContentType -notmatch '(?i)text/css') { throw "Public CSS asset check failed: $(Get-HttpStatusText $cssCheck)" }
-    if (-not $jsCheck.Success -or $jsCheck.ContentType -notmatch '(?i)(javascript|ecmascript)') { throw "Public JS asset check failed: $(Get-HttpStatusText $jsCheck)" }
+    if (-not $quickTunnelReady) { throw "All $maxQuickTunnelAttempts Quick Tunnel attempts failed. Last failure: $lastQuickTunnelFailure" }
 
-    Save-PublicDemoUrlFile 'READY'
     Write-Diagnostic 'FINAL: READY'
     Write-Host ''
     Write-Host '============================================================'
