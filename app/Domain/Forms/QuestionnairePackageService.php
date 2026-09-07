@@ -154,7 +154,10 @@ class QuestionnairePackageService
     {
         $manifest = $this->validateDirectory($directory, $allowedRoot, $directChild);
         $hash = $manifest['content_hash'];
-        if (QuestionnairePackageImport::where('organisation_id', $organisation->id)->where('content_hash', $hash)->exists()) {
+        if (QuestionnairePackageImport::where('organisation_id', $organisation->id)
+            ->where('content_hash', $hash)
+            ->whereHas('form', fn ($form) => $form->where('status', '!=', 'archived'))
+            ->exists()) {
             throw ValidationException::withMessages(['package' => __('messages.questionnaire_already_imported')]);
         }
 
@@ -566,7 +569,10 @@ class QuestionnairePackageService
             'package_name' => $name, 'valid' => true, 'name' => $manifest['form']['name'], 'content_hash' => $manifest['content_hash'],
             'schema_version' => $manifest['schema_version'], 'sections' => count($manifest['sections']), 'components' => $components,
             'has_assets' => count($manifest['attachments']) > 0,
-            'duplicate' => $organisation ? QuestionnairePackageImport::where('organisation_id', $organisation->id)->where('content_hash', $manifest['content_hash'])->exists() : false,
+            'duplicate' => $organisation ? QuestionnairePackageImport::where('organisation_id', $organisation->id)
+                ->where('content_hash', $manifest['content_hash'])
+                ->whereHas('form', fn ($form) => $form->where('status', '!=', 'archived'))
+                ->exists() : false,
         ];
     }
 

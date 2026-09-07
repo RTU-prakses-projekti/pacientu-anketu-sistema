@@ -319,10 +319,21 @@ class QuestionnairePackageExchangeTest extends TestCase
     public function test_duplicate_import_is_prevented_and_reported_in_import_ui(): void
     {
         [$creator, $target, $form, $version] = $this->graph(); $export = $this->actingAs($creator)->packages()->export($form, $version);
-        $this->packages()->import($export['package_name'], $target, $creator);
+        $imported = $this->packages()->import($export['package_name'], $target, $creator);
         $this->assertTrue($this->packages()->discover($target)[0]['duplicate']);
         $this->actingAs($creator)->get(route('questionnaires.index', $target))->assertOk()->assertSee(__('messages.questionnaire_already_imported'));
-        $this->expectException(ValidationException::class); $this->packages()->import($export['package_name'], $target, $creator);
+        try {
+            $this->packages()->import($export['package_name'], $target, $creator);
+            $this->fail('Expected duplicate import rejection');
+        } catch (ValidationException) {
+            $this->assertDatabaseCount('forms', 2);
+        }
+
+        $imported->update(['status' => 'archived']);
+        $this->assertFalse($this->packages()->discover($target)[0]['duplicate']);
+        $reimported = $this->packages()->import($export['package_name'], $target, $creator);
+        $this->assertNotSame($imported->id, $reimported->id);
+        $this->assertSame('draft', $reimported->status);
     }
 
     public function test_package_can_be_appended_to_existing_draft_with_collisions_graph_and_provenance_preserved(): void
