@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', __('messages.anonymized_results'))
 @section('content')
-<div class="page-header"><h1>{{ __('messages.anonymized_results') }}</h1></div>
+<div class="page-header"><h1 class="page-title">{{ __('messages.anonymized_results') }}</h1></div>
 <form method="POST" action="{{ route('anonymized-results.export') }}" class="stack mb-6" id="anonymized-results-export-form">
     @csrf
     <div class="actions"><button type="button" class="btn" data-select-all>{{ __('messages.select_all_visible') }}</button><label>{{ __('messages.export_format') }} <select name="format"><option value="csv">CSV</option><option value="xlsx">XLSX</option></select></label><button class="btn primary">{{ __('messages.export_selected') }}</button></div>

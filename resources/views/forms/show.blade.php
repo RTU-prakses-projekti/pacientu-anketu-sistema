@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('content')
-<div class="page-header"><div><h1>{{ $form->name }}</h1><span class="badge">{{ __('messages.questionnaire_status_'.$form->status) }}</span></div><div class="actions"><a class="btn" href="{{ route('forms.builder',$form) }}">{{ __('messages.builder') }}</a><a class="btn" href="{{ route('forms.preview',$form) }}">{{ __('messages.preview') }}</a><form method="POST" action="{{ route('forms.duplicate',$form) }}">@csrf<button class="btn">{{ __('messages.duplicate') }}</button></form>@if($form->status!=='archived')<form method="POST" action="{{ route('forms.archive',$form) }}">@csrf<button class="btn danger">{{ __('messages.archive') }}</button></form>@endif</div></div>
+<div class="page-header"><div><h1 class="page-title">{{ $form->name }}</h1><span class="badge">{{ __('messages.questionnaire_status_'.$form->status) }}</span></div><div class="actions"><a class="btn" href="{{ route('forms.builder',$form) }}">{{ __('messages.builder') }}</a><a class="btn" href="{{ route('forms.preview',$form) }}">{{ __('messages.preview') }}</a><form method="POST" action="{{ route('forms.duplicate',$form) }}">@csrf<button class="btn">{{ __('messages.duplicate') }}</button></form>@if($form->status!=='archived')<form method="POST" action="{{ route('forms.archive',$form) }}">@csrf<button class="btn danger">{{ __('messages.archive') }}</button></form>@endif</div></div>
 @php($versions = $form->versions->sortByDesc('version_number')->values())
 <section class="card">
     <h2>{{ __('messages.history') }}</h2>

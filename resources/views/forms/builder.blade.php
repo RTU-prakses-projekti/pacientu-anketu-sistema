@@ -20,7 +20,7 @@
     ];
 @endphp
 <div class="page-header">
-    <div><a href="{{ route('forms.show',$form) }}">{{ __('messages.back') }}</a><h1>{{ $form->name }} · {{ __('messages.builder') }}</h1></div>
+    <div><a href="{{ route('forms.show',$form) }}">{{ __('messages.back') }}</a><h1 class="page-title">{{ $form->name }} · {{ __('messages.builder') }}</h1></div>
     <div class="actions">@if($version)<a class="btn" href="{{ route('questionnaires.parts',[$form,$version]) }}">{{ __('messages.add_questionnaire_part_from_git') }}</a>@endif<a class="btn" href="{{ route('forms.preview',$form) }}?locale={{ config('form_locales.default') }}">{{ __('messages.preview') }}</a></div>
 </div>
 

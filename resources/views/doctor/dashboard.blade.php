@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', __('messages.doctor_dashboard'))
 @section('content')
-<div class="page-header"><div><h1>{{ __('messages.doctor_dashboard') }}</h1><p class="text-slate-600">{{ __('messages.patient_registry') }}</p></div></div>
+<div class="page-header"><div><h1 class="page-title">{{ __('messages.doctor_dashboard') }}</h1><p class="text-slate-600">{{ __('messages.patient_registry') }}</p></div></div>
 @if($workspaces->isEmpty())
 <div class="notice">{{ __('messages.no_doctor_workspaces') }}</div>
 @else
@@ -16,7 +16,7 @@
     <noscript><button class="btn">{{ __('messages.view') }}</button></noscript>
 </form>
 @endif
-<div class="mb-4 text-sm text-slate-600"><strong>{{ $selectedMembership->organisation->name }}</strong> · {{ $selectedMembership->user->name }}</div>
+<div class="mb-4 text-sm text-slate-600"><strong>{{ __('messages.organisation') }}:</strong> {{ $selectedMembership->organisation->name }}</div>
 
 <details class="card mb-6" @if($errors->any()) open @endif>
     <summary class="cursor-pointer font-semibold">{{ __('messages.add_patient') }}</summary>

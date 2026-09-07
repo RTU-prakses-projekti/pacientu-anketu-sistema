@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', __('messages.bulk_assign_questionnaire'))
 @section('content')
-<div class="page-header"><div><h1>{{ __('messages.bulk_assign_questionnaire') }}</h1><p>{{ trans_choice('messages.selected_patients_count', $patientCases->count(), ['count' => $patientCases->count()]) }}</p></div><a class="btn" href="{{ route('doctor.dashboard', ['organisation_id' => $patientCases->first()->organisation_id]) }}">{{ __('messages.back') }}</a></div>
+<div class="page-header"><div><h1 class="page-title">{{ __('messages.bulk_assign_questionnaire') }}</h1><p>{{ trans_choice('messages.selected_patients_count', $patientCases->count(), ['count' => $patientCases->count()]) }}</p></div><a class="btn" href="{{ route('doctor.dashboard', ['organisation_id' => $patientCases->first()->organisation_id]) }}">{{ __('messages.back') }}</a></div>
 <section class="card mb-6"><h2>{{ __('messages.selected_patients') }}</h2><ul class="list-disc pl-6">@foreach($patientCases as $patientCase)<li>{{ $patientCase->slot_number }}. {{ trim($patientCase->first_name.' '.$patientCase->last_name) ?: $patientCase->patient_code }} · <code>{{ $patientCase->patient_code }}</code></li>@endforeach</ul></section>
 <section class="card"><h2>{{ __('messages.assign_questionnaire') }}</h2>
 @if($publications->isEmpty())

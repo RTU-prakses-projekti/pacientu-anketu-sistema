@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('content')
-<div class="page-header"><h1>{{ __('messages.roles_permissions') }}</h1><a class="btn" href="{{ route('system.users') }}">{{ __('messages.system_users') }}</a></div>
+<div class="page-header"><h1 class="page-title">{{ __('messages.roles_permissions') }}</h1><a class="btn" href="{{ route('system.users') }}">{{ __('messages.system_users') }}</a></div>
 
 <form method="POST" action="{{ route('system.roles.store') }}" class="card mb-6">@csrf
     <h2>{{ __('messages.create_role') }}</h2>

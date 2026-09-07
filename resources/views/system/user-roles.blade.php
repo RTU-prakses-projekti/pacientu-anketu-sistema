@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('content')
-<div class="page-header"><div><h1>{{ __('messages.change_roles') }}</h1><p>{{ $managedUser->name }} · {{ $managedUser->email }}</p></div><a class="btn" href="{{ route('system.users') }}">{{ __('messages.back') }}</a></div>
+<div class="page-header"><div><h1 class="page-title">{{ __('messages.change_roles') }}</h1><p>{{ $managedUser->name }} · {{ $managedUser->email }}</p></div><a class="btn" href="{{ route('system.users') }}">{{ __('messages.back') }}</a></div>
 <form method="POST" action="{{ route('system.users.roles.update', $managedUser) }}" class="stack">@csrf @method('PUT')
     <section class="card">
         <h2>{{ __('messages.global_roles') }}</h2>

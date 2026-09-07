@@ -107,6 +107,8 @@ html[data-theme='dark'] {
   .app-main { min-height: calc(100vh - 4.25rem); }
   .page-header { @apply mb-6 flex flex-wrap items-start justify-between gap-4; }
   .page-header h1 { margin-bottom: .25rem; }
+  .page-title { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -.015em; line-height: 1.25; }
+  .page-context { margin: .25rem 0 0; }
   .actions { @apply flex flex-wrap items-center gap-2; }
   .btn { min-height: 2.5rem; border: 1px solid var(--border-strong); border-radius: .625rem; background: var(--surface); color: var(--text); @apply inline-flex items-center justify-center px-4 py-2 text-sm font-semibold no-underline transition duration-150; box-shadow: 0 1px 1px rgb(15 23 42 / .03); }
   .btn:hover { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); text-decoration: none; transform: translateY(-1px); }

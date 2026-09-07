@@ -1,7 +1,7 @@
 @extends('layouts.patient')
 @section('title', __('messages.patient_questionnaire_portal'))
 @section('content')
-<div class="page-header"><div><h1>{{ __('messages.your_questionnaires') }}</h1><p class="text-slate-600">{{ __('messages.complete_parts_in_order') }}</p></div></div>
+<div class="page-header"><div><h1 class="page-title">{{ __('messages.your_questionnaires') }}</h1><p class="text-slate-600">{{ __('messages.complete_parts_in_order') }}</p></div></div>
 @if($surveyEnded)<div class="notice warning mb-4">{{ __('messages.survey_ended_no_consent') }}</div>@endif
 <div class="stack">
 @forelse($parts as $index => $part)

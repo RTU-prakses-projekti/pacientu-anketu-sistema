@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', __('messages.add_questionnaire_part_from_git'))
 @section('content')
-<div class="page-header"><div><a href="{{ route('forms.builder',$form) }}">{{ __('messages.back') }}</a><h1>{{ __('messages.add_questionnaire_part_from_git') }}</h1><p>{{ $form->name }}</p></div></div>
+<div class="page-header"><div><a href="{{ route('forms.builder',$form) }}">{{ __('messages.back') }}</a><h1 class="page-title">{{ __('messages.add_questionnaire_part_from_git') }}</h1><p>{{ $form->name }}</p></div></div>
 <div class="stack">
 @forelse($packages as $package)
 <article class="card"><div class="page-header"><div><h2>{{ $package['name'] }}</h2><p><code>{{ $package['package_name'] }}</code></p></div><span class="badge">schema v{{ $package['schema_version'] }}</span></div>

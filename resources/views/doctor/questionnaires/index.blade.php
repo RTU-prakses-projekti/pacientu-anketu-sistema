@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', __('messages.manage_questionnaires'))
 @section('content')
-<div class="page-header"><div><h1>{{ __('messages.manage_questionnaires') }}</h1><p>{{ $patientCase->first_name }} {{ $patientCase->last_name }} · {{ __('messages.patient_id') }}: {{ $patientCase->external_patient_code ?: '—' }} · {{ __('messages.slot_number') }} {{ $patientCase->slot_number }}</p></div><a class="btn" href="{{ route('doctor.dashboard', ['organisation_id'=>$patientCase->organisation_id, 'doctor_id'=>$patientCase->doctor_id]) }}">{{ __('messages.back') }}</a></div>
+<div class="page-header"><div><h1 class="page-title">{{ __('messages.manage_questionnaires') }}</h1><p>{{ $patientCase->first_name }} {{ $patientCase->last_name }} · {{ __('messages.patient_id') }}: {{ $patientCase->external_patient_code ?: '—' }} · {{ __('messages.slot_number') }} {{ $patientCase->slot_number }}</p></div><a class="btn" href="{{ route('doctor.dashboard', ['organisation_id'=>$patientCase->organisation_id, 'doctor_id'=>$patientCase->doctor_id]) }}">{{ __('messages.back') }}</a></div>
 @if(session('patient_access_url'))<div class="notice success"><strong>{{ __('messages.patient_link_copy_once') }}</strong><div class="actions mt-3"><input id="patient-access-url" readonly value="{{ session('patient_access_url') }}"><button type="button" class="btn primary" data-copy-target="patient-access-url">{{ __('messages.copy_link') }}</button></div></div>@endif
 <div class="grid-cards mb-6">
 <section class="card"><h2>{{ __('messages.assign_questionnaire') }}</h2>

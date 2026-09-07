@@ -27,5 +27,5 @@ return array_replace($lv, [
  'appearance'=>'Оформление','theme_light'=>'Светлая тема','theme_dark'=>'Тёмная тема','theme_light_short'=>'Светлая','theme_dark_short'=>'Тёмная','menu'=>'Меню',
  'about_system_additional'=>'Система обеспечивает пользовательские роли, разделение данных пациентов, обработку обезличенных результатов и экспорт данных.','about_project'=>'О проекте','about_project_description'=>'Проект разработан во время профессиональной практики в RTU как практический проект полного цикла разработки веб-системы. Решение создано с использованием Laravel, MariaDB, Docker и Cloudflare Tunnel и включает разработку приложения, тестирование и развёртывание.',
  'inactive_publications'=>'Неактивные публикации (:count)','previous_links'=>'Предыдущие ссылки (:count)','used'=>'Использована',
- 'previous_versions'=>'Предыдущие версии (:count)','publication_name'=>'Название публикации',
+ 'previous_versions'=>'Предыдущие версии (:count)','publication_name'=>'Название публикации','your_organisations'=>'Ваши организации',
 ]);

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
 <div class="page-header">
-    <div><a href="{{ route('dashboard') }}">{{ __('messages.back') }}</a><h1>{{ $organisation->name }} · {{ __('messages.questionnaires_label') }}</h1></div>
+    <div><a href="{{ route('dashboard') }}">{{ __('messages.back') }}</a><h1 class="page-title">{{ __('messages.questionnaires_label') }}</h1><p class="page-context">{{ __('messages.organisation') }}: {{ $organisation->name }}</p></div>
     <div class="actions">
         <a class="btn" href="{{ $showArchived ? route('forms.index', $organisation) : route('forms.index', ['organisation' => $organisation, 'status' => 'archived']) }}">{{ __($showArchived ? 'messages.active_questionnaires' : 'messages.archived_questionnaires') }}</a>
         @can('create', [\App\Models\Form::class, $organisation->id])

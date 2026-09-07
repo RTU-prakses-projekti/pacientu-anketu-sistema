@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('title', __('messages.export_answers'))
 @section('content')
-<div class="page-header"><div><h1>{{ __('messages.export_answers') }}</h1><p class="text-slate-600">{{ $organisation->name }}</p></div><a class="btn" href="{{ route('doctor.dashboard', ['organisation_id' => $organisation->id]) }}">{{ __('messages.back') }}</a></div>
+<div class="page-header"><div><h1 class="page-title">{{ __('messages.export_answers') }}</h1><p class="page-context">{{ __('messages.organisation') }}: {{ $organisation->name }}</p></div><a class="btn" href="{{ route('doctor.dashboard', ['organisation_id' => $organisation->id]) }}">{{ __('messages.back') }}</a></div>
 <form method="POST" action="{{ route('doctor.patients.export.download', $organisation) }}" class="card form-grid">
     @csrf
     @foreach($patientCaseIds as $patientCaseId)<input type="hidden" name="patient_case_ids[]" value="{{ $patientCaseId }}">@endforeach

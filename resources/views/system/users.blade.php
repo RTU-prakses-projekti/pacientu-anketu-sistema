@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('content')
-<div class="page-header"><h1>{{ __('messages.system_users') }}</h1><a class="btn" href="{{ route('system.roles') }}">{{ __('messages.roles_permissions') }}</a></div>
+<div class="page-header"><h1 class="page-title">{{ __('messages.system_users') }}</h1><a class="btn" href="{{ route('system.roles') }}">{{ __('messages.roles_permissions') }}</a></div>
 
 <form method="GET" action="{{ route('system.users') }}" class="card form-grid mb-6">
     <label>{{ __('messages.search') }}<input name="q" value="{{ $filters['q'] ?? '' }}" placeholder="{{ __('messages.user_search_placeholder') }}"></label>
