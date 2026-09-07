@@ -77,32 +77,135 @@
     })();
 </script>
 @endpush
-<section class="mt-6"><h2>{{ __('messages.publications') }}</h2>@foreach($form->publications as $publication)<article class="card mb-3"><div class="page-header"><div><strong>{{ $publication->name }}</strong> <span class="badge">{{ __('messages.publication_status_'.$publication->status) }}</span><p><a href="{{ route('publications.show',$publication) }}">{{ route('publications.show',$publication) }}</a></p></div><form method="POST" action="{{ route('publications.toggle',[$form,$publication]) }}">@csrf<button class="btn">{{ $publication->status==='active'?__('messages.inactive'):__('messages.active') }}</button></form></div>@if($publication->access_mode==='invitation')<form method="POST" action="{{ route('invitations.store',[$form,$publication]) }}" class="form-grid">@csrf<label>{{ __('messages.ui_reference') }}<input name="recipient_reference"></label><label>{{ __('messages.ui_max_uses') }}<input type="number" name="max_uses" value="1"></label><label>{{ __('messages.ui_expires') }}<input type="datetime-local" name="expires_at"></label><button class="btn">{{ __('messages.invitation') }}</button></form>@endif</article>@endforeach</section>
-@if($form->publications->where('access_mode', 'invitation')->isNotEmpty())
-<section class="card mt-6">
-    <h2>{{ __('messages.invitation_links') }}</h2>
-    @foreach($form->publications->where('access_mode', 'invitation') as $publication)
-        <h3>{{ $publication->name }}</h3>
-        @forelse($publication->invitations as $invitation)
-            @php($invitationStatus = $invitation->revoked_at ? 'revoked' : ($invitation->expires_at?->isPast() ? 'expired' : 'active'))
+<?php
+    $activePublications = $form->publications->where('status', 'active');
+    $inactivePublications = $form->publications->where('status', '!=', 'active');
+?>
+<section class="mt-6">
+    <h2>{{ __('messages.publications') }}</h2>
+    @foreach($activePublications as $publication)
+        <article class="card mb-3">
             <div class="page-header">
                 <div>
-                    <strong>{{ $invitation->recipient_reference ?: '#'.$invitation->id }}</strong>
-                    <span class="badge">{{ __('messages.'.$invitationStatus) }}</span>
-                    <small>{{ $invitation->uses }}/{{ $invitation->max_uses }}</small>
+                    <strong>{{ $publication->name }}</strong>
+                    <span class="badge">{{ __('messages.publication_status_'.$publication->status) }}</span>
+                    <p><a href="{{ route('publications.show',$publication) }}">{{ route('publications.show',$publication) }}</a></p>
                 </div>
-                @if($invitationStatus === 'active')
-                    <form method="POST" action="{{ route('invitations.revoke', [$form, $publication, $invitation]) }}" onsubmit="return confirm(@js(__('messages.confirm_link_revoke')))" >
+                <form method="POST" action="{{ route('publications.toggle',[$form,$publication]) }}">
+                    @csrf
+                    <button class="btn">{{ __('messages.inactive') }}</button>
+                </form>
+            </div>
+            @if($publication->access_mode === 'invitation')
+                <form method="POST" action="{{ route('invitations.store',[$form,$publication]) }}" class="form-grid">
+                    @csrf
+                    <label>{{ __('messages.ui_reference') }}<input name="recipient_reference"></label>
+                    <label>{{ __('messages.ui_max_uses') }}<input type="number" name="max_uses" value="1"></label>
+                    <label>{{ __('messages.ui_expires') }}<input type="datetime-local" name="expires_at"></label>
+                    <button class="btn">{{ __('messages.invitation') }}</button>
+                </form>
+            @endif
+        </article>
+    @endforeach
+    @if($inactivePublications->isNotEmpty())
+        <details class="publication-history">
+            <summary>{{ __('messages.inactive_publications', ['count' => $inactivePublications->count()]) }}</summary>
+            @foreach($inactivePublications as $publication)
+                <article class="card mb-3">
+                    <div class="page-header">
+                        <div>
+                            <strong>{{ $publication->name }}</strong>
+                            <span class="badge">{{ __('messages.publication_status_'.$publication->status) }}</span>
+                            <p><a href="{{ route('publications.show',$publication) }}">{{ route('publications.show',$publication) }}</a></p>
+                        </div>
+                        <form method="POST" action="{{ route('publications.toggle',[$form,$publication]) }}">
+                            @csrf
+                            <button class="btn">{{ __('messages.active') }}</button>
+                        </form>
+                    </div>
+                    @if($publication->access_mode === 'invitation')
+                        <form method="POST" action="{{ route('invitations.store',[$form,$publication]) }}" class="form-grid">
+                            @csrf
+                            <label>{{ __('messages.ui_reference') }}<input name="recipient_reference"></label>
+                            <label>{{ __('messages.ui_max_uses') }}<input type="number" name="max_uses" value="1"></label>
+                            <label>{{ __('messages.ui_expires') }}<input type="datetime-local" name="expires_at"></label>
+                            <button class="btn">{{ __('messages.invitation') }}</button>
+                        </form>
+                    @endif
+                </article>
+            @endforeach
+        </details>
+    @endif
+</section>
+@php($activeInvitationGroups = [])
+@php($previousInvitationGroups = [])
+@php($invitationLinkCount = 0)
+@php($previousInvitationCount = 0)
+@foreach($form->publications->where('access_mode', 'invitation') as $publication)
+    @foreach($publication->invitations as $invitation)
+        <?php
+            $isExpired = $invitation->expires_at?->isPast() ?? false;
+            $isUsed = $invitation->max_uses !== null && $invitation->uses >= $invitation->max_uses;
+            $status = 'active';
+            if ($invitation->revoked_at) {
+                $status = 'revoked';
+            } elseif ($isExpired) {
+                $status = 'expired';
+            } elseif ($isUsed) {
+                $status = 'used';
+            } elseif ($publication->status !== 'active') {
+                $status = 'inactive';
+            }
+            $link = ['publication' => $publication, 'invitation' => $invitation, 'status' => $status];
+            $invitationLinkCount++;
+            if ($status === 'active') {
+                $activeInvitationGroups[$publication->id][] = $link;
+            } else {
+                $previousInvitationGroups[$publication->id][] = $link;
+                $previousInvitationCount++;
+            }
+        ?>
+    @endforeach
+@endforeach
+@if($invitationLinkCount > 0)
+    <section class="card mt-6">
+        <h2>{{ __('messages.invitation_links') }}</h2>
+        @foreach($activeInvitationGroups as $links)
+            <h3>{{ $links[0]['publication']->name }}</h3>
+            @foreach($links as $link)
+                @php($invitation = $link['invitation'])
+                <div class="page-header">
+                    <div>
+                        <strong>{{ $invitation->recipient_reference ?: '#'.$invitation->id }}</strong>
+                        <span class="badge">{{ __('messages.active') }}</span>
+                        <small>{{ $invitation->uses }}/{{ $invitation->max_uses }}</small>
+                    </div>
+                    <form method="POST" action="{{ route('invitations.revoke', [$form, $link['publication'], $invitation]) }}" onsubmit="return confirm(@js(__('messages.confirm_link_revoke')))" >
                         @csrf @method('DELETE')
                         <button class="btn danger" type="submit">{{ __('messages.deactivate') }}</button>
                     </form>
-                @endif
-            </div>
-        @empty
-            <p>{{ __('messages.no_records') }}</p>
-        @endforelse
-    @endforeach
-</section>
+                </div>
+            @endforeach
+        @endforeach
+        @if(count($previousInvitationGroups) > 0)
+            <details class="invitation-history">
+                <summary>{{ __('messages.previous_links', ['count' => $previousInvitationCount]) }}</summary>
+                @foreach($previousInvitationGroups as $links)
+                    <h3>{{ $links[0]['publication']->name }}</h3>
+                    @foreach($links as $link)
+                        @php($invitation = $link['invitation'])
+                        <div class="page-header">
+                            <div>
+                                <strong>{{ $invitation->recipient_reference ?: '#'.$invitation->id }}</strong>
+                                <span class="badge">{{ __('messages.'.$link['status']) }}</span>
+                                <small>{{ $invitation->uses }}/{{ $invitation->max_uses }}</small>
+                            </div>
+                        </div>
+                    @endforeach
+                @endforeach
+            </details>
+        @endif
+    </section>
 @endif
 @php($draftVersion=$form->versions->firstWhere('status','draft'))
 @if($draftVersion)<section class="card mt-6"><h2>{{ __('messages.add_questionnaire_part_from_git') }}</h2><a class="btn" href="{{ route('questionnaires.parts',[$form,$draftVersion]) }}">{{ __('messages.add_questionnaire_part_from_git') }}</a></section>@endif

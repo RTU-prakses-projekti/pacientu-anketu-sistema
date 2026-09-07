@@ -135,6 +135,48 @@ class UniversalFormWorkflowTest extends TestCase
         $this->assertStringNotContainsString('<details', $singleResponse->getContent());
     }
 
+    public function test_form_show_groups_inactive_publications_and_previous_invitation_links(): void
+    {
+        [$creator, $organisation] = $this->member('form_creator');
+        $authoring = app(FormAuthoringService::class);
+        $form = $authoring->create($organisation->id, $creator, 'Publication history', 'blank');
+        $published = $authoring->publish($form->versions()->firstOrFail());
+        $activePublication = $this->publication($form, $published, ['name' => 'Active publication', 'access_mode' => 'invitation', 'status' => 'active']);
+        $inactivePublication = $this->publication($form, $published, ['name' => 'Inactive publication', 'access_mode' => 'invitation', 'status' => 'inactive']);
+
+        Invitation::create(['publication_id' => $activePublication->id, 'token_hash' => hash('sha256', 'active-link'), 'recipient_reference' => 'Active link', 'uses' => 0, 'max_uses' => 1]);
+        Invitation::create(['publication_id' => $activePublication->id, 'token_hash' => hash('sha256', 'revoked-link'), 'recipient_reference' => 'Revoked link', 'uses' => 1, 'max_uses' => 1, 'revoked_at' => now()]);
+        Invitation::create(['publication_id' => $activePublication->id, 'token_hash' => hash('sha256', 'used-link'), 'recipient_reference' => 'Used link', 'uses' => 1, 'max_uses' => 1]);
+        Invitation::create(['publication_id' => $inactivePublication->id, 'token_hash' => hash('sha256', 'expired-link'), 'recipient_reference' => 'Expired link', 'uses' => 0, 'max_uses' => 1, 'expires_at' => now()->subMinute()]);
+        Invitation::create(['publication_id' => $inactivePublication->id, 'token_hash' => hash('sha256', 'inactive-link'), 'recipient_reference' => 'Inactive link', 'uses' => 0, 'max_uses' => 1]);
+
+        $response = $this->actingAs($creator)->get(route('forms.show', $form));
+        $html = $response->getContent();
+        $inactivePublicationDetails = strpos($html, '<summary>'.__('messages.inactive_publications', ['count' => 1]).'</summary>');
+        $previousLinksDetails = strpos($html, '<summary>'.__('messages.previous_links', ['count' => 4]).'</summary>');
+
+        $response->assertOk();
+        $this->assertNotFalse($inactivePublicationDetails);
+        $this->assertNotFalse($previousLinksDetails);
+        $this->assertLessThan($inactivePublicationDetails, strpos($html, 'Active publication'));
+        $this->assertGreaterThan($inactivePublicationDetails, strpos($html, 'Inactive publication'));
+        $this->assertLessThan($previousLinksDetails, strpos($html, 'Active link'));
+        $this->assertGreaterThan($previousLinksDetails, strpos($html, 'Revoked link'));
+        $this->assertGreaterThan($previousLinksDetails, strpos($html, 'Expired link'));
+        $this->assertGreaterThan($previousLinksDetails, strpos($html, 'Used link'));
+        $this->assertGreaterThan($previousLinksDetails, strpos($html, 'Inactive link'));
+
+        $cleanForm = $authoring->create($organisation->id, $creator, 'Only active publication', 'blank');
+        $cleanPublished = $authoring->publish($cleanForm->versions()->firstOrFail());
+        $cleanPublication = $this->publication($cleanForm, $cleanPublished, ['name' => 'Only active', 'status' => 'active']);
+        Invitation::create(['publication_id' => $cleanPublication->id, 'token_hash' => hash('sha256', 'only-active-link'), 'recipient_reference' => 'Only active link', 'uses' => 0]);
+        $cleanHtml = $this->actingAs($creator)->get(route('forms.show', $cleanForm))->getContent();
+
+        $this->assertStringNotContainsString(__('messages.inactive_publications', ['count' => 0]), $cleanHtml);
+        $this->assertStringNotContainsString(__('messages.previous_links', ['count' => 0]), $cleanHtml);
+        $this->assertStringNotContainsString('<details', $cleanHtml);
+    }
+
     public function test_published_form_can_create_new_draft_and_archive_without_deleting_publication(): void
     {
         [$creator,$organisation]=$this->member('form_creator');$service=app(FormAuthoringService::class);$form=$service->create($organisation->id,$creator,'Exam','test');$published=$service->publish($form->versions()->first());
