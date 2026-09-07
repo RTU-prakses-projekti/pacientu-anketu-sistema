@@ -29,7 +29,7 @@ class StorePublicationRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            if ($this->boolean('anonymous_allowed') && $this->boolean('identified_required')) $validator->errors()->add('anonymous_allowed', __('messages.contradictory_identity_settings'));
+            if (!$this->isPatientQuestionnaire() && $this->boolean('anonymous_allowed') && $this->boolean('identified_required')) $validator->errors()->add('anonymous_allowed', __('messages.contradictory_identity_settings'));
             if ($this->input('status') === 'active' && $this->route('form')?->status === 'archived') $validator->errors()->add('status', __('messages.archived_form_cannot_publish'));
         });
     }

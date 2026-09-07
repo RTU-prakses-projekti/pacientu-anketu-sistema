@@ -14,7 +14,13 @@ class PublicationController extends Controller
     public function store(StorePublicationRequest $request, Form $form, AuditService $audit)
     {
         $data=$request->validated(); $version=$form->versions()->findOrFail($data['form_version_id']); abort_unless($version->status==='published',422);
-        if ($form->preset_key === 'patient_questionnaire') $data['attempt_limit'] = 1;
+        if ($form->preset_key === 'patient_questionnaire') {
+            $data['attempt_limit'] = 1;
+            $data['identified_required'] = true;
+            $data['anonymous_allowed'] = false;
+            $data['autosave_enabled'] = true;
+            $data['resume_enabled'] = true;
+        }
         $publication=Publication::create([
             ...collect($data)->except(['access_code','timer_enabled','correct_answers_visible','anonymous_allowed','identified_required','consent_required','autosave_enabled','resume_enabled'])->all(),
             'organisation_id'=>$form->organisation_id,'form_id'=>$form->id,'public_key'=>Str::lower(Str::random(20)),
