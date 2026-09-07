@@ -26,18 +26,13 @@ $privateRoot = Join-Path $backupRoot 'storage-app-private'
 $configRoot = Join-Path $backupRoot 'deployment-config'
 New-Item -ItemType Directory -Force -Path $privateRoot, $configRoot | Out-Null
 
-$dbName = Get-EnvValue 'MARIADB_DATABASE'
-if ([string]::IsNullOrWhiteSpace($dbName)) { $dbName = Get-EnvValue 'DB_DATABASE' }
-$dbPassword = Get-EnvValue 'MARIADB_ROOT_PASSWORD'
-if ([string]::IsNullOrWhiteSpace($dbPassword)) { throw 'MARIADB_ROOT_PASSWORD is missing from .env.production.' }
-
 $dumpPath = Join-Path $backupRoot 'database.sql'
 $dumpName = "backup-$stamp.sql"
-$dumpCommand = 'mariadb-dump --single-transaction --routines --events --hex-blob -uroot --databases "$MYSQL_DATABASE" > /tmp/' + $dumpName
+$dumpCommand = 'if [ -z "$MARIADB_DATABASE" ] || [ -z "$MARIADB_USER" ] || [ -z "$MARIADB_PASSWORD" ]; then exit 2; fi; MYSQL_PWD="$MARIADB_PASSWORD" mariadb-dump --single-transaction --routines --events --no-tablespaces --hex-blob -u"$MARIADB_USER" --databases "$MARIADB_DATABASE" > /tmp/' + $dumpName
 $dbContainerId = (& docker compose --env-file $envFile ps -q db).Trim()
 if ([string]::IsNullOrWhiteSpace($dbContainerId)) { throw 'The database container is not running.' }
 try {
-    & docker compose --env-file $envFile exec -T -e "MYSQL_PWD=$dbPassword" -e "MYSQL_DATABASE=$dbName" db sh -c $dumpCommand
+    & docker compose --env-file $envFile exec -T db sh -c $dumpCommand
     if ($LASTEXITCODE -ne 0) { throw 'MariaDB dump failed.' }
     & docker cp "${dbContainerId}:/tmp/$dumpName" $dumpPath
     if ($LASTEXITCODE -ne 0) { throw 'MariaDB dump copy failed.' }
