@@ -348,6 +348,19 @@ class UniversalFormWorkflowTest extends TestCase
         $inactive=$this->publication($form,$published,['status'=>'inactive']);$authoring->archive($form);$this->actingAs($creator)->post(route('publications.toggle',[$form,$inactive]))->assertStatus(422);$this->actingAs($creator)->post(route('publications.store',$form),$base)->assertSessionHasErrors('status');
     }
 
+    public function test_patient_questionnaire_publication_allows_only_patient_access_modes_and_forces_single_attempt(): void
+    {
+        [$creator,$organisation]=$this->member('form_creator');$authoring=app(FormAuthoringService::class);$form=$authoring->create($organisation->id,$creator,'Patient publication','patient_questionnaire');$published=$authoring->publish($form->versions()->firstOrFail());
+        $common=['form_version_id'=>$published->id,'result_visibility'=>'completion','status'=>'active','attempt_limit'=>99];
+        $this->actingAs($creator)->post(route('publications.store',$form),array_merge($common,['name'=>'Authenticated','access_mode'=>'authenticated']))->assertSessionHasErrors('access_mode');
+        $this->actingAs($creator)->post(route('publications.store',$form),array_merge($common,['name'=>'Public','access_mode'=>'public']))->assertRedirect(route('forms.show',$form));
+        $this->actingAs($creator)->post(route('publications.store',$form),array_merge($common,['name'=>'Code','access_mode'=>'access_code','access_code'=>'patient-code']))->assertRedirect(route('forms.show',$form));
+        $this->actingAs($creator)->post(route('publications.store',$form),array_merge($common,['name'=>'Invitation','access_mode'=>'invitation']))->assertRedirect(route('forms.show',$form));
+        $public=$form->publications()->where('name','Public')->firstOrFail();$code=$form->publications()->where('name','Code')->firstOrFail();$invitation=$form->publications()->where('name','Invitation')->firstOrFail();
+        $this->assertSame('public',$public->access_mode);$this->assertSame('access_code',$code->access_mode);$this->assertSame('invitation',$invitation->access_mode);foreach([$public,$code,$invitation] as $publication)$this->assertSame(1,$publication->attempt_limit);$this->assertNull($public->access_code_hash);$this->assertNotNull($code->access_code_hash);$this->assertNull($invitation->access_code_hash);
+        $this->actingAs($creator)->get(route('forms.show',$form))->assertSee('value="public"',false)->assertSee('value="access_code"',false)->assertSee('value="invitation"',false)->assertDontSee('value="authenticated"',false)->assertDontSee('name="attempt_limit"',false);
+    }
+
     public function test_localized_form_version_content_is_created_cloned_duplicated_and_immutable_when_published(): void
     {
         [$creator,$organisation]=$this->member('form_creator');$authoring=app(FormAuthoringService::class);$builder=app(BuilderService::class);$form=$authoring->create($organisation->id,$creator,'Internal form name','blank');$version=$form->versions()->firstOrFail();
