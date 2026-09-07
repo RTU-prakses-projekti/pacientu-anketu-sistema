@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 
 class FormController extends Controller
 {
-    public function index(Organisation $organisation, CleanupService $cleanup) { $this->authorize('view',$organisation);$forms=$organisation->forms()->withCount(['versions','publications'])->latest()->get();return view('forms.index',['organisation'=>$organisation,'forms'=>$forms,'deleteEligibility'=>$forms->mapWithKeys(fn($form)=>[$form->id=>$cleanup->formEligibility($form)])]); }
+    public function index(Organisation $organisation, CleanupService $cleanup, Request $request) { $this->authorize('view',$organisation);$showArchived=$request->query('status')==='archived';$forms=$organisation->forms()->where('status',$showArchived?'=':'!=','archived')->withCount(['versions','publications'])->latest()->get();return view('forms.index',['organisation'=>$organisation,'forms'=>$forms,'showArchived'=>$showArchived,'deleteEligibility'=>$forms->mapWithKeys(fn($form)=>[$form->id=>$cleanup->formEligibility($form)])]); }
     public function create(Organisation $organisation) { abort_unless(auth()->user()->can('create',[Form::class,$organisation->id]),403); return view('forms.create',compact('organisation')); }
     public function store(StoreFormRequest $request, FormAuthoringService $service) { $form=$service->create((int)$request->organisation_id,$request->user(),$request->name,$request->preset); return redirect()->route('forms.builder',$form)->with('success',__('messages.form_created')); }
     public function show(Form $form) { $this->authorize('view',$form); return view('forms.show',['form'=>$form->load('versions','publications.formVersion','publications.invitations')]); }

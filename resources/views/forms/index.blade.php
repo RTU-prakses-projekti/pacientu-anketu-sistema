@@ -3,6 +3,7 @@
 <div class="page-header">
     <div><a href="{{ route('dashboard') }}">{{ __('messages.back') }}</a><h1>{{ $organisation->name }} · {{ __('messages.questionnaires_label') }}</h1></div>
     <div class="actions">
+        <a class="btn" href="{{ $showArchived ? route('forms.index', $organisation) : route('forms.index', ['organisation' => $organisation, 'status' => 'archived']) }}">{{ __($showArchived ? 'messages.active_questionnaires' : 'messages.archived_questionnaires') }}</a>
         @can('create', [\App\Models\Form::class, $organisation->id])
             <a class="btn" href="{{ route('questionnaires.index', $organisation) }}">{{ __('messages.import_questionnaire_file') }}</a>
             <a class="btn primary" href="{{ route('forms.create', $organisation) }}">{{ __('messages.new_questionnaire') }}</a>
@@ -17,15 +18,23 @@
         <p>{{ __('messages.'.$form->preset_key) }} · {{ $form->versions_count }} {{ __('messages.versions') }} · {{ $form->publications_count }} {{ __('messages.publications') }}</p>
         <div class="actions">
             <a class="btn" href="{{ route('forms.show', $form) }}">{{ __('messages.view') }}</a>
-            <a class="btn" href="{{ route('forms.builder', $form) }}">{{ __('messages.builder') }}</a>
+            @can('update', $form)
+                <a class="btn" href="{{ route('forms.builder', $form) }}">{{ __('messages.builder') }}</a>
+            @endcan
+            @if(!$showArchived && $form->status !== 'archived')
+                @can('archive', $form)
+                    <form method="POST" action="{{ route('forms.archive', $form) }}" onsubmit="return confirm(@js(__('messages.confirm_archive')))">
+                        @csrf
+                        <button class="btn" type="submit">{{ __('messages.archive') }}</button>
+                    </form>
+                @endcan
+            @endif
             @can('update', $form)
                 @if($deleteEligibility[$form->id]['allowed'])
                     <form method="POST" action="{{ route('forms.destroy', $form) }}" onsubmit="return confirm(@js(__('messages.confirm_permanent_delete')))" >
                         @csrf @method('DELETE')
                         <button class="btn danger" type="submit">{{ __('messages.delete_permanently') }}</button>
                     </form>
-                @else
-                    <span title="{{ $deleteEligibility[$form->id]['reason'] }}">{{ __('messages.delete_not_allowed') }}</span>
                 @endif
             @endcan
         </div>

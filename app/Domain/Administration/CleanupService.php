@@ -21,10 +21,14 @@ class CleanupService
     public function formEligibility(Form $form): array
     {
         $versionIds = $form->versions()->pluck('id');
-        if ($form->versions()->where(fn ($query) => $query->whereIn('status', ['published', 'archived'])->orWhereNotNull('published_at'))->exists()) {
-            return $this->denied(__('messages.form_delete_published_denied'));
+        if (DB::table('form_submissions')->whereIn('form_version_id', $versionIds)->exists()) {
+            return $this->denied(__('messages.form_delete_used_denied'));
         }
-        if ($form->publications()->exists() || DB::table('form_submissions')->whereIn('form_version_id', $versionIds)->exists()) {
+        $publicationIds = $form->publications()->pluck('id');
+        if (DB::table('invitations')->whereIn('publication_id', $publicationIds)->where('uses', '>', 0)->exists()) {
+            return $this->denied(__('messages.form_delete_used_denied'));
+        }
+        if (DB::table('patient_form_assignments')->whereIn('publication_id', $publicationIds)->exists()) {
             return $this->denied(__('messages.form_delete_used_denied'));
         }
         if (DB::table('exports')->where('form_id', $form->id)->exists()) {
@@ -212,6 +216,7 @@ class CleanupService
     {
         $this->ensureAllowed($this->formEligibility($form), 'form');
         $versionIds = $form->versions()->pluck('id');
+        $publicationIds = $form->publications()->lockForUpdate()->pluck('id');
         $sectionIds = DB::table('form_sections')->whereIn('form_version_id', $versionIds)->pluck('id');
         $componentIds = DB::table('form_components')->whereIn('form_version_id', $versionIds)->pluck('id');
         $ruleIds = DB::table('conditional_rules')->whereIn('form_version_id', $versionIds)->pluck('id');
@@ -227,6 +232,11 @@ class CleanupService
         QuestionnairePackagePartImport::where('form_id', $form->id)->delete();
         QuestionnairePackageImport::where('form_id', $form->id)->delete();
         $attachmentQuery->delete();
+        if ($publicationIds->isNotEmpty()) {
+            DB::table('attempt_grants')->whereIn('publication_id', $publicationIds)->delete();
+            DB::table('invitations')->whereIn('publication_id', $publicationIds)->delete();
+            DB::table('publications')->whereIn('id', $publicationIds)->delete();
+        }
         DB::table('form_components')->whereIn('id', $componentIds)->delete();
         DB::table('form_sections')->whereIn('id', $sectionIds)->delete();
         DB::table('form_versions')->whereIn('id', $versionIds)->delete();
@@ -254,11 +264,7 @@ class CleanupService
                 $query->orWhere(fn ($subject) => $subject->where('subject_type', $type)->whereIn('subject_id', $ids));
             }
         })->get(['action', 'subject_type', 'subject_id'])
-            ->contains(fn (AuditLog $log) => !(
-                $log->action === 'form.created'
-                && $log->subject_type === $form->getMorphClass()
-                && (int) $log->subject_id === $form->id
-            ));
+            ->contains(fn (AuditLog $log) => !str_starts_with((string) $log->action, 'form.'));
     }
 
     private function isOrganisationCreationAudit(AuditLog $log, Organisation $organisation, Collection $formIds): bool

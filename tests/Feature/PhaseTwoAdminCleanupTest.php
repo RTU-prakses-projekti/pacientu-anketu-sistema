@@ -11,9 +11,11 @@ use App\Models\Invitation;
 use App\Models\Organisation;
 use App\Models\OrganisationMembership;
 use App\Models\PatientCase;
+use App\Models\PatientFormAssignment;
 use App\Models\Publication;
 use App\Models\QuestionnairePackagePartImport;
 use App\Models\Role;
+use App\Models\SubmissionAnswer;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -63,6 +65,9 @@ class PhaseTwoAdminCleanupTest extends TestCase
         ]);
         $other = $this->cleanDraftForm($organisation, $admin, 'Keep draft');
 
+        $this->actingAs($admin)->get(route('forms.index', $organisation))
+            ->assertSee(__('messages.delete_permanently'));
+
         $this->actingAs($admin)->delete(route('forms.destroy', $form))->assertRedirect(route('forms.index', $organisation));
 
         $this->assertDatabaseMissing('forms', ['id' => $form->id]);
@@ -79,14 +84,18 @@ class PhaseTwoAdminCleanupTest extends TestCase
     {
         $admin = $this->platformAdmin();
         $organisation = $this->organisation();
-        $form = app(FormAuthoringService::class)->create($organisation->id, $admin, 'Used form', 'blank');
+        $form = $this->cleanDraftForm($organisation, $admin, 'Used form');
         $published = app(FormAuthoringService::class)->publish($form->versions()->firstOrFail());
         $publication = $this->publication($form, $published);
         $respondent = User::factory()->create(['is_active' => true]);
-        FormSubmission::create([
+        $submission = FormSubmission::create([
             'public_id' => (string) Str::uuid(), 'organisation_id' => $organisation->id,
             'publication_id' => $publication->id, 'form_version_id' => $published->id, 'user_id' => $respondent->id,
             'attempt_number' => 1, 'status' => 'in_progress', 'started_at' => now(),
+        ]);
+        $answer = SubmissionAnswer::create([
+            'form_submission_id' => $submission->id, 'form_component_id' => $published->components()->firstOrFail()->id,
+            'value' => ['answer' => 'retained'], 'saved_at' => now(),
         ]);
 
         $this->actingAs($admin)->delete(route('forms.destroy', $form))->assertSessionHasErrors('form');
@@ -94,6 +103,130 @@ class PhaseTwoAdminCleanupTest extends TestCase
         $outsider = User::factory()->create(['is_active' => true]);
         $this->actingAs($outsider)->delete(route('forms.destroy', $form))->assertForbidden();
         $this->assertDatabaseHas('form_submissions', ['publication_id' => $publication->id]);
+        $this->assertDatabaseHas('submission_answers', ['id' => $answer->id, 'form_submission_id' => $submission->id]);
+    }
+
+    public function test_form_with_unused_publication_and_invitation_can_be_deleted(): void
+    {
+        $admin = $this->platformAdmin();
+        $organisation = $this->organisation();
+        $form = $this->cleanDraftForm($organisation, $admin, 'Unused publication form');
+        $publication = $this->publication($form, $form->versions()->firstOrFail(), ['access_mode' => 'invitation']);
+        $invitation = Invitation::create(['publication_id' => $publication->id, 'token_hash' => hash('sha256', Str::random(64)), 'uses' => 0]);
+
+        $this->actingAs($admin)->delete(route('forms.destroy', $form))->assertRedirect(route('forms.index', $organisation));
+
+        $this->assertDatabaseMissing('forms', ['id' => $form->id]);
+        $this->assertDatabaseMissing('publications', ['id' => $publication->id]);
+        $this->assertDatabaseMissing('invitations', ['id' => $invitation->id]);
+    }
+
+    public function test_published_form_with_only_unused_invitation_can_be_deleted(): void
+    {
+        $admin = $this->platformAdmin();
+        $organisation = $this->organisation();
+        $form = app(FormAuthoringService::class)->create($organisation->id, $admin, 'Published disposable form', 'blank');
+        $published = app(FormAuthoringService::class)->publish($form->versions()->firstOrFail());
+        $publication = $this->publication($form, $published, ['access_mode' => 'invitation']);
+        $invitation = Invitation::create(['publication_id' => $publication->id, 'token_hash' => hash('sha256', Str::random(64)), 'uses' => 0]);
+
+        $this->actingAs($admin)->delete(route('forms.destroy', $form))->assertRedirect(route('forms.index', $organisation));
+
+        $this->assertDatabaseMissing('forms', ['id' => $form->id]);
+        $this->assertDatabaseMissing('publications', ['id' => $publication->id]);
+        $this->assertDatabaseMissing('invitations', ['id' => $invitation->id]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'form.published']);
+    }
+
+    public function test_patient_assignment_blocks_form_deletion_and_is_retained(): void
+    {
+        $admin = $this->platformAdmin();
+        $organisation = $this->organisation();
+        $form = $this->cleanDraftForm($organisation, $admin, 'Assigned form');
+        $version = $form->versions()->firstOrFail();
+        $publication = $this->publication($form, $version, ['access_mode' => 'invitation']);
+        $invitation = Invitation::create(['publication_id' => $publication->id, 'token_hash' => hash('sha256', Str::random(64)), 'uses' => 0]);
+        $patient = PatientCase::create(['organisation_id' => $organisation->id, 'doctor_id' => $admin->id, 'slot_number' => 1]);
+        $assignment = PatientFormAssignment::create([
+            'patient_case_id' => $patient->id, 'publication_id' => $publication->id,
+            'invitation_id' => $invitation->id, 'label' => 'Assigned questionnaire',
+        ]);
+
+        $this->actingAs($admin)->delete(route('forms.destroy', $form))->assertSessionHasErrors('form');
+
+        $this->assertDatabaseHas('forms', ['id' => $form->id]);
+        $this->assertDatabaseHas('patient_form_assignments', ['id' => $assignment->id, 'publication_id' => $publication->id]);
+    }
+
+    public function test_completed_submission_and_answers_block_form_deletion(): void
+    {
+        $admin = $this->platformAdmin();
+        $organisation = $this->organisation();
+        $form = $this->cleanDraftForm($organisation, $admin, 'Completed form');
+        $version = $form->versions()->firstOrFail();
+        $publication = $this->publication($form, $version);
+        $submission = FormSubmission::create([
+            'public_id' => (string) Str::uuid(), 'organisation_id' => $organisation->id,
+            'publication_id' => $publication->id, 'form_version_id' => $version->id,
+            'attempt_number' => 1, 'status' => 'submitted', 'started_at' => now(), 'submitted_at' => now(),
+        ]);
+        $answer = SubmissionAnswer::create([
+            'form_submission_id' => $submission->id, 'form_component_id' => $version->components()->firstOrFail()->id,
+            'value' => ['answer' => 'retained'], 'saved_at' => now(),
+        ]);
+
+        $this->actingAs($admin)->delete(route('forms.destroy', $form))->assertSessionHasErrors('form');
+
+        $this->assertDatabaseHas('form_submissions', ['id' => $submission->id, 'status' => 'submitted']);
+        $this->assertDatabaseHas('submission_answers', ['id' => $answer->id, 'form_submission_id' => $submission->id]);
+    }
+
+    public function test_used_invitation_blocks_form_deletion(): void
+    {
+        $admin = $this->platformAdmin();
+        $organisation = $this->organisation();
+        $form = $this->cleanDraftForm($organisation, $admin, 'Used invitation form');
+        $publication = $this->publication($form, $form->versions()->firstOrFail(), ['access_mode' => 'invitation']);
+        Invitation::create(['publication_id' => $publication->id, 'token_hash' => hash('sha256', Str::random(64)), 'uses' => 1]);
+
+        $this->actingAs($admin)->delete(route('forms.destroy', $form))->assertSessionHasErrors('form');
+        $this->assertDatabaseHas('forms', ['id' => $form->id]);
+    }
+
+    public function test_archiving_retains_submissions_and_removes_form_from_active_list(): void
+    {
+        $admin = $this->platformAdmin();
+        $organisation = $this->organisation();
+        $form = $this->cleanDraftForm($organisation, $admin, 'Archived form');
+        $version = $form->versions()->firstOrFail();
+        $publication = $this->publication($form, $version);
+        $submission = FormSubmission::create([
+            'public_id' => (string) Str::uuid(), 'organisation_id' => $organisation->id,
+            'publication_id' => $publication->id, 'form_version_id' => $version->id,
+            'attempt_number' => 1, 'status' => 'in_progress', 'started_at' => now(),
+        ]);
+        $answer = SubmissionAnswer::create([
+            'form_submission_id' => $submission->id, 'form_component_id' => $version->components()->firstOrFail()->id,
+            'value' => ['answer' => 'retained'], 'saved_at' => now(),
+        ]);
+
+        $activeResponse = $this->actingAs($admin)->get(route('forms.index', $organisation));
+        $activeResponse->assertSee(route('forms.archive', $form), false)
+            ->assertSee(route('forms.builder', $form), false)
+            ->assertDontSee(__('messages.delete_permanently'));
+
+        $this->actingAs($admin)->post(route('forms.archive', $form))->assertRedirect();
+
+        $this->assertDatabaseHas('forms', ['id' => $form->id, 'status' => 'archived']);
+        $this->assertDatabaseHas('publications', ['id' => $publication->id, 'status' => 'inactive']);
+        $this->assertDatabaseHas('form_submissions', ['id' => $submission->id, 'status' => 'in_progress']);
+        $this->assertDatabaseHas('submission_answers', ['id' => $answer->id, 'form_submission_id' => $submission->id]);
+        $this->actingAs($admin)->get(route('forms.index', $organisation))->assertOk()->assertDontSee('Archived form');
+        $this->actingAs($admin)->get(route('forms.index', ['organisation' => $organisation, 'status' => 'archived']))
+            ->assertOk()
+            ->assertSee('Archived form')
+            ->assertDontSee(route('forms.archive', $form), false)
+            ->assertDontSee(__('messages.delete_permanently'));
     }
 
     public function test_clean_organisation_is_deleted_transactionally_with_drafts_and_memberships_but_other_organisation_remains(): void
