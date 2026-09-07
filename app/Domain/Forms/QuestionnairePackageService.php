@@ -44,7 +44,7 @@ class QuestionnairePackageService
         File::ensureDirectoryExists($root);
 
         if (File::isDirectory($destination)) {
-            $existing = $this->validateDirectory($destination);
+            $existing = $this->validateDirectory($destination, $this->root());
             if (!hash_equals($hash, $existing['content_hash'])) $this->invalid('package');
             return ['package_name' => $name, 'relative_path' => 'questionnaires/'.$name, 'content_hash' => $hash, 'duplicate' => true];
         }
@@ -116,7 +116,7 @@ class QuestionnairePackageService
             $name = basename($directory);
             if (str_starts_with($name, '.')) continue;
             try {
-                $manifest = $this->validateDirectory($directory);
+                $manifest = $this->validateDirectory($directory, $this->root());
                 $result[] = $this->summary($name, $manifest, $organisation);
             } catch (Throwable $exception) {
                 if ($includeInvalid) $result[] = ['package_name' => $name, 'valid' => false, 'error' => $exception->getMessage()];
@@ -128,7 +128,7 @@ class QuestionnairePackageService
 
     public function validatePackage(string $packageName): array
     {
-        return $this->validateDirectory($this->packageDirectory($packageName));
+        return $this->validateDirectory($this->packageDirectory($packageName), $this->root());
     }
 
     public function discoverForVersion(FormVersion $version): array
@@ -142,8 +142,17 @@ class QuestionnairePackageService
 
     public function import(string $packageName, Organisation $organisation, User $creator): Form
     {
-        $directory = $this->packageDirectory($packageName);
-        $manifest = $this->validateDirectory($directory);
+        return $this->importFromDirectory($this->packageDirectory($packageName), $packageName, $organisation, $creator, $this->root());
+    }
+
+    public function importUploadedDirectory(string $directory, string $packageName, Organisation $organisation, User $creator): Form
+    {
+        return $this->importFromDirectory($directory, $packageName, $organisation, $creator, $this->uploadedImportRoot(), true);
+    }
+
+    private function importFromDirectory(string $directory, string $packageName, Organisation $organisation, User $creator, string $allowedRoot, bool $directChild = false): Form
+    {
+        $manifest = $this->validateDirectory($directory, $allowedRoot, $directChild);
         $hash = $manifest['content_hash'];
         if (QuestionnairePackageImport::where('organisation_id', $organisation->id)->where('content_hash', $hash)->exists()) {
             throw ValidationException::withMessages(['package' => __('messages.questionnaire_already_imported')]);
@@ -255,7 +264,7 @@ class QuestionnairePackageService
         }
 
         $directory = $this->packageDirectory($packageName);
-        $manifest = $this->validateDirectory($directory);
+        $manifest = $this->validateDirectory($directory, $this->root());
         $hash = $manifest['content_hash'];
         if (QuestionnairePackagePartImport::where('form_version_id', $version->id)->where('content_hash', $hash)->exists()) {
             throw ValidationException::withMessages(['package' => __('messages.questionnaire_part_already_imported')]);
@@ -432,11 +441,11 @@ class QuestionnairePackageService
         return $manifest;
     }
 
-    private function validateDirectory(string $directory): array
+    private function validateDirectory(string $directory, string $allowedRoot, bool $directChild = false): array
     {
-        $root = realpath($this->root());
+        $root = realpath($allowedRoot);
         $real = realpath($directory);
-        if (!$root || !$real || !($real === $root || str_starts_with($real, $root.DIRECTORY_SEPARATOR))) $this->invalid('package');
+        if (!$root || !$real || ($directChild && dirname($real) !== $root) || (!$directChild && !($real === $root || str_starts_with($real, $root.DIRECTORY_SEPARATOR)))) $this->invalid('package');
         $manifestPath = $real.DIRECTORY_SEPARATOR.'manifest.json';
         if (!File::isFile($manifestPath) || File::size($manifestPath) > 5 * 1024 * 1024) $this->invalid('manifest');
         try { $manifest = json_decode(File::get($manifestPath), true, 512, JSON_THROW_ON_ERROR); }
@@ -601,6 +610,8 @@ class QuestionnairePackageService
         return $key;
     }
     private function root(): string { return rtrim((string) config('questionnaire_packages.root', base_path('questionnaires')), '\\/'); }
+
+    private function uploadedImportRoot(): string { return storage_path('framework/questionnaire-imports'); }
 
     private function packageName(Form $form, string $hash): string
     {

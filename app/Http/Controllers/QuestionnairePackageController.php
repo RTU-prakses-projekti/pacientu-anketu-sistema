@@ -50,10 +50,9 @@ class QuestionnairePackageController extends Controller
         abort_unless($request->user()->can('create', [Form::class, $organisation->id]), 403);
         $data = $request->validate(['package_file' => ['required', 'file', 'mimes:zip', 'max:51200']]);
         $uploaded = $data['package_file'];
-        $root = rtrim((string) config('questionnaire_packages.root', base_path('questionnaires')), '\\/');
         $temporaryName = 'upload-'.Str::lower(str_replace('-', '', (string) Str::uuid()));
-        $temporaryDirectory = $root.DIRECTORY_SEPARATOR.$temporaryName;
-        $packageDirectory = null;
+        $temporaryDirectory = storage_path('framework/questionnaire-imports'.DIRECTORY_SEPARATOR.$temporaryName);
+        $uploadedPackageDirectory = null;
         $zip = new ZipArchive();
         $seen = [];
         $totalSize = 0;
@@ -90,14 +89,14 @@ class QuestionnairePackageController extends Controller
             $hash = is_array($manifest) ? ($manifest['content_hash'] ?? null) : null;
             if (!is_string($hash) || !preg_match('/^[a-f0-9]{64}$/', $hash)) $this->invalidUploadedPackage();
             $packageName = $temporaryName.'--'.substr($hash, 0, 8);
-            $packageDirectory = $root.DIRECTORY_SEPARATOR.$packageName;
-            if (!File::moveDirectory($temporaryDirectory, $packageDirectory)) $this->invalidUploadedPackage();
-            $form = $packages->import($packageName, $organisation, $request->user());
+            $uploadedPackageDirectory = dirname($temporaryDirectory).DIRECTORY_SEPARATOR.$packageName;
+            if (!File::moveDirectory($temporaryDirectory, $uploadedPackageDirectory)) $this->invalidUploadedPackage();
+            $form = $packages->importUploadedDirectory($uploadedPackageDirectory, $packageName, $organisation, $request->user());
             return redirect()->route('forms.builder', $form)->with('success', __('messages.questionnaire_imported_as_draft'));
         } finally {
             if ($zip->status !== ZipArchive::ER_OK) $zip->close();
             if (File::isDirectory($temporaryDirectory)) File::deleteDirectory($temporaryDirectory);
-            if ($packageDirectory && File::isDirectory($packageDirectory)) File::deleteDirectory($packageDirectory);
+            if ($uploadedPackageDirectory && File::isDirectory($uploadedPackageDirectory)) File::deleteDirectory($uploadedPackageDirectory);
         }
     }
 
