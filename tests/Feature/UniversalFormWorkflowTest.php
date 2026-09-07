@@ -105,6 +105,36 @@ class UniversalFormWorkflowTest extends TestCase
         $this->expectException(LogicException::class);$published->update(['settings'=>['tampered'=>true]]);
     }
 
+    public function test_form_version_history_keeps_newest_open_and_collapses_previous_versions(): void
+    {
+        [$creator, $organisation] = $this->member('form_creator');
+        $service = app(FormAuthoringService::class);
+        $form = $service->create($organisation->id, $creator, 'Version history', 'blank');
+        $publishedV1 = $service->publish($form->versions()->firstOrFail());
+        $draftV2 = $service->createDraftFrom($publishedV1, $creator);
+        $publishedV2 = $service->publish($draftV2);
+        $service->createDraftFrom($publishedV2, $creator);
+
+        $response = $this->actingAs($creator)->get(route('forms.show', $form));
+        $html = $response->getContent();
+        $detailsPosition = strpos($html, '<details');
+        $newestPosition = strpos($html, 'v3 ·');
+
+        $response->assertOk()
+            ->assertSee(__('messages.previous_versions', ['count' => 2]), false);
+        $this->assertNotFalse($detailsPosition);
+        $this->assertNotFalse($newestPosition);
+        $this->assertLessThan($detailsPosition, $newestPosition);
+        $this->assertStringContainsString('v2 ·', substr($html, $detailsPosition));
+        $this->assertStringContainsString('v1 ·', substr($html, $detailsPosition));
+
+        $singleForm = $service->create($organisation->id, $creator, 'Single version', 'blank');
+        $singleResponse = $this->actingAs($creator)->get(route('forms.show', $singleForm));
+
+        $singleResponse->assertOk();
+        $this->assertStringNotContainsString('<details', $singleResponse->getContent());
+    }
+
     public function test_published_form_can_create_new_draft_and_archive_without_deleting_publication(): void
     {
         [$creator,$organisation]=$this->member('form_creator');$service=app(FormAuthoringService::class);$form=$service->create($organisation->id,$creator,'Exam','test');$published=$service->publish($form->versions()->first());
