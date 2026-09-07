@@ -6,7 +6,7 @@
 
 - Docker Desktop ar Linux containers un Compose v2;
 - pietiekama diska vieta MariaDB datiem un private storage;
-- production domēns/HTTPS risinājums, ja aplikācija būs publiski pieejama.
+- publiskam demo nav vajadzīgs domēns; Quick Tunnel izmanto pagaidu random HTTPS adresi.
 
 PHP un Node tiek iebūvēti image buildā. Runtime image izmanto PHP 8.4 FPM; frontend buildā tiek izmantots Node 24 un `npm ci`.
 
@@ -20,7 +20,7 @@ PHP un Node tiek iebūvēti image buildā. Runtime image izmanto PHP 8.4 FPM; fr
 6. Ja root vēl nav, interaktīvi palaidīs esošo `php artisan app:create-admin` komandu. Izmanto tikai paša izvēlētu paroli; default parole netiek izmantota.
 7. Pēc pabeigšanas pārbaudi `deployment\STATUS-SERVER.bat` un atver `http://localhost:8080`.
 
-Ja vajadzīgs publisks HTTPS serveris, vienu reizi palaid `deployment\CONFIGURE-PUBLIC-SERVER.bat`. Tas pieprasa publisko HTTPS URL un Cloudflare Tunnel tokenu, ieslēdz secure cookies, aktivizē tunnel profilu un pārbauda health.
+Publiskam, īslaicīgam HTTPS demo izmanto `deployment\START-PUBLIC-DEMO.bat`; tam nav vajadzīgs domēns, Cloudflare konts vai token.
 
 Installer ir idempotents: atkārtota palaišana nepārraksta APP_KEY, DB paroles vai esošo root kontu un neveic destructive migrācijas.
 
@@ -38,24 +38,27 @@ START neveic migrācijas, neveido adminu un nereģenerē APP_KEY. STOP izmanto t
 
 Tikai test/staging vidē palaid `deployment\UNINSTALL-SERVER.bat`, ja jāatkārto instalācija no nulles. Tas dzēš šī Compose projekta konteinerus, tīklus, volumes, built image tagus, `.env.production` un install logu, tāpēc tiek neatgriezeniski zaudēti visi šī servera projekta DB un private storage dati. Uninstall turpinās tikai pēc precīzas `DELETE` ievades. Tas neizmanto globālu Docker cleanup un neaiztiek citus projektus.
 
-## HTTPS / Cloudflare Tunnel
+## Public HTTPS demo / Cloudflare Quick Tunnel
 
-Bez tunnel profila nginx pēc noklusējuma ir pieejams tikai uz `HTTP_BIND_ADDRESS`/`HTTP_PORT` (pēc noklusējuma localhost:8080). DB ports nav publicēts.
+Without the public demo, nginx is available only on `HTTP_BIND_ADDRESS`/`HTTP_PORT` (by default `http://localhost:8080`). The database port is not published.
 
-Cloudflare Zero Trust / Cloudflare Tunnel konfigurācijai:
+### Start
 
-1. Cloudflare Zero Trust panelī izveido Tunnel.
-2. Tunnel konfigurācijā pievieno Public Hostname.
-3. Hostname iestati uz izvēlēto publisko subdomēnu.
-4. Service/Origin iestati uz `http://nginx:80`.
-5. Pēc tam paņem tunnel tokenu.
-6. Palaid `deployment\CONFIGURE-PUBLIC-SERVER.bat` un ievadi URL/tokenu tikai interaktīvi. Skripts tokenu saglabā tikai ignorētajā `.env.production` laukā `CLOUDFLARE_TUNNEL_TOKEN` un iestata `APP_URL=https://<hostname>`.
-7. Turpmāk izmanto tikai `deployment\START-SERVER.bat`; ja token nav tukšs, START automātiski aktivizē tunnel profilu. Manuālā Compose alternatīva ir `docker compose --env-file .env.production --profile tunnel up -d`.
+1. Confirm the local stack is running and `http://localhost:8080/up` returns HTTP 200.
+2. Run `deployment\START-PUBLIC-DEMO.bat`.
+3. The script starts only a separate Cloudflare Quick Tunnel container with origin `http://nginx:80`; it does not reconfigure Laravel or recreate app, database, queue, or scheduler services.
+4. Every start creates a fresh random `https://<random>.trycloudflare.com` address. No Cloudflare account, custom domain or token is required.
+5. The script waits for a registered tunnel connection and checks Windows/default DNS plus public DNS resolvers. It then verifies HTTPS `/up`, `/login`, CSS/JS assets and mixed-content behavior. If a hostname is not ready, it removes only that demo tunnel and retries with a new hostname.
+6. `deployment\PUBLIC-DEMO-URL.txt` is written only after the URL passes all readiness checks. Diagnostic output is stored separately and does not contain secrets.
+7. On failure, the script reports the reason and leaves the local Laravel stack untouched.
 
+### Stop
 
-Cloudflared savienojas ar iekšējo `nginx` servisu; router port forwarding nav vajadzīgs. Tokenu neieraksti Git, dokumentācijā vai shell skriptā.
+Run `deployment\STOP-PUBLIC-DEMO.bat` to stop and remove only the public demo tunnel. The database, application, nginx, queue, scheduler and Docker volumes remain running/persistent.
 
-`TRUSTED_PROXIES` pēc noklusējuma norāda uz Compose privātajiem edge/backend subnetiem `172.30.0.0/24,172.31.0.0/24`. Tas nav wildcard `*`; nemaini to uz plašāku tīklu bez atsevišķa drošības pamatojuma.
+The Quick Tunnel hostname is temporary and changes on each successful start. Router port forwarding is not required. The local `.env.production`, `APP_URL` and `SESSION_*` settings are not changed by this transport-only flow.
+
+`TRUSTED_PROXIES` is scoped to the Compose private edge/backend subnets `172.30.0.0/24,172.31.0.0/24`; it is not a wildcard.
 
 ## Backup
 

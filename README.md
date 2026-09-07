@@ -9,13 +9,13 @@ This is an RTU professional internship and demonstration project. It is not pres
 ## Main Features
 
 - Doctor workspace with an organisation-scoped patient registry.
-- Pseudonymous \`PAT-*\` research IDs for patient questionnaire workflows.
+- Pseudonymous `PAT-*` research IDs for patient questionnaire workflows.
 - Questionnaire assignment and individual expiring/revocable patient access links.
 - Patient completion without a patient User account.
 - Autosave, resume, sequential questionnaire parts and final submission.
-- Questionnaire builder with sections, components, validation and conditional logic.
+- Questionnaire builder with sections, components, LV/EN/RU translations, validation, conditional visibility and sensitive component marking.
 - LV/EN/RU localized questionnaire and application content.
-- Consent recording and published form-version immutability.
+- Consent recording, immutable published versions and new draft/version workflow.
 - Completed result view for the responsible doctor.
 - Permission-controlled anonymized result handoff.
 - Sensitive-answer filtering for anonymized views and exports.
@@ -32,13 +32,13 @@ The product roles are:
 - **Questionnaire manager** — questionnaire builder, publishing and package exchange.
 - **Doctor** — own patient workspace, assignments and completed results.
 
-\`platform_admin\` is a hidden bootstrap/root account used for initial administration and recovery. It is not an assignable product role.
+`platform_admin` is a hidden bootstrap/root account used for initial administration and recovery. It is not an assignable product role.
 
 Patients do not have system accounts. They use the protected patient-access link workflow.
 
 ## Patient Workflow
 
-\`\`\`mermaid
+```mermaid
 flowchart LR
     D[Doctor] --> P[Create patient case]
     P --> A[Assign questionnaire parts]
@@ -50,7 +50,7 @@ flowchart LR
     C --> V[Doctor views completed result]
     V --> H[Anonymized handoff]
     H --> X[Recipient views filtered result/export]
-\`\`\`
+```
 
 Patient links are bearer credentials. The plaintext token is displayed only for link delivery; the database stores only a SHA-256 token hash. Active links expire and can be revoked or regenerated.
 
@@ -61,7 +61,7 @@ Patient links are bearer credentials. The plaintext token is displayed only for 
 - Generic submission/export permissions do not grant access to patient-linked submissions or anonymized handoffs.
 - Anonymized recipients see only their own handoffs, PAT IDs, metadata and non-sensitive answers.
 - Patient identity fields and sensitive component answers are excluded from anonymized views and exports.
-- \`platform_admin\` is hidden from role-assignment UI and protected by bootstrap safeguards.
+- `platform_admin` is hidden from role-assignment UI and protected by bootstrap safeguards.
 - Audit records avoid plaintext patient access tokens.
 - Private attachments and application storage are kept outside nginx public content.
 
@@ -69,7 +69,7 @@ These controls are application-level protections for a demonstration project. Th
 
 ## Architecture
 
-\`\`\`mermaid
+```mermaid
 flowchart LR
     DA[Local doctor/admin] --> N[nginx]
     RP[Remote patient] --> CF[Cloudflare Quick Tunnel<br/>public HTTPS demo/test transport]
@@ -79,7 +79,7 @@ flowchart LR
     PHP --> Q[Queue worker]
     PHP --> SCH[Scheduler]
     PHP --> PS[(Private storage volume)]
-\`\`\`
+```
 
 Docker Compose separates the edge and backend networks. nginx serves the Laravel public directory and proxies PHP requests to the app container. The database is backend-only; private storage and logs use persistent volumes.
 
@@ -100,14 +100,14 @@ Docker Compose separates the edge and backend networks. nginx serves the Laravel
 For a local Docker demonstration:
 
 1. Start Docker Desktop with Linux containers.
-2. Run \`deployment\\\\INSTALL-SERVER.bat\` once on a fresh server.
-3. Use \`deployment\\\\START-SERVER.bat\`, \`STATUS-SERVER.bat\` and \`STOP-SERVER.bat\` for daily operation.
-4. Use \`deployment\\\\START-PUBLIC-DEMO.bat\` for a temporary public HTTPS demo URL through Cloudflare Quick Tunnel.
-5. Use \`deployment\\\\STOP-PUBLIC-DEMO.bat\` to stop only the public demo tunnel.
+2. Run `deployment\INSTALL-SERVER.bat` once on a fresh server.
+3. Use `deployment\START-SERVER.bat`, `STATUS-SERVER.bat` and `STOP-SERVER.bat` for daily operation.
+4. Use `deployment\START-PUBLIC-DEMO.bat` for a temporary public HTTPS demo URL through Cloudflare Quick Tunnel.
+5. Use `deployment\STOP-PUBLIC-DEMO.bat` to stop only the public demo tunnel.
 
-The Quick Tunnel is a temporary public HTTPS demo/test transport and may receive a new random \`trycloudflare.com\` hostname when recreated. No custom domain is required. The deployment scripts keep secrets in ignored local files and preserve database/private-storage volumes.
+Each successful `START-PUBLIC-DEMO.bat` run creates a fresh random `trycloudflare.com` hostname. The script waits for tunnel registration and default/public DNS readiness, then checks HTTPS `/up`, `/login`, CSS/JS and mixed-content behavior before reporting READY. No custom domain is required. The deployment scripts keep secrets in ignored local files and preserve database/private-storage volumes.
 
-Backups are created with \`deployment\\\\BACKUP-SERVER.bat\`. Test/staging uninstall is available through \`deployment\\\\UNINSTALL-SERVER.bat\` and is destructive for this project’s Docker data only.
+Backups are created with `deployment\BACKUP-SERVER.bat`. Test/staging uninstall is available through `deployment\UNINSTALL-SERVER.bat` and is destructive for this project’s Docker data only.
 
 ## Testing
 
@@ -124,18 +124,18 @@ The repository contains feature coverage for:
 
 Run the full checks inside the application Docker environment:
 
-\`\`\`powershell
+```powershell
 docker compose --env-file .env.production exec -T app php artisan test
 docker compose --env-file .env.production exec -T app php artisan questionnaires:validate
 npm.cmd run build
 git diff --check
-\`\`\`
+```
 
 The project should be treated as a demonstration/practice system until the complete Docker runtime checks and an independent security/privacy/compliance review are completed.
 
 ## Project Structure
 
-\`\`\`text
+```text
 app/                 Laravel application, policies and domain services
 database/            migrations, factories and seeders
 deployment/          Docker/Windows server scripts and nginx configuration
@@ -146,24 +146,50 @@ resources/css/       application styles
 resources/js/         questionnaire and UI behavior
 routes/               web and console routes
 tests/                feature and unit regression tests
-docs/screenshots/     planned portfolio screenshots
-\`\`\`
+docs/screenshots/     portfolio screenshots
+```
 
 ## Screenshots
 
-Planned screenshots are listed below. Actual images are intentionally not included yet.
+These portfolio previews use demonstration data. The public-demo image intentionally shows a temporary Quick Tunnel hostname; it is not a permanent service address.
 
-- \`docs/screenshots/doctor-workspace.png\` — Doctor Workspace with synthetic patients and PAT IDs.
-- \`docs/screenshots/patient-management.png\` — patient assignment and secure-link management with fake data.
-- \`docs/screenshots/questionnaire-builder.png\` — sections, components and conditional logic.
-- \`docs/screenshots/patient-portal-mobile.png\` — account-free patient portal on a phone-sized viewport.
-- \`docs/screenshots/questionnaire-runner-mobile.png\` — questionnaire runner with progress and validation.
-- \`docs/screenshots/result-handoff.png\` — doctor’s completed result and anonymized recipient selection.
-- \`docs/screenshots/anonymized-results.png\` — recipient result list and export controls.
-- \`docs/screenshots/roles-permissions.png\` — product roles with hidden bootstrap root.
-- \`docs/screenshots/public-demo.png\` — public HTTPS Quick Tunnel demo, with the temporary URL redacted if necessary.
+### 1. Doctor Workspace
 
-Use only synthetic data. Never show plaintext patient tokens, names, personal IDs, notes, emails, database credentials, \`.env.production\`, diagnostics or real medical answers.
+![Doctor Workspace](docs/screenshots/doctor-workspace-1.png)
+
+### 2. Patient management and assignment
+
+![Patient management and assignment](docs/screenshots/patient-management-1.png)
+
+### 3. Patient portal on mobile
+
+![Patient portal mobile](docs/screenshots/patient-portal-mobile.png)
+
+### 4. Questionnaire runner on mobile
+
+![Questionnaire runner mobile](docs/screenshots/patient-portal-mobile-1.png)
+
+### 5. Questionnaire builder
+
+![Questionnaire builder](docs/screenshots/questionnaire-builder.png)
+
+### 6. Sensitive components and conditional logic
+
+![Questionnaire builder sensitive component settings](docs/screenshots/questionnaire-builder-2.png)
+
+### 7. Anonymized result detail
+
+![Anonymized result detail](docs/screenshots/anonymized-results.png)
+
+### 8. Roles and permissions
+
+![Roles and permissions](docs/screenshots/roles-permissions-2.png)
+
+### 9. Public HTTPS demo
+
+![Public HTTPS Quick Tunnel demo](docs/screenshots/public-demo.png)
+
+Use only synthetic data. Never show plaintext patient tokens, names, personal IDs, notes, emails, database credentials, `.env.production`, diagnostics or real medical answers.
 
 ## Project Context
 
