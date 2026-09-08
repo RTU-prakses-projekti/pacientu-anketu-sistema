@@ -26,6 +26,7 @@
 /deployment/PUBLIC-DEMO-URL.txt
 /deployment/PUBLIC-DEMO-DIAGNOSTIC.txt
 /deployment/PUBLIC-DEMO-STATE.txt
+/deployment/PUBLIC-DEMO-DNS-STATE.json
 _ide_helper.php
 Homestead.json
 Homestead.yaml

@@ -5,7 +5,8 @@ Set-Location $projectRoot
 $envFile = Join-Path $projectRoot '.env.production'
 $envExample = Join-Path $PSScriptRoot '.env.production.example'
 $installLog = Join-Path $PSScriptRoot 'install.log'
-$env:DEPLOY_ENV_FILE = 'deployment/.env.production.example'
+$composeEnvFile = if (Test-Path -LiteralPath $envFile) { '.env.production' } elseif (Test-Path -LiteralPath $envExample) { 'deployment/.env.production.example' } else { throw 'Neither .env.production nor the deployment env example is available for cleanup.' }
+$env:DEPLOY_ENV_FILE = $composeEnvFile
 
 Write-Host 'WARNING: this will permanently delete this project Docker installation.' -ForegroundColor Yellow
 Write-Host 'All patient database data, private storage, exports, attachments, containers, networks and volumes for this project will be lost.' -ForegroundColor Yellow
@@ -18,7 +19,7 @@ if ($confirmation -cne 'DELETE') {
 }
 
 function Invoke-ProjectCompose([string[]] $arguments) {
-    $composeArguments = @('compose', '--project-name', 'pacientu-anketu-sistema', '--env-file', $envExample, '--profile', 'tunnel') + $arguments
+    $composeArguments = @('compose', '--project-name', 'pacientu-anketu-sistema', '--env-file', $composeEnvFile, '--profile', 'tunnel') + $arguments
     & docker @composeArguments
     if ($LASTEXITCODE -ne 0) { throw "docker compose command failed: $($arguments -join ' ')" }
 }

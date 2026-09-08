@@ -3,6 +3,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location $projectRoot
 $envFile = Join-Path $projectRoot '.env.production'
+$env:DEPLOY_ENV_FILE = '.env.production'
 
 function Get-EnvValue([string] $key) {
     if (-not (Test-Path -LiteralPath $envFile)) { return '' }

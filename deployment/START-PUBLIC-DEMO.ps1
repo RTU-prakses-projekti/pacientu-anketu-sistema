@@ -1,10 +1,17 @@
+param(
+    [switch] $ApplyDnsFallback,
+    [string] $DnsStatePath = ''
+)
+
 $ErrorActionPreference = 'Stop'
 
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location $projectRoot
 $envFile = Join-Path $projectRoot '.env.production'
+$env:DEPLOY_ENV_FILE = '.env.production'
 $publicDemoUrlFile = Join-Path $PSScriptRoot 'PUBLIC-DEMO-URL.txt'
 $diagnosticFile = Join-Path $PSScriptRoot 'PUBLIC-DEMO-DIAGNOSTIC.txt'
+$dnsStateFile = if ([string]::IsNullOrWhiteSpace($DnsStatePath)) { Join-Path $PSScriptRoot 'PUBLIC-DEMO-DNS-STATE.json' } else { $DnsStatePath }
 $publicDemoUrlDisplay = 'deployment\PUBLIC-DEMO-URL.txt'
 $diagnosticDisplay = 'deployment\PUBLIC-DEMO-DIAGNOSTIC.txt'
 $containerName = 'pacientu-anketu-sistema-public-demo'
@@ -213,6 +220,133 @@ function Get-DnsReadiness([string] $Hostname) {
     }
 }
 
+function Test-IsAdministrator {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+function Get-ActiveDnsInterface {
+    $routes = @(Get-NetRoute -AddressFamily IPv4 -DestinationPrefix '0.0.0.0/0' -ErrorAction Stop |
+        Where-Object { $_.InterfaceIndex -gt 0 -and -not [string]::IsNullOrWhiteSpace([string] $_.NextHop) } |
+        Sort-Object RouteMetric, InterfaceIndex)
+    foreach ($route in $routes) {
+        $configuration = Get-NetIPConfiguration -InterfaceIndex $route.InterfaceIndex -ErrorAction SilentlyContinue
+        if ($null -eq $configuration -or $null -eq $configuration.NetAdapter) { continue }
+        if ($configuration.NetAdapter.Status -ne 'Up') { continue }
+        if ($null -eq $configuration.IPv4DefaultGateway) { continue }
+        $dnsConfiguration = Get-DnsClientServerAddress -InterfaceIndex $route.InterfaceIndex -AddressFamily IPv4 -ErrorAction Stop
+        $dns = @($dnsConfiguration.ServerAddresses | Where-Object { -not [string]::IsNullOrWhiteSpace([string] $_) })
+        return [pscustomobject]@{
+            InterfaceIndex = [int] $route.InterfaceIndex
+            InterfaceAlias = [string] $configuration.InterfaceAlias
+            PreviousDnsServers = @($dns | ForEach-Object { [string] $_ })
+        }
+    }
+    throw 'Could not determine the active IPv4 network interface with a default route.'
+}
+
+function Read-DnsState {
+    if (-not (Test-Path -LiteralPath $dnsStateFile)) { return $null }
+    try {
+        $encoding = New-Object System.Text.UTF8Encoding($false)
+        return [System.IO.File]::ReadAllText($dnsStateFile, $encoding) | ConvertFrom-Json
+    } catch {
+        throw "The saved temporary DNS state is invalid: $(Get-ShortText $_.Exception.Message)"
+    }
+}
+
+function Write-DnsState($State) {
+    $encoding = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($dnsStateFile, ($State | ConvertTo-Json -Depth 4), $encoding)
+}
+
+function Restore-DnsStateFromFile {
+    $state = Read-DnsState
+    if ($null -eq $state) { return }
+    $interfaceIndex = 0
+    if (-not [int]::TryParse([string] $state.InterfaceIndex, [ref] $interfaceIndex) -or $interfaceIndex -le 0) { throw 'The saved temporary DNS state has no valid interface index.' }
+    $previousDnsServers = @($state.PreviousDnsServers | ForEach-Object { [string] $_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    if ($previousDnsServers.Count -eq 0) {
+        Set-DnsClientServerAddress -InterfaceIndex $interfaceIndex -ResetServerAddresses -ErrorAction Stop
+    } else {
+        Set-DnsClientServerAddress -InterfaceIndex $interfaceIndex -ServerAddresses $previousDnsServers -ErrorAction Stop
+    }
+    $flush = & ipconfig.exe /flushdns 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "DNS cache flush failed: $(Get-ShortText (($flush | ForEach-Object { [string] $_ }) -join ' '))" }
+    Remove-Item -LiteralPath $dnsStateFile -Force -ErrorAction Stop
+}
+
+function Apply-DnsStateFromFile {
+    $state = Read-DnsState
+    if ($null -eq $state) { throw 'Temporary DNS state was not found.' }
+    $interfaceIndex = 0
+    if (-not [int]::TryParse([string] $state.InterfaceIndex, [ref] $interfaceIndex) -or $interfaceIndex -le 0) { throw 'The temporary DNS state has no valid interface index.' }
+    $fallbackDnsServers = @($state.FallbackDnsServers | ForEach-Object { [string] $_ } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    if ($fallbackDnsServers.Count -eq 0) { throw 'No validated public DNS server was saved for the temporary fallback.' }
+    try {
+        Set-DnsClientServerAddress -InterfaceIndex $interfaceIndex -ServerAddresses $fallbackDnsServers -ErrorAction Stop
+        $flush = & ipconfig.exe /flushdns 2>&1
+        if ($LASTEXITCODE -ne 0) { throw "DNS cache flush failed: $(Get-ShortText (($flush | ForEach-Object { [string] $_ }) -join ' '))" }
+    } catch {
+        try { Restore-DnsStateFromFile } catch { }
+        throw
+    }
+}
+
+function Invoke-ElevatedDnsAction([string] $Action) {
+    $powerShellPath = Join-Path $PSHOME 'powershell.exe'
+    $quotedScript = '"{0}"' -f $PSCommandPath
+    $quotedState = '"{0}"' -f $dnsStateFile
+    $process = Start-Process -FilePath $powerShellPath -Verb RunAs -Wait -PassThru -ArgumentList @(
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $quotedScript,
+        $Action, '-DnsStatePath', $quotedState
+    )
+    return $process.ExitCode -eq 0
+}
+
+function Select-ValidatedFallbackDnsServers($Readiness) {
+    $servers = @()
+    foreach ($candidate in @(
+        [pscustomobject]@{ Address = '8.8.8.8'; Probe = $Readiness.Google },
+        [pscustomobject]@{ Address = '1.1.1.1'; Probe = $Readiness.Cloudflare },
+        [pscustomobject]@{ Address = '9.9.9.9'; Probe = $Readiness.Quad9 }
+    )) {
+        if ($candidate.Probe.Success -and @($candidate.Probe.Addresses).Count -gt 0) { $servers += $candidate.Address }
+    }
+    return @($servers | Select-Object -Unique)
+}
+
+function Enable-TemporaryDnsFallback([string] $Hostname, $Readiness) {
+    $selectedServers = @(Select-ValidatedFallbackDnsServers $Readiness)
+    if ($selectedServers.Count -eq 0) { throw 'No public DNS resolver returned an IPv4 address for the Quick Tunnel hostname.' }
+    $interface = Get-ActiveDnsInterface
+    $existingState = Read-DnsState
+    if ($null -ne $existingState) {
+        if ([int] $existingState.InterfaceIndex -ne $interface.InterfaceIndex) { throw 'A temporary DNS state for a different active network interface already exists. Run STOP-PUBLIC-DEMO first.' }
+        Write-Diagnostic "Temporary DNS state already exists for interface $($existingState.InterfaceAlias); preserving its original DNS configuration."
+    } else {
+        $state = [ordered]@{
+            Version = 1
+            Hostname = $Hostname
+            InterfaceIndex = $interface.InterfaceIndex
+            InterfaceAlias = $interface.InterfaceAlias
+            PreviousDnsServers = @($interface.PreviousDnsServers)
+            FallbackDnsServers = @($selectedServers)
+            CreatedAt = (Get-Date).ToString('o')
+        }
+        Write-DnsState $state
+        Write-Diagnostic "Saved temporary DNS state: interface=$($interface.InterfaceAlias) ($($interface.InterfaceIndex)); previous DNS=$($interface.PreviousDnsServers -join ','); fallback DNS=$($selectedServers -join ',')."
+    }
+    Write-Diagnostic "DNS fallback trigger: registered tunnel + public resolver IPv4 + --resolve HTTPS PASS + Windows/default DNS FAIL. Interface=$($interface.InterfaceAlias) ($($interface.InterfaceIndex)); fallback DNS=$($selectedServers -join ',')."
+    if (Test-IsAdministrator) {
+        Apply-DnsStateFromFile
+    } elseif (-not (Invoke-ElevatedDnsAction '-ApplyDnsFallback')) {
+        throw 'Windows denied elevation for the temporary DNS fallback. The Quick Tunnel remains running; no permanent configuration was changed.'
+    }
+    return $selectedServers
+}
+
 function Get-PublicHttpCheck([string] $Url, [string] $Hostname, [string] $IpAddress) {
     $curlCommand = Get-Command curl.exe -ErrorAction SilentlyContinue
     if ($null -eq $curlCommand) { return [pscustomobject]@{ Success = $false; StatusCode = ''; ContentType = ''; Content = ''; Error = 'curl.exe is not available for public HTTPS readiness checks.' } }
@@ -256,6 +390,79 @@ function Wait-PublicHttp200Until([string] $Url, [string] $Label, [string] $Hostn
     throw "$Label did not return HTTPS 200 within the five-minute readiness window: $Url"
 }
 
+function Get-PublicHttpCheckForMode([string] $Url, [string] $Hostname, [string] $IpAddress, [bool] $UseResolve) {
+    if ($UseResolve) { return Get-PublicHttpCheck $Url $Hostname $IpAddress }
+    return Get-HttpCheck $Url
+}
+
+function Wait-PublicHttp200UntilForMode([string] $Url, [string] $Label, [string] $Hostname, [string] $IpAddress, [datetime] $Deadline, [bool] $UseResolve) {
+    if ($UseResolve) { return Wait-PublicHttp200Until $Url $Label $Hostname $IpAddress $Deadline }
+
+    $attempt = 0
+    while ((Get-Date) -lt $Deadline) {
+        $attempt++
+        $check = Get-HttpCheck $Url
+        if ($check.Success) { return $check }
+        if ($attempt -eq 1 -or $attempt % 5 -eq 0) { Write-Host "Waiting for $Label... $([int] ((Get-Date) - $script:readinessStartedAt).TotalSeconds)s, HTTPS $(Get-HttpStatusText $check)" }
+        Start-Sleep -Seconds 2
+    }
+    throw "$Label did not return HTTPS 200 through the normal hostname within the five-minute readiness window: $Url"
+}
+
+function Test-PublicReadiness([string] $BaseUrl, [string] $Hostname, [string] $IpAddress, [datetime] $Deadline, [bool] $UseResolve, [bool] $WaitForPass) {
+    try {
+        $publicHealth = if ($WaitForPass) {
+            Wait-PublicHttp200UntilForMode "$BaseUrl/up" 'public /up' $Hostname $IpAddress $Deadline $UseResolve
+        } else {
+            Get-PublicHttpCheckForMode "$BaseUrl/up" $Hostname $IpAddress $UseResolve
+        }
+        if (-not $publicHealth.Success) { return [pscustomobject]@{ Success = $false; Error = "public /up $(Get-HttpStatusText $publicHealth)"; Health = $publicHealth; Login = $null; Css = $null; Js = $null } }
+
+        $login = if ($WaitForPass) {
+            Wait-PublicHttp200UntilForMode "$BaseUrl/login" 'public /login' $Hostname $IpAddress $Deadline $UseResolve
+        } else {
+            Get-PublicHttpCheckForMode "$BaseUrl/login" $Hostname $IpAddress $UseResolve
+        }
+        if (-not $login.Success) { return [pscustomobject]@{ Success = $false; Error = "public /login $(Get-HttpStatusText $login)"; Health = $publicHealth; Login = $login; Css = $null; Js = $null } }
+
+        $loginHtml = [string] $login.Content
+        $insecureHtmlUrls = @([regex]::Matches($loginHtml, '(?i)http://[^"\s<>]+') | ForEach-Object { $_.Value } | Select-Object -Unique)
+        if ($insecureHtmlUrls.Count -gt 0) { return [pscustomobject]@{ Success = $false; Error = 'Public login HTML contains insecure http:// URL(s).'; Health = $publicHealth; Login = $login; Css = $null; Js = $null } }
+
+        $formActions = @([regex]::Matches($loginHtml, '(?is)<form\b[^>]*\baction="([^"]+)"') | ForEach-Object { $_.Groups[1].Value })
+        if ($formActions | Where-Object { $_ -match '^http://' }) { return [pscustomobject]@{ Success = $false; Error = 'Public login form action uses insecure http://.'; Health = $publicHealth; Login = $login; Css = $null; Js = $null } }
+
+        $cssMatch = [regex]::Match($loginHtml, '(?i)(?:href|src)="([^"\s]+/build/[^"\s]+\.css(?:\?[^"\s]*)?)"')
+        $jsMatch = [regex]::Match($loginHtml, '(?i)(?:href|src)="([^"\s]+/build/[^"\s]+\.js(?:\?[^"\s]*)?)"')
+        if (-not $cssMatch.Success -or -not $jsMatch.Success) { return [pscustomobject]@{ Success = $false; Error = 'Public login page did not expose both CSS and JS asset URLs.'; Health = $publicHealth; Login = $login; Css = $null; Js = $null } }
+
+        $cssPath = $cssMatch.Groups[1].Value
+        $cssUrl = if ($cssPath -match '^https?://') { $cssPath } else { "$BaseUrl/$($cssPath.TrimStart('/'))" }
+        $jsPath = $jsMatch.Groups[1].Value
+        $jsUrl = if ($jsPath -match '^https?://') { $jsPath } else { "$BaseUrl/$($jsPath.TrimStart('/'))" }
+        if ($cssUrl -notmatch '^https://' -or -not $cssUrl.StartsWith("$BaseUrl/") -or $jsUrl -notmatch '^https://' -or -not $jsUrl.StartsWith("$BaseUrl/")) { return [pscustomobject]@{ Success = $false; Error = 'Public CSS/JS URL is not HTTPS/current-host scoped.'; Health = $publicHealth; Login = $login; Css = $null; Js = $null } }
+
+        $cssCheck = if ($WaitForPass) {
+            Wait-PublicHttp200UntilForMode $cssUrl 'public CSS asset' $Hostname $IpAddress $Deadline $UseResolve
+        } else {
+            Get-PublicHttpCheckForMode $cssUrl $Hostname $IpAddress $UseResolve
+        }
+        if (-not $cssCheck.Success -or $cssCheck.ContentType -notmatch '(?i)text/css') { return [pscustomobject]@{ Success = $false; Error = "Public CSS asset check failed: HTTP $(Get-HttpStatusText $cssCheck), Content-Type $($cssCheck.ContentType)"; Health = $publicHealth; Login = $login; Css = $cssCheck; Js = $null } }
+
+        $jsCheck = if ($WaitForPass) {
+            Wait-PublicHttp200UntilForMode $jsUrl 'public JS asset' $Hostname $IpAddress $Deadline $UseResolve
+        } else {
+            Get-PublicHttpCheckForMode $jsUrl $Hostname $IpAddress $UseResolve
+        }
+        if (-not $jsCheck.Success -or $jsCheck.ContentType -notmatch '(?i)(javascript|ecmascript)') { return [pscustomobject]@{ Success = $false; Error = "Public JS asset check failed: HTTP $(Get-HttpStatusText $jsCheck), Content-Type $($jsCheck.ContentType)"; Health = $publicHealth; Login = $login; Css = $cssCheck; Js = $jsCheck } }
+
+        return [pscustomobject]@{ Success = $true; Error = ''; Health = $publicHealth; Login = $login; Css = $cssCheck; Js = $jsCheck }
+    } catch {
+        if ($WaitForPass) { throw }
+        return [pscustomobject]@{ Success = $false; Error = (Get-ShortText $_.Exception.Message); Health = $null; Login = $null; Css = $null; Js = $null }
+    }
+}
+
 function Collect-FailureDiagnostics {
     if (-not [string]::IsNullOrWhiteSpace($containerId)) {
         Write-DiagnosticBlock 'cloudflared Quick Tunnel logs' (Invoke-DockerSafe -Arguments @('logs', '--tail=200', $containerId)).Text
@@ -268,6 +475,16 @@ function Collect-FailureDiagnostics {
     }
     Write-DiagnosticBlock 'nginx service status' (Invoke-ComposeSafe @('ps', 'nginx')).Text
     Write-DiagnosticBlock 'nginx logs' (Invoke-ComposeSafe @('logs', '--tail=120', 'nginx')).Text
+}
+
+if ($ApplyDnsFallback) {
+    try {
+        Apply-DnsStateFromFile
+        exit 0
+    } catch {
+        Write-Error $_.Exception.Message
+        exit 1
+    }
 }
 
 Remove-PublicDemoUrlFile
@@ -380,6 +597,10 @@ try {
     Write-Diagnostic "Using existing Docker edge network: $edgeNetwork"
     $maxQuickTunnelAttempts = 5
     $quickTunnelReady = $false
+    $dnsPropagationWarning = $false
+    $dnsFallbackAttempted = $false
+    $dnsFallbackApplied = $false
+    $dnsFallbackFailure = ''
     $lastQuickTunnelFailure = ''
 
     for ($quickAttempt = 1; $quickAttempt -le $maxQuickTunnelAttempts -and -not $quickTunnelReady; $quickAttempt++) {
@@ -441,10 +662,15 @@ try {
 
             $hostname = ([Uri] $publicUrl).Host
             $dnsReady = $false
+            $resolvedHttpsReady = $false
+            $lastResolvedHttpsCheck = $null
             $lastDnsReadiness = $null
+            $lastValidatedIpAddress = ''
             $lastDnsLogAt = [datetime]::MinValue
+            $lastResolvedHttpsLogAt = [datetime]::MinValue
             while ((Get-Date) -lt $readinessDeadline) {
                 $lastDnsReadiness = Get-DnsReadiness $hostname
+                if (-not [string]::IsNullOrWhiteSpace($lastDnsReadiness.IpAddress)) { $lastValidatedIpAddress = $lastDnsReadiness.IpAddress }
                 $now = Get-Date
                 if (($now - $lastDnsLogAt).TotalSeconds -ge 10 -or $lastDnsReadiness.Ready) {
                     Write-DiagnosticBlock "Attempt $quickAttempt DNS $hostname (Windows default resolver)" $lastDnsReadiness.Default.Text
@@ -453,7 +679,36 @@ try {
                     Write-DiagnosticBlock "Attempt $quickAttempt DNS $hostname (9.9.9.9)" $lastDnsReadiness.Quad9.Text
                     $lastDnsLogAt = $now
                 }
-                if ($lastDnsReadiness.Ready) { $dnsReady = $true; break }
+                if ((Get-ContainerState $containerId) -ne 'running') { throw 'The Quick Tunnel container stopped during DNS propagation.' }
+
+                if (-not $resolvedHttpsReady -and -not [string]::IsNullOrWhiteSpace($lastDnsReadiness.IpAddress)) {
+                    $lastResolvedHttpsCheck = Test-PublicReadiness $publicUrl $hostname $lastDnsReadiness.IpAddress $readinessDeadline $true $false
+                    if ($lastResolvedHttpsCheck.Success) {
+                        $resolvedHttpsReady = $true
+                        Write-Diagnostic "Attempt $quickAttempt --resolve HTTPS checks: PASS; tunnel remains active while normal DNS propagates."
+                        Write-Host 'Registered tunnel HTTPS checks PASS (--resolve). Waiting for normal DNS readiness...' -ForegroundColor Green
+                    } elseif (($now - $lastResolvedHttpsLogAt).TotalSeconds -ge 10) {
+                        Write-Diagnostic "Attempt $quickAttempt --resolve HTTPS checks: WAIT; $($lastResolvedHttpsCheck.Error)"
+                        $lastResolvedHttpsLogAt = $now
+                    }
+                }
+
+                if ($resolvedHttpsReady -and -not $lastDnsReadiness.Default.Success -and -not $dnsFallbackAttempted) {
+                    $dnsFallbackAttempted = $true
+                    try {
+                        $fallbackServers = Enable-TemporaryDnsFallback $hostname $lastDnsReadiness
+                        $dnsFallbackApplied = $true
+                        Write-Diagnostic "Attempt $quickAttempt temporary Windows DNS fallback applied: $($fallbackServers -join ',')."
+                        Write-Host "Windows default DNS did not resolve the registered hostname. Temporary DNS fallback applied: $($fallbackServers -join ',')." -ForegroundColor Yellow
+                        Start-Sleep -Seconds 2
+                    } catch {
+                        $dnsFallbackFailure = $_.Exception.Message
+                        Write-Diagnostic "Attempt $quickAttempt temporary Windows DNS fallback: FAIL; $dnsFallbackFailure"
+                        Write-Host "Temporary DNS fallback could not be applied: $dnsFallbackFailure" -ForegroundColor Yellow
+                    }
+                }
+
+                if ($lastDnsReadiness.Default.Success -and $resolvedHttpsReady) { $dnsReady = $true; break }
                 $elapsed = [int] ($now - $script:readinessStartedAt).TotalSeconds
                 if ($elapsed -eq 0 -or $elapsed % 5 -eq 0) {
                     Write-Host ("Waiting for DNS readiness... {0}s (default={1}; 1.1.1.1={2}; 8.8.8.8={3}; 9.9.9.9={4})" -f $elapsed, $(if ($lastDnsReadiness.Default.Success) { 'PASS' } else { 'WAIT' }), $(if ($lastDnsReadiness.Cloudflare.Success) { 'PASS' } else { 'WAIT' }), $(if ($lastDnsReadiness.Google.Success) { 'PASS' } else { 'WAIT' }), $(if ($lastDnsReadiness.Quad9.Success) { 'PASS' } else { 'WAIT' }))
@@ -461,40 +716,30 @@ try {
                 Start-Sleep -Seconds 2
             }
             if (-not $dnsReady) {
-                Write-Diagnostic "Attempt $quickAttempt DNS readiness: FAIL; Windows/default plus all three public resolvers did not resolve before timeout."
-                throw "DNS readiness failed for $hostname on the Windows/default resolver and/or 1.1.1.1, 8.8.8.8, or 9.9.9.9."
+                if ($resolvedHttpsReady) {
+                    $dnsPropagationWarning = $true
+                    Write-Diagnostic "Attempt $quickAttempt DNS readiness: WARNING; tunnel is registered and --resolve HTTPS checks passed, but normal DNS did not become ready before timeout."
+                    if (-not [string]::IsNullOrWhiteSpace($dnsFallbackFailure)) { Write-Diagnostic "Attempt $quickAttempt DNS fallback warning: $dnsFallbackFailure" }
+                    Write-Diagnostic "Attempt $quickAttempt PUBLIC TUNNEL ACTIVE; DNS PROPAGATION STILL IN PROGRESS; hostname=$hostname"
+                    break
+                }
+                Write-Diagnostic "Attempt $quickAttempt DNS readiness: FAIL; tunnel registration or --resolve HTTPS checks did not remain healthy before timeout."
+                throw "DNS readiness failed for $hostname and no healthy --resolve HTTPS path was available."
             }
             Write-Diagnostic "Attempt $quickAttempt DNS readiness: PASS; HTTPS readiness IP=$($lastDnsReadiness.IpAddress)"
             Write-DiagnosticBlock "Attempt $quickAttempt FINAL DNS $hostname (Windows default resolver)" $lastDnsReadiness.Default.Text
             Write-DiagnosticBlock "Attempt $quickAttempt FINAL DNS $hostname (1.1.1.1)" $lastDnsReadiness.Cloudflare.Text
             Write-DiagnosticBlock "Attempt $quickAttempt FINAL DNS $hostname (8.8.8.8)" $lastDnsReadiness.Google.Text
             Write-DiagnosticBlock "Attempt $quickAttempt FINAL DNS $hostname (9.9.9.9)" $lastDnsReadiness.Quad9.Text
-            if ([string]::IsNullOrWhiteSpace($lastDnsReadiness.IpAddress)) { throw 'Public DNS resolved without a usable IPv4 address for HTTPS readiness.' }
+            if ([string]::IsNullOrWhiteSpace($lastValidatedIpAddress)) { throw 'Public DNS resolved without a usable IPv4 address for HTTPS readiness.' }
 
-            $publicHealth = Wait-PublicHttp200Until "$publicUrl/up" 'public /up' $hostname $lastDnsReadiness.IpAddress $readinessDeadline
-            $login = Wait-PublicHttp200Until "$publicUrl/login" 'public /login' $hostname $lastDnsReadiness.IpAddress $readinessDeadline
-            Write-Diagnostic ("Attempt {0} public HTTPS /up HTTP={1}; /login HTTP={2}" -f $quickAttempt, (Get-HttpStatusText $publicHealth), (Get-HttpStatusText $login))
-            $loginHtml = [string] $login.Content
-            $insecureHtmlUrls = @([regex]::Matches($loginHtml, '(?i)http://[^"\s<>]+') | ForEach-Object { $_.Value } | Select-Object -Unique)
-            Write-Diagnostic "Attempt $quickAttempt public login insecure HTTP URLs: $($insecureHtmlUrls -join ', ')"
-            if ($insecureHtmlUrls.Count -gt 0) { throw 'Public login HTML contains insecure http:// URL(s); mixed content is not allowed.' }
-            $formActions = @([regex]::Matches($loginHtml, '(?is)<form\b[^>]*\baction="([^"]+)"') | ForEach-Object { $_.Groups[1].Value })
-            if ($formActions | Where-Object { $_ -match '^http://' }) { throw 'Public login form action uses insecure http://.' }
-            $cssMatch = [regex]::Match($loginHtml, '(?i)(?:href|src)="([^"\s]+/build/[^"\s]+\.css(?:\?[^"\s]*)?)"')
-            $jsMatch = [regex]::Match($loginHtml, '(?i)(?:href|src)="([^"\s]+/build/[^"\s]+\.js(?:\?[^"\s]*)?)"')
-            if (-not $cssMatch.Success -or -not $jsMatch.Success) { throw 'Public login page did not expose both CSS and JS asset URLs.' }
-            $cssPath = $cssMatch.Groups[1].Value
-            $cssUrl = if ($cssPath -match '^https?://') { $cssPath } else { "$publicUrl/$($cssPath.TrimStart('/'))" }
-            $jsPath = $jsMatch.Groups[1].Value
-            $jsUrl = if ($jsPath -match '^https?://') { $jsPath } else { "$publicUrl/$($jsPath.TrimStart('/'))" }
-            Write-Diagnostic "Attempt $quickAttempt generated CSS URL: $cssUrl"
-            Write-Diagnostic "Attempt $quickAttempt generated JS URL: $jsUrl"
-            if ($cssUrl -notmatch '^https://' -or -not $cssUrl.StartsWith("$publicUrl/") -or $jsUrl -notmatch '^https://' -or -not $jsUrl.StartsWith("$publicUrl/")) { throw 'Public CSS/JS URL is not HTTPS/current-host scoped.' }
-            $cssCheck = Wait-PublicHttp200Until $cssUrl 'public CSS asset' $hostname $lastDnsReadiness.IpAddress $readinessDeadline
-            $jsCheck = Wait-PublicHttp200Until $jsUrl 'public JS asset' $hostname $lastDnsReadiness.IpAddress $readinessDeadline
+            $normalReadiness = Test-PublicReadiness $publicUrl $hostname $lastValidatedIpAddress $readinessDeadline $false $true
+            $publicHealth = $normalReadiness.Health
+            $login = $normalReadiness.Login
+            $cssCheck = $normalReadiness.Css
+            $jsCheck = $normalReadiness.Js
+            Write-Diagnostic ("Attempt {0} normal-host HTTPS /up HTTP={1}; /login HTTP={2}" -f $quickAttempt, (Get-HttpStatusText $publicHealth), (Get-HttpStatusText $login))
             Write-Diagnostic ("Attempt {0} CSS HTTP={1}; Content-Type={2}; JS HTTP={3}; Content-Type={4}" -f $quickAttempt, (Get-HttpStatusText $cssCheck), $cssCheck.ContentType, (Get-HttpStatusText $jsCheck), $jsCheck.ContentType)
-            if ($cssCheck.ContentType -notmatch '(?i)text/css') { throw "Public CSS asset check failed: Content-Type $($cssCheck.ContentType)" }
-            if ($jsCheck.ContentType -notmatch '(?i)(javascript|ecmascript)') { throw "Public JS asset check failed: Content-Type $($jsCheck.ContentType)" }
 
             Save-PublicDemoUrlFile 'READY'
             Write-Diagnostic "Attempt ${quickAttempt}: FULL READINESS PASS"
@@ -513,6 +758,23 @@ try {
                 Start-Sleep -Seconds 2
             }
         }
+    }
+
+    if ($dnsPropagationWarning) {
+        Write-Diagnostic 'FINAL: PUBLIC TUNNEL ACTIVE; DNS PROPAGATION STILL IN PROGRESS; Quick Tunnel container was intentionally left running.'
+        Write-Host ''
+        Write-Host '============================================================'
+        Write-Host 'PUBLIC TUNNEL ACTIVE' -ForegroundColor Yellow
+        Write-Host 'DNS PROPAGATION STILL IN PROGRESS' -ForegroundColor Yellow
+        Write-Host '============================================================'
+        Write-Host ''
+        Write-Host 'Public URL:'
+        Write-Host $publicUrl
+        Write-Host ''
+        Write-Host 'The Quick Tunnel is registered and HTTPS checks passed with --resolve.'
+        Write-Host 'The container remains running. Wait for normal DNS propagation before sharing the URL broadly.'
+        Write-Host "Diagnostics: $diagnosticDisplay"
+        exit 0
     }
 
     if (-not $quickTunnelReady) { throw "All $maxQuickTunnelAttempts Quick Tunnel attempts failed. Last failure: $lastQuickTunnelFailure" }

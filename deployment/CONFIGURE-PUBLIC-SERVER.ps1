@@ -61,7 +61,10 @@ Set-EnvValue 'APP_URL' $publicUrl.TrimEnd('/')
 Set-EnvValue 'SESSION_SECURE_COOKIE' 'true'
 Set-EnvValue 'SESSION_COOKIE' 'pacientu_anketu_sistema_session'
 Set-EnvValue 'CLOUDFLARE_TUNNEL_TOKEN' $tunnelToken
-Set-EnvValue 'TRUSTED_PROXIES' '172.31.0.0/24'
+$currentTrustedProxies = Get-EnvValue 'TRUSTED_PROXIES'
+if ([string]::IsNullOrWhiteSpace($currentTrustedProxies)) {
+    Set-EnvValue 'TRUSTED_PROXIES' '172.30.0.0/24,172.31.0.0/24'
+}
 $env:DEPLOY_ENV_FILE = '.env.production'
 
 Invoke-Compose @('config', '--quiet')

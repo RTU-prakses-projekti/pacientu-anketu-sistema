@@ -13,15 +13,17 @@ trap {
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location $projectRoot
 $envFile = Join-Path $projectRoot '.env.production'
+$composeEnvFile = '.env.production'
 $envExample = Join-Path $PSScriptRoot '.env.production.example'
 
 function Write-InstallProgress([int] $step, [int] $percent, [string] $message) {
     Write-Host ("[{0}/9] {1,3}%  {2}" -f $step, $percent, $message)
 }
 
-function Set-EnvValue([string] $key, [string] $value) {
+function Set-EnvValue([string] $key, [string] $value, [string] $path = $null) {
+    if ([string]::IsNullOrWhiteSpace($path)) { $path = $envFile }
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    $content = if (Test-Path $envFile) { [System.IO.File]::ReadAllText($envFile, $utf8NoBom) } else { '' }
+    $content = if (Test-Path $path) { [System.IO.File]::ReadAllText($path, $utf8NoBom) } else { '' }
     $lines = [regex]::Split($content, "\r?\n")
     $keyPattern = "^$([regex]::Escape($key))="
     $updated = $false
@@ -33,16 +35,40 @@ function Set-EnvValue([string] $key, [string] $value) {
         }
     }
     if (-not $updated) { $lines += "$key=$value" }
-    [System.IO.File]::WriteAllText($envFile, [string]::Join([Environment]::NewLine, $lines), $utf8NoBom)
+    [System.IO.File]::WriteAllText($path, [string]::Join([Environment]::NewLine, $lines), $utf8NoBom)
 }
 
-function Get-EnvValue([string] $key) {
-    if (-not (Test-Path $envFile)) { return '' }
+function Get-EnvValue([string] $key, [string] $path = $null) {
+    if ([string]::IsNullOrWhiteSpace($path)) { $path = $envFile }
+    if (-not (Test-Path $path)) { return '' }
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    $content = [System.IO.File]::ReadAllText($envFile, $utf8NoBom)
+    $content = [System.IO.File]::ReadAllText($path, $utf8NoBom)
     $line = [regex]::Match($content, "(?m)^$([regex]::Escape($key))=([^\r\n]*)")
     if (-not $line.Success) { return '' }
-    return $line.Groups[2].Value.Trim().Trim('"')
+    return $line.Groups[1].Value.Trim().Trim('"')
+}
+
+function Reconcile-EnvPair([string] $leftKey, [string] $rightKey, [string] $defaultValue, [string] $label, [string] $path) {
+    $leftValue = Get-EnvValue $leftKey $path
+    $rightValue = Get-EnvValue $rightKey $path
+
+    if ([string]::IsNullOrWhiteSpace($leftValue) -and [string]::IsNullOrWhiteSpace($rightValue)) {
+        if ([string]::IsNullOrWhiteSpace($defaultValue)) { throw "$label values cannot both be empty in .env.production." }
+        Set-EnvValue $leftKey $defaultValue $path
+        Set-EnvValue $rightKey $defaultValue $path
+    } elseif ([string]::IsNullOrWhiteSpace($leftValue)) {
+        Set-EnvValue $leftKey $rightValue $path
+    } elseif ([string]::IsNullOrWhiteSpace($rightValue)) {
+        Set-EnvValue $rightKey $leftValue $path
+    } elseif ($leftValue -ne $rightValue) {
+        throw "$leftKey and $rightKey must match in .env.production."
+    }
+
+    $leftAfterWrite = Get-EnvValue $leftKey $path
+    $rightAfterWrite = Get-EnvValue $rightKey $path
+    if ([string]::IsNullOrWhiteSpace($leftAfterWrite) -or [string]::IsNullOrWhiteSpace($rightAfterWrite) -or $leftAfterWrite -ne $rightAfterWrite) {
+        throw "$leftKey and $rightKey could not be reconciled in .env.production."
+    }
 }
 
 function New-RandomSecret([int] $bytes = 32) {
@@ -60,7 +86,7 @@ function New-LaravelAppKey() {
 }
 
 function Invoke-Compose([string[]] $arguments) {
-    $composeArguments = @('compose', '--env-file', $envFile)
+    $composeArguments = @('compose', '--env-file', $composeEnvFile)
     if (-not [string]::IsNullOrWhiteSpace((Get-EnvValue 'CLOUDFLARE_TUNNEL_TOKEN'))) { $composeArguments += @('--profile', 'tunnel') }
     $composeArguments += $arguments
     & docker @composeArguments
@@ -72,10 +98,10 @@ function Write-HealthDiagnostics() {
     $diagnosticErrorActionPreference = $ErrorActionPreference
     try {
         $ErrorActionPreference = 'Continue'
-        & docker compose --env-file $envFile --profile tunnel ps 2>&1
-        & docker compose --env-file $envFile --profile tunnel logs --tail=80 app 2>&1
-        & docker compose --env-file $envFile --profile tunnel logs --tail=80 nginx 2>&1
-        & docker compose --env-file $envFile --profile tunnel exec -T nginx getent hosts app 2>&1
+        & docker compose --env-file $composeEnvFile --profile tunnel ps 2>&1
+        & docker compose --env-file $composeEnvFile --profile tunnel logs --tail=80 app 2>&1
+        & docker compose --env-file $composeEnvFile --profile tunnel logs --tail=80 nginx 2>&1
+        & docker compose --env-file $composeEnvFile --profile tunnel exec -T nginx getent hosts app 2>&1
     } finally {
         $ErrorActionPreference = $diagnosticErrorActionPreference
     }
@@ -104,27 +130,33 @@ if ([string]::IsNullOrWhiteSpace((Get-EnvValue 'APP_KEY'))) {
 
 Set-EnvValue 'SESSION_COOKIE' 'pacientu_anketu_sistema_session'
 
-if ([string]::IsNullOrWhiteSpace((Get-EnvValue 'DB_DATABASE'))) { Set-EnvValue 'DB_DATABASE' 'patient_questionnaires' }
-if ([string]::IsNullOrWhiteSpace((Get-EnvValue 'DB_USERNAME'))) { Set-EnvValue 'DB_USERNAME' 'patient_app' }
-if ([string]::IsNullOrWhiteSpace((Get-EnvValue 'MARIADB_DATABASE'))) { Set-EnvValue 'MARIADB_DATABASE' (Get-EnvValue 'DB_DATABASE') }
-if ([string]::IsNullOrWhiteSpace((Get-EnvValue 'MARIADB_USER'))) { Set-EnvValue 'MARIADB_USER' (Get-EnvValue 'DB_USERNAME') }
+Reconcile-EnvPair 'DB_DATABASE' 'MARIADB_DATABASE' 'patient_questionnaires' 'Database name' $envFile
+Reconcile-EnvPair 'DB_USERNAME' 'MARIADB_USER' 'patient_app' 'Database user' $envFile
 
 $dbPassword = Get-EnvValue 'DB_PASSWORD'
-if ([string]::IsNullOrWhiteSpace($dbPassword)) {
+$mariaDbPassword = Get-EnvValue 'MARIADB_PASSWORD'
+if ([string]::IsNullOrWhiteSpace($dbPassword) -and [string]::IsNullOrWhiteSpace($mariaDbPassword)) {
     $dbPassword = New-RandomSecret 24
-    Set-EnvValue 'DB_PASSWORD' $dbPassword
-    Set-EnvValue 'MARIADB_PASSWORD' $dbPassword
     Write-Host 'Generated application database password.'
-} elseif ([string]::IsNullOrWhiteSpace((Get-EnvValue 'MARIADB_PASSWORD'))) {
-    Set-EnvValue 'MARIADB_PASSWORD' $dbPassword
 }
+Reconcile-EnvPair 'DB_PASSWORD' 'MARIADB_PASSWORD' $dbPassword 'Database password' $envFile
+
+$dbName = Get-EnvValue 'DB_DATABASE' $envFile
+$mariaDbName = Get-EnvValue 'MARIADB_DATABASE' $envFile
+$dbUser = Get-EnvValue 'DB_USERNAME' $envFile
+$mariaDbUser = Get-EnvValue 'MARIADB_USER' $envFile
+$dbPassword = Get-EnvValue 'DB_PASSWORD' $envFile
+$mariaDbPassword = Get-EnvValue 'MARIADB_PASSWORD' $envFile
+if ([string]::IsNullOrWhiteSpace($dbName) -or $dbName -ne $mariaDbName) { throw 'DB_DATABASE and MARIADB_DATABASE must be equal and non-empty in .env.production.' }
+if ([string]::IsNullOrWhiteSpace($dbUser) -or $dbUser -ne $mariaDbUser) { throw 'DB_USERNAME and MARIADB_USER must be equal and non-empty in .env.production.' }
+if ([string]::IsNullOrWhiteSpace($dbPassword) -or $dbPassword -ne $mariaDbPassword) { throw 'DB_PASSWORD and MARIADB_PASSWORD must be equal and non-empty in .env.production.' }
 if ([string]::IsNullOrWhiteSpace((Get-EnvValue 'MARIADB_ROOT_PASSWORD'))) {
     Set-EnvValue 'MARIADB_ROOT_PASSWORD' (New-RandomSecret 32)
     Write-Host 'Generated MariaDB root password.'
 }
 $currentTrustedProxies = Get-EnvValue 'TRUSTED_PROXIES'
-if ([string]::IsNullOrWhiteSpace($currentTrustedProxies) -or $currentTrustedProxies -eq '172.30.0.2') {
-    Set-EnvValue 'TRUSTED_PROXIES' '172.31.0.0/24'
+if ([string]::IsNullOrWhiteSpace($currentTrustedProxies)) {
+    Set-EnvValue 'TRUSTED_PROXIES' '172.30.0.0/24,172.31.0.0/24'
 }
 
 $env:DEPLOY_ENV_FILE = '.env.production'
@@ -139,7 +171,7 @@ Write-InstallProgress 3 35 'Starting server services...'
 Write-InstallProgress 4 50 'Preparing database...'
 $healthy = $false
 for ($attempt = 1; $attempt -le 60; $attempt++) {
-    $healthComposeArguments = @('compose', '--env-file', $envFile)
+    $healthComposeArguments = @('compose', '--env-file', $composeEnvFile)
     if (-not [string]::IsNullOrWhiteSpace((Get-EnvValue 'CLOUDFLARE_TUNNEL_TOKEN'))) { $healthComposeArguments += @('--profile', 'tunnel') }
     & docker @healthComposeArguments exec -T db healthcheck.sh --connect --innodb_initialized *> $null
     if ($LASTEXITCODE -eq 0) { $healthy = $true; break }
