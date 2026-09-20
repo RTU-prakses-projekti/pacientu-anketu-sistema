@@ -41,6 +41,18 @@
     <button class="btn primary" type="submit">{{ __('messages.assign_questionnaire') }}</button>
     <a class="btn" href="{{ route('doctor.patients.export', $selectedMembership->organisation) }}" data-patient-export>{{ __('messages.export_answers') }}</a>
 </form>
+@if($handoffRecipients->isNotEmpty())
+<form id="bulk-anonymized-handoff-form" method="POST" action="{{ route('doctor.results.handoff.bulk') }}" class="card stack mb-4">
+    @csrf
+    <div><strong>{{ __('messages.share_selected_results') }}</strong><p class="text-sm text-slate-600">{{ __('messages.select_completed_results') }}</p></div>
+    @error('assignment_ids')<p class="text-red-700">{{ $message }}</p>@enderror
+    @error('recipient')<p class="text-red-700">{{ $message }}</p>@enderror
+    <label>{{ __('messages.recipient') }}
+        <select name="recipient" required><option value="">—</option>@foreach($handoffRecipients as $recipient)<option value="{{ $recipient->id }}">{{ $recipient->name }}</option>@endforeach</select>
+    </label>
+    <button class="btn primary" type="submit">{{ __('messages.hand_off_selected_results') }}</button>
+</form>
+@endif
 @endunless
 
 <div class="table-wrap doctor-overview-table mobile-card-table"><table><thead><tr>
@@ -55,7 +67,18 @@
     <td data-label="{{ __('messages.patient') }}"><strong>{{ trim($patientCase->first_name.' '.$patientCase->last_name) ?: '—' }}</strong></td>
     <td data-label="{{ __('messages.patient_id') }}">{{ $patientCase->external_patient_code ?: '—' }}</td>
     <td data-label="{{ __('messages.research_id') }}"><code>{{ $patientCase->patient_code }}</code></td>
-    <td data-label="{{ __('messages.questionnaires') }}">{{ trans_choice('messages.assigned_count', $patientCase->assignments_count, ['count' => $patientCase->assignments_count]) }}</td>
+    <td data-label="{{ __('messages.questionnaires') }}">
+        {{ trans_choice('messages.assigned_count', $patientCase->assignments_count, ['count' => $patientCase->assignments_count]) }}
+        @if(!$showArchived && $handoffRecipients->isNotEmpty())
+            <div class="stack mt-2">
+                @foreach($patientCase->assignments as $assignment)
+                    @if($assignment->completedSubmission)
+                        <label class="check"><input type="checkbox" form="bulk-anonymized-handoff-form" name="assignment_ids[]" value="{{ $assignment->public_id }}"> {{ $assignment->label }}</label>
+                    @endif
+                @endforeach
+            </div>
+        @endif
+    </td>
     <td data-label="{{ __('messages.status') }}"><span class="patient-summary-status">{{ __('messages.completed_count', ['count' => $patientCase->completed_assignments_count]) }}</span><br><span class="text-sm text-slate-600">{{ __('messages.in_progress_count', ['count' => $patientCase->in_progress_assignments_count]) }} · {{ __('messages.not_started_count', ['count' => $notStarted]) }}</span></td>
     <td class="doctor-row-actions" data-label="{{ __('messages.actions') }}">
         <button class="btn" type="button" data-patient-edit-open="{{ $patientCase->public_id }}">{{ __('messages.edit') }}</button>

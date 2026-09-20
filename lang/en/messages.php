@@ -29,4 +29,5 @@ return array_replace($lv, [
  'inactive_publications'=>'Inactive publications (:count)','previous_links'=>'Previous links (:count)','used'=>'Used','your_organisations'=>'Your organisations',
  'add_component'=>'Add component','publication_name'=>'Publication name',
  'active_patients'=>'Active','archived_patients'=>'Archived','archive_patient'=>'Archive patient','restore_patient'=>'Restore patient','patient_archived'=>'Patient archived.','patient_restored'=>'Patient restored.','confirm_patient_archive'=>'Archive this patient? The patient record, questionnaires, responses, and audit history will be retained.','no_archived_patients'=>'There are no archived patients.','link_active_validity'=>'Link valid for :days days (until :date).',
+ 'share_selected_results'=>'Share selected results','select_completed_results'=>'Select one or more completed results in the patient list.','hand_off_selected_results'=>'Share selected','bulk_handoff_summary'=>'New handoffs created: :created. Already shared and skipped: :skipped.',
 ]);

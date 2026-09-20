@@ -29,4 +29,5 @@ return array_replace($lv, [
  'inactive_publications'=>'Неактивные публикации (:count)','previous_links'=>'Предыдущие ссылки (:count)','used'=>'Использована',
  'previous_versions'=>'Предыдущие версии (:count)','publication_name'=>'Название публикации','your_organisations'=>'Ваши организации',
  'active_patients'=>'Активные','archived_patients'=>'Архивные','archive_patient'=>'Архивировать пациента','restore_patient'=>'Восстановить пациента','patient_archived'=>'Пациент архивирован.','patient_restored'=>'Пациент восстановлен.','confirm_patient_archive'=>'Архивировать пациента? Запись пациента, анкеты, ответы и история аудита будут сохранены.','no_archived_patients'=>'Архивных пациентов нет.','link_active_validity'=>'Ссылка действительна :days дн. (до :date).',
+ 'share_selected_results'=>'Передать выбранные результаты','select_completed_results'=>'Выберите один или несколько завершённых результатов в списке пациентов.','hand_off_selected_results'=>'Передать выбранные','bulk_handoff_summary'=>'Создано новых передач: :created. Уже переданы и пропущены: :skipped.',
 ]);

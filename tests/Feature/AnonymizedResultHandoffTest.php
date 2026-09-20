@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Domain\Forms\FormAuthoringService;
+use App\Models\AnonymizedResultHandoff;
+use App\Models\FormComponent;
 use App\Models\FormSubmission;
 use App\Models\Invitation;
 use App\Models\Organisation;
@@ -159,6 +161,214 @@ class AnonymizedResultHandoffTest extends TestCase
         $this->actingAs($other)->post(route('anonymized-results.export'), ['format' => 'csv', 'handoff_ids' => [$handoff->public_id]])->assertForbidden();
     }
 
+    public function test_doctor_can_bulk_handoff_completed_results_with_sensitive_data_filtered(): void
+    {
+        [$doctor, $organisation, , , $normal, $name, $email, $phone, $firstAssignment, $firstSubmission, $firstPatient] = $this->completedGraph();
+        SubmissionAnswer::create(['form_submission_id' => $firstSubmission->id, 'form_component_id' => $normal->id, 'value' => '60', 'display_value' => '60', 'saved_at' => now()]);
+        foreach ([[$name, 'BULK_SENSITIVE_NAME_ONE'], [$email, 'BULK_SENSITIVE_EMAIL_ONE'], [$phone, 'BULK_SENSITIVE_PHONE_ONE']] as [$component, $value]) {
+            SubmissionAnswer::create(['form_submission_id' => $firstSubmission->id, 'form_component_id' => $component->id, 'value' => $value, 'display_value' => $value, 'saved_at' => now()]);
+        }
+
+        [$secondAssignment, $secondSubmission, $secondPatient] = $this->createAdditionalResult(
+            $organisation, $doctor, $firstAssignment->publication, $normal, $name, 2, 'BULK_SECOND', 'submitted'
+        );
+        $recipient = $this->anonymizedRecipient($organisation);
+
+        $this->actingAs($doctor)->get(route('doctor.dashboard', ['organisation_id' => $organisation->id, 'doctor_id' => $doctor->id]))
+            ->assertOk()
+            ->assertSee('form="bulk-anonymized-handoff-form" name="assignment_ids[]" value="'.$firstAssignment->public_id.'"', false)
+            ->assertSee('form="bulk-anonymized-handoff-form" name="assignment_ids[]" value="'.$secondAssignment->public_id.'"', false);
+
+        $this->actingAs($doctor)->post(route('doctor.results.handoff.bulk'), [
+            'recipient' => $recipient->id,
+            'assignment_ids' => [$firstAssignment->public_id, $secondAssignment->public_id],
+        ])->assertRedirect(route('doctor.dashboard', ['organisation_id' => $organisation->id, 'doctor_id' => $doctor->id]))
+            ->assertSessionHas('success', __('messages.bulk_handoff_summary', ['created' => 2, 'skipped' => 0]));
+
+        $this->assertSame(2, AnonymizedResultHandoff::where('recipient_user_id', $recipient->id)->count());
+        $handoffs = AnonymizedResultHandoff::where('recipient_user_id', $recipient->id)->get();
+        foreach ($handoffs as $handoff) {
+            $show = $this->actingAs($recipient)->get(route('anonymized-results.show', $handoff))->assertOk();
+            $show->assertSee('Age')->assertDontSee('SENSITIVE')->assertDontSee('PRIVATE_PERSON')->assertDontSee('PRIVATE_CODE')->assertDontSee('DOCTOR_NOTE')->assertDontSee('Secret Patient')->assertDontSee('Doctor note');
+        }
+
+        $csv = $this->actingAs($recipient)->post(route('anonymized-results.export'), [
+            'format' => 'csv',
+            'handoff_ids' => $handoffs->pluck('public_id')->all(),
+        ])->assertDownload()->streamedContent();
+        $this->assertStringContainsString($firstPatient->patient_code, $csv);
+        $this->assertStringContainsString($secondPatient->patient_code, $csv);
+        $this->assertStringContainsString('60', $csv);
+        $this->assertStringContainsString('BULK_SECOND_AGE', $csv);
+        $this->assertStringNotContainsString('SENSITIVE', $csv);
+        $this->assertStringNotContainsString('PRIVATE_PERSON', $csv);
+        $this->assertStringNotContainsString('PRIVATE_CODE', $csv);
+        $this->assertStringNotContainsString('DOCTOR_NOTE', $csv);
+        $this->assertStringNotContainsString('Secret Patient', $csv);
+        $this->assertStringNotContainsString('Doctor note', $csv);
+    }
+
+    public function test_bulk_handoff_rejects_an_incomplete_result_without_partial_handoffs(): void
+    {
+        [$doctor, $organisation, , , $normal, $name, , , $completedAssignment] = $this->completedGraph();
+        [$incompleteAssignment] = $this->createAdditionalResult(
+            $organisation, $doctor, $completedAssignment->publication, $normal, $name, 2, 'BULK_INCOMPLETE', 'in_progress'
+        );
+        $recipient = $this->anonymizedRecipient($organisation);
+
+        $this->actingAs($doctor)->post(route('doctor.results.handoff.bulk'), [
+            'recipient' => $recipient->id,
+            'assignment_ids' => [$completedAssignment->public_id, $incompleteAssignment->public_id],
+        ])->assertSessionHasErrors('assignment_ids');
+
+        $this->assertDatabaseCount('anonymized_result_handoffs', 0);
+
+        $unpermissioned = User::factory()->create(['is_active' => true]);
+        OrganisationMembership::create(['organisation_id' => $organisation->id, 'user_id' => $unpermissioned->id, 'is_active' => true]);
+        $this->actingAs($doctor)->post(route('doctor.results.handoff.bulk'), [
+            'recipient' => $unpermissioned->id,
+            'assignment_ids' => [$completedAssignment->public_id],
+        ])->assertSessionHasErrors('recipient');
+        $this->assertDatabaseCount('anonymized_result_handoffs', 0);
+    }
+
+    public function test_bulk_handoff_denies_foreign_doctor_and_cross_organisation_selections(): void
+    {
+        [$doctor, $organisation, , , $normal, $name, , , $ownAssignment] = $this->completedGraph();
+        [$otherDoctor] = $this->member('doctor', $organisation);
+        [$foreignDoctorAssignment] = $this->createAdditionalResult(
+            $organisation, $otherDoctor, $ownAssignment->publication, $normal, $name, 1, 'BULK_OTHER_DOCTOR', 'submitted'
+        );
+        $recipient = $this->anonymizedRecipient($organisation);
+
+        $this->actingAs($doctor)->post(route('doctor.results.handoff.bulk'), [
+            'recipient' => $recipient->id,
+            'assignment_ids' => [$ownAssignment->public_id, $foreignDoctorAssignment->public_id],
+        ])->assertForbidden();
+        $this->assertDatabaseCount('anonymized_result_handoffs', 0);
+
+        $foreignGraph = $this->completedGraph();
+        $foreignAssignment = $foreignGraph[8];
+        $this->actingAs($doctor)->post(route('doctor.results.handoff.bulk'), [
+            'recipient' => $recipient->id,
+            'assignment_ids' => [$ownAssignment->public_id, $foreignAssignment->public_id],
+        ])->assertStatus(422);
+        $this->assertDatabaseCount('anonymized_result_handoffs', 0);
+    }
+
+    public function test_bulk_handoff_skips_existing_recipient_handoff_without_creating_duplicates(): void
+    {
+        [$doctor, $organisation, , , $normal, $name, , , $firstAssignment, $firstSubmission] = $this->completedGraph();
+        [$secondAssignment] = $this->createAdditionalResult(
+            $organisation, $doctor, $firstAssignment->publication, $normal, $name, 2, 'BULK_DUPLICATE', 'submitted'
+        );
+        $recipient = $this->anonymizedRecipient($organisation);
+        $this->actingAs($doctor)->post(route('doctor.results.handoff', [$firstAssignment->patientCase, $firstAssignment]), ['recipient' => $recipient->id])->assertRedirect();
+
+        $this->actingAs($doctor)->post(route('doctor.results.handoff.bulk'), [
+            'recipient' => $recipient->id,
+            'assignment_ids' => [$firstAssignment->public_id, $secondAssignment->public_id],
+        ])->assertRedirect()
+            ->assertSessionHas('success', __('messages.bulk_handoff_summary', ['created' => 1, 'skipped' => 1]));
+
+        $this->assertSame(2, AnonymizedResultHandoff::where('recipient_user_id', $recipient->id)->count());
+        $this->assertSame(1, AnonymizedResultHandoff::where('form_submission_id', $firstSubmission->id)->where('recipient_user_id', $recipient->id)->count());
+    }
+
+    public function test_anonymized_xlsx_separates_respondent_blocks_without_sensitive_data(): void
+    {
+        [$doctor, $organisation, , , $normal, $name, $email, $phone, $firstAssignment, $firstSubmission, $firstPatient] = $this->completedGraph();
+        SubmissionAnswer::create(['form_submission_id' => $firstSubmission->id, 'form_component_id' => $normal->id, 'value' => '60', 'display_value' => '60', 'saved_at' => now()]);
+        foreach ([[$name, 'XLSX_SENSITIVE_NAME_ONE'], [$email, 'XLSX_SENSITIVE_EMAIL_ONE'], [$phone, 'XLSX_SENSITIVE_PHONE_ONE']] as [$component, $value]) {
+            SubmissionAnswer::create(['form_submission_id' => $firstSubmission->id, 'form_component_id' => $component->id, 'value' => $value, 'display_value' => $value, 'saved_at' => now()]);
+        }
+        [$secondAssignment, $secondSubmission, $secondPatient] = $this->createAdditionalResult(
+            $organisation, $doctor, $firstAssignment->publication, $normal, $name, 2, 'XLSX_SECOND', 'submitted'
+        );
+        $recipient = $this->anonymizedRecipient($organisation);
+        foreach ([[$firstPatient, $firstAssignment], [$secondPatient, $secondAssignment]] as [$patient, $assignment]) {
+            $this->actingAs($doctor)->post(route('doctor.results.handoff', [$patient, $assignment]), ['recipient' => $recipient->id])->assertRedirect();
+        }
+
+        $handoffIds = AnonymizedResultHandoff::where('recipient_user_id', $recipient->id)->pluck('public_id')->all();
+        $response = $this->actingAs($recipient)->post(route('anonymized-results.export'), ['format' => 'xlsx', 'handoff_ids' => $handoffIds])->assertDownload();
+        $path = $response->baseResponse->getFile()->getPathname();
+        $zip = new \ZipArchive();
+        try {
+            $this->assertTrue($zip->open($path) === true);
+            $sheet = $zip->getFromName('xl/worksheets/sheet1.xml');
+            $sharedStrings = $zip->getFromName('xl/sharedStrings.xml');
+            $this->assertIsString($sheet);
+            $sharedValues = [];
+            if (is_string($sharedStrings)) {
+                $sharedDocument = new \DOMDocument();
+                $this->assertTrue($sharedDocument->loadXML($sharedStrings, LIBXML_NONET | LIBXML_NOBLANKS));
+                $sharedXPath = new \DOMXPath($sharedDocument);
+                foreach ($sharedXPath->query('//*[local-name()="si"]') as $sharedItem) {
+                    $value = '';
+                    foreach ($sharedXPath->query('.//*[local-name()="t"]', $sharedItem) as $textNode) {
+                        $value .= $textNode->textContent;
+                    }
+                    $sharedValues[] = $value;
+                }
+            }
+
+            $sheetDocument = new \DOMDocument();
+            $this->assertTrue($sheetDocument->loadXML($sheet, LIBXML_NONET | LIBXML_NOBLANKS));
+            $sheetXPath = new \DOMXPath($sheetDocument);
+            $cellValues = [];
+            $patientRows = [];
+            foreach ($sheetXPath->query('//*[local-name()="sheetData"]/*[local-name()="row"]') as $row) {
+                $rowNumber = (int) $row->getAttribute('r');
+                foreach ($sheetXPath->query('./*[local-name()="c"]', $row) as $cell) {
+                    $type = $cell->getAttribute('t');
+                    $value = '';
+
+                    if ($type === 's') {
+                        $valueNode = $sheetXPath->query('./*[local-name()="v"]', $cell)->item(0);
+                        if ($valueNode !== null) {
+                            $sharedIndex = (int) $valueNode->textContent;
+                            $value = $sharedValues[$sharedIndex] ?? '';
+                        }
+                    } elseif ($type === 'inlineStr') {
+                        foreach ($sheetXPath->query('.//*[local-name()="t"]', $cell) as $textNode) {
+                            $value .= $textNode->textContent;
+                        }
+                    } else {
+                        $valueNode = $sheetXPath->query('./*[local-name()="v"]', $cell)->item(0);
+                        if ($valueNode !== null) {
+                            $value = $valueNode->textContent;
+                        }
+                    }
+
+                    $cellValues[] = $value;
+                    if (in_array($value, [$firstPatient->patient_code, $secondPatient->patient_code], true)) {
+                        $patientRows[$value] = $rowNumber;
+                    }
+                }
+            }
+
+            $this->assertContains($firstPatient->patient_code, $cellValues);
+            $this->assertContains($secondPatient->patient_code, $cellValues);
+            $this->assertContains('60', $cellValues);
+            $this->assertContains('XLSX_SECOND_AGE', $cellValues);
+            $exportedText = implode("\n", array_merge($sharedValues, $cellValues));
+            $this->assertStringNotContainsString('SENSITIVE', $exportedText);
+            $this->assertStringNotContainsString('PRIVATE_PERSON', $exportedText);
+            $this->assertStringNotContainsString('PRIVATE_CODE', $exportedText);
+            $this->assertStringNotContainsString('DOCTOR_NOTE', $exportedText);
+            $this->assertStringNotContainsString('Secret Patient', $exportedText);
+            $this->assertStringNotContainsString('Doctor note', $exportedText);
+
+            $this->assertCount(2, $patientRows);
+            $this->assertGreaterThanOrEqual(2, abs($patientRows[$firstPatient->patient_code] - $patientRows[$secondPatient->patient_code]), 'A blank row should separate respondent blocks.');
+        } finally {
+            if ($zip->status === \ZipArchive::ER_OK) $zip->close();
+            @unlink($path);
+            @unlink(substr($path, 0, -5));
+        }
+    }
+
     public function test_incomplete_other_doctor_and_unpermissioned_recipient_are_denied(): void
     {
         [$doctor, $organisation, , , , , , , $assignment, $submission, $patient] = $this->completedGraph();
@@ -278,6 +488,59 @@ class AnonymizedResultHandoffTest extends TestCase
         $assignment = PatientFormAssignment::create(['patient_case_id' => $patient->id, 'publication_id' => $publication->id, 'invitation_id' => $invitation->id, 'label' => 'Study', 'display_order' => 1]);
         $submission = FormSubmission::create(['public_id' => Str::uuid(), 'organisation_id' => $organisation->id, 'publication_id' => $publication->id, 'form_version_id' => $normal->form_version_id, 'invitation_id' => $invitation->id, 'attempt_number' => 1, 'status' => $complete ? 'submitted' : 'in_progress', 'started_at' => now(), 'submitted_at' => $complete ? now() : null]);
         return [$doctor, $organisation, null, null, $normal, $name, $email, $phone, $assignment, $submission, $patient];
+    }
+
+    private function anonymizedRecipient(Organisation $organisation): User
+    {
+        $recipient = User::factory()->create(['is_active' => true]);
+        $membership = OrganisationMembership::create(['organisation_id' => $organisation->id, 'user_id' => $recipient->id, 'is_active' => true]);
+        $membership->roles()->attach(Role::where('name', 'administrator')->firstOrFail());
+
+        return $recipient;
+    }
+
+    private function createAdditionalResult(
+        Organisation $organisation,
+        User $doctor,
+        Publication $publication,
+        FormComponent $normal,
+        FormComponent $sensitive,
+        int $slot,
+        string $marker,
+        string $status
+    ): array {
+        $patient = PatientCase::create([
+            'organisation_id' => $organisation->id,
+            'doctor_id' => $doctor->id,
+            'slot_number' => $slot,
+            'first_name' => $marker.'_PRIVATE_PERSON',
+            'last_name' => 'Private',
+            'external_patient_code' => $marker.'_PRIVATE_CODE',
+            'note' => $marker.'_DOCTOR_NOTE',
+        ]);
+        $invitation = Invitation::create(['publication_id' => $publication->id, 'token_hash' => hash('sha256', Str::random(64))]);
+        $assignment = PatientFormAssignment::create([
+            'patient_case_id' => $patient->id,
+            'publication_id' => $publication->id,
+            'invitation_id' => $invitation->id,
+            'label' => $marker.' assignment',
+            'display_order' => $slot,
+        ]);
+        $submission = FormSubmission::create([
+            'public_id' => Str::uuid(),
+            'organisation_id' => $organisation->id,
+            'publication_id' => $publication->id,
+            'form_version_id' => $publication->form_version_id,
+            'invitation_id' => $invitation->id,
+            'attempt_number' => 1,
+            'status' => $status,
+            'started_at' => now(),
+            'submitted_at' => $status === 'in_progress' ? null : now(),
+        ]);
+        SubmissionAnswer::create(['form_submission_id' => $submission->id, 'form_component_id' => $normal->id, 'value' => $marker.'_AGE', 'display_value' => $marker.'_AGE', 'saved_at' => now()]);
+        SubmissionAnswer::create(['form_submission_id' => $submission->id, 'form_component_id' => $sensitive->id, 'value' => $marker.'_SENSITIVE', 'display_value' => $marker.'_SENSITIVE', 'saved_at' => now()]);
+
+        return [$assignment, $submission, $patient];
     }
 
     private function graph(): array

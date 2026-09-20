@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/doctor/organisations/{organisation}/doctors/{doctor}/slots/{slot}', [DoctorDashboardController::class, 'updateSlot'])->name('doctor.patients.slots.update');
     Route::get('/doctor/patients/{patientCase}/assignments/{assignment}/result', [DoctorDashboardController::class, 'result'])->name('doctor.results.show');
     Route::post('/doctor/patients/{patientCase}/assignments/{assignment}/result/handoff', [AnonymizedResultController::class, 'store'])->name('doctor.results.handoff');
+    Route::post('/doctor/anonymized-results/bulk-handoff', [AnonymizedResultController::class, 'bulkStore'])->name('doctor.results.handoff.bulk');
     Route::get('/anonymized-results', [AnonymizedResultController::class, 'index'])->name('anonymized-results.index');
     Route::post('/anonymized-results/export', [AnonymizedResultController::class, 'export'])->name('anonymized-results.export');
     Route::get('/anonymized-results/{handoff}', [AnonymizedResultController::class, 'show'])->name('anonymized-results.show');

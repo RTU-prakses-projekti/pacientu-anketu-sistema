@@ -19,7 +19,7 @@ use OpenSpout\Writer\XLSX\Writer;
 
 class DoctorDashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, AnonymizedResultHandoffService $handoffs)
     {
         $actor = $request->user();
         abort_unless($actor->isBootstrapRoot() || $actor->hasDoctorWorkspace(), 403);
@@ -45,11 +45,14 @@ class DoctorDashboardController extends Controller
         }
 
         $patientCases = collect();
+        $handoffRecipients = collect();
         if ($selected) {
+            $handoffRecipients = $handoffs->recipients($selected->organisation);
             $patientCases = PatientCase::query()
                 ->visibleTo($actor)
                 ->where('organisation_id', $selected->organisation_id)
                 ->when($showArchived, fn ($query) => $query->whereNotNull('archived_at'), fn ($query) => $query->whereNull('archived_at'))
+                ->with(['assignments.completedSubmission'])
                 ->withCount([
                     'assignments',
                     'assignments as completed_assignments_count' => fn ($query) => $query->whereHas('submissions', fn ($submissions) => $submissions->whereIn('status', FormSubmission::PATIENT_COMPLETED_STATUSES)),
@@ -67,6 +70,7 @@ class DoctorDashboardController extends Controller
             'selectedMembership' => $selected,
             'patientCases' => $patientCases,
             'showArchived' => $showArchived,
+            'handoffRecipients' => $handoffRecipients,
         ]);
     }
 

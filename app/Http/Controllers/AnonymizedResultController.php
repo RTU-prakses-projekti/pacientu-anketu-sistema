@@ -23,6 +23,35 @@ class AnonymizedResultController extends Controller
         return back()->with('success', __('messages.result_handed_off').' '.__('messages.handed_off_to', ['name' => $handoff->recipient->name]));
     }
 
+    public function bulkStore(Request $request, AnonymizedResultHandoffService $service)
+    {
+        $data = $request->validate([
+            'recipient' => ['required', 'integer'],
+            'assignment_ids' => ['required', 'array', 'min:1', 'max:500'],
+            'assignment_ids.*' => ['required', 'string', 'distinct', 'max:100'],
+        ]);
+        $assignments = PatientFormAssignment::query()
+            ->whereIn('public_id', $data['assignment_ids'])
+            ->with(['patientCase.organisation', 'completedSubmission'])
+            ->get();
+        abort_unless($assignments->count() === count($data['assignment_ids']), 404);
+
+        $organisationIds = $assignments->map(fn ($assignment) => $assignment->patientCase?->organisation_id)->filter()->unique();
+        abort_unless($organisationIds->count() === 1, 422);
+        foreach ($assignments as $assignment) {
+            abort_unless($assignment->patientCase, 404);
+            $this->authorize('viewQuestionnaires', $assignment->patientCase);
+        }
+
+        $counts = $service->handoffMany($request->user(), $assignments, (int) $data['recipient']);
+        $firstPatient = $assignments->first()->patientCase;
+
+        return redirect()->route('doctor.dashboard', [
+            'organisation_id' => $firstPatient->organisation_id,
+            'doctor_id' => $firstPatient->doctor_id,
+        ])->with('success', __('messages.bulk_handoff_summary', $counts));
+    }
+
     public function index(Request $request)
     {
         $user = $request->user();
