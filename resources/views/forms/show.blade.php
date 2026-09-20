@@ -7,7 +7,7 @@
     @if($versions->isNotEmpty())
         @php($version = $versions->first())
         <div class="list-row">
-            <span>v{{ $version->version_number }} · {{ __('messages.questionnaire_status_'.$version->status) }} @if($version->published_at)· {{ $version->published_at }}@endif</span>
+            <span>v{{ $version->version_number }} · {{ __('messages.questionnaire_status_'.$version->status) }} @if($version->published_at)· {{ \App\Support\DateTimeDisplay::format($version->published_at) }}@endif</span>
             <span class="actions">
                 <form method="POST" action="{{ route('questionnaires.export-file',[$form,$version]) }}">@csrf<button class="btn">{{ __('messages.export_questionnaire_file') }} · v{{ $version->version_number }}</button></form>
                 @if(in_array(app()->environment(),config('questionnaire_packages.write_environments',[]),true))
@@ -25,7 +25,7 @@
                 <summary>{{ __('messages.previous_versions', ['count' => $versions->count() - 1]) }}</summary>
                 @foreach($versions->skip(1) as $version)
                     <div class="list-row">
-                        <span>v{{ $version->version_number }} · {{ __('messages.questionnaire_status_'.$version->status) }} @if($version->published_at)· {{ $version->published_at }}@endif</span>
+                        <span>v{{ $version->version_number }} · {{ __('messages.questionnaire_status_'.$version->status) }} @if($version->published_at)· {{ \App\Support\DateTimeDisplay::format($version->published_at) }}@endif</span>
                         <span class="actions">
                             <form method="POST" action="{{ route('questionnaires.export-file',[$form,$version]) }}">@csrf<button class="btn">{{ __('messages.export_questionnaire_file') }} · v{{ $version->version_number }}</button></form>
                             @if(in_array(app()->environment(),config('questionnaire_packages.write_environments',[]),true))

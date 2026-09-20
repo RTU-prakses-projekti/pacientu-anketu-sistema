@@ -6,6 +6,7 @@ use App\Domain\Audit\AuditService;
 use App\Http\Requests\StorePublicationRequest;
 use App\Models\Form;
 use App\Models\Publication;
+use App\Support\DateTimeDisplay;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -14,6 +15,8 @@ class PublicationController extends Controller
     public function store(StorePublicationRequest $request, Form $form, AuditService $audit)
     {
         $data=$request->validated(); $version=$form->versions()->findOrFail($data['form_version_id']); abort_unless($version->status==='published',422);
+        $data['opens_at'] = DateTimeDisplay::parseLocalInput($data['opens_at'] ?? null);
+        $data['closes_at'] = DateTimeDisplay::parseLocalInput($data['closes_at'] ?? null);
         if ($form->preset_key === 'patient_questionnaire') {
             $data['attempt_limit'] = 1;
             $data['identified_required'] = true;

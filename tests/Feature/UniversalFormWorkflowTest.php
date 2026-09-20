@@ -22,7 +22,9 @@ use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Console\Command as ConsoleCommand;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -331,6 +333,62 @@ class UniversalFormWorkflowTest extends TestCase
     {
         [$creator,$organisation]=$this->member('organisation_admin');$authoring=app(FormAuthoringService::class);$form=$authoring->create($organisation->id,$creator,'=FORMULA','blank');$published=$authoring->publish($form->versions()->first());$publication=$this->publication($form,$published,['access_mode'=>'public','identified_required'=>false,'anonymous_allowed'=>true]);$submission=app(SubmissionService::class)->start($publication,null,null,null,'export-browser');app(SubmissionService::class)->finalize($submission);
         foreach(['csv','xlsx'] as $format){$export=Export::create(['public_id'=>(string)Str::uuid(),'organisation_id'=>$organisation->id,'requested_by'=>$creator->id,'form_id'=>$form->id,'format'=>$format,'status'=>'pending']);app(ExportService::class)->generate($export);$export->refresh();$this->assertSame('completed',$export->status);$path=storage_path('app/private/'.$export->storage_path);$this->assertFileExists($path);if($format==='csv')$this->assertStringContainsString("'=FORMULA",file_get_contents($path));else{$zip=new \ZipArchive();$this->assertTrue($zip->open($path)===true);$workbook=$zip->getFromName('xl/workbook.xml');$this->assertStringContainsString('Submissions',$workbook);$this->assertStringContainsString('Answers',$workbook);$zip->close();}}
+    }
+
+    public function test_human_exports_use_riga_time_and_keep_submission_timestamps_in_utc(): void
+    {
+        Storage::fake('local');
+        Carbon::setTestNow(Carbon::parse('2026-01-15 10:00:00', 'UTC'));
+        $exportPaths = [];
+
+        try {
+            [$creator, $organisation] = $this->member('organisation_admin');
+            $authoring = app(FormAuthoringService::class);
+            $form = $authoring->create($organisation->id, $creator, 'Timezone export', 'blank');
+            $published = $authoring->publish($form->versions()->first());
+            $publication = $this->publication($form, $published, ['access_mode' => 'public', 'identified_required' => false, 'anonymous_allowed' => true]);
+            $submission = app(SubmissionService::class)->start($publication, null, null, null, 'timezone-export-browser');
+            DB::table('form_submissions')->where('id', $submission->id)->update(['started_at' => '2026-01-15 09:00:00']);
+            $submission = app(SubmissionService::class)->finalize($submission);
+            $this->assertSame('2026-01-15 10:00:00', DB::table('form_submissions')->where('id', $submission->id)->value('submitted_at'));
+
+            foreach (['csv', 'xlsx'] as $format) {
+                $export = Export::create(['public_id' => (string) Str::uuid(), 'organisation_id' => $organisation->id, 'requested_by' => $creator->id, 'form_id' => $form->id, 'format' => $format, 'status' => 'pending']);
+                app(ExportService::class)->generate($export);
+                $relativePath = $export->fresh()->storage_path;
+                $exportPaths[] = $relativePath;
+                $path = Storage::disk('local')->path($relativePath);
+
+                if ($format === 'csv') {
+                    $csv = file_get_contents($path);
+                    $this->assertStringContainsString('15.01.2026 11:00', $csv);
+                    $this->assertStringContainsString('15.01.2026 12:00', $csv);
+                    continue;
+                }
+
+                $zip = new \ZipArchive();
+                $this->assertTrue($zip->open($path) === true);
+                $exportedText = [];
+                try {
+                    for ($index = 0; $index < $zip->numFiles; $index++) {
+                        $name = $zip->getNameIndex($index);
+                        if (!is_string($name) || !str_ends_with($name, '.xml')) continue;
+                        $xml = $zip->getFromIndex($index);
+                        if (!is_string($xml)) continue;
+                        $document = new \DOMDocument();
+                        if (!$document->loadXML($xml, LIBXML_NONET | LIBXML_NOBLANKS)) continue;
+                        foreach ((new \DOMXPath($document))->query('//*[local-name()="t"]') as $node) $exportedText[] = $node->textContent;
+                    }
+                } finally {
+                    $zip->close();
+                }
+                $this->assertContains('15.01.2026 11:00', $exportedText);
+                $this->assertContains('15.01.2026 12:00', $exportedText);
+            }
+        } finally {
+            foreach ($exportPaths as $relativePath) Storage::disk('local')->delete($relativePath);
+            Carbon::setTestNow();
+        }
     }
 
     public function test_private_attachments_require_form_access_or_the_owning_submission(): void

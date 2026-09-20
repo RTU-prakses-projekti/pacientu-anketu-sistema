@@ -22,6 +22,9 @@ class AuthController extends Controller
             $request->session()->regenerate();
             
             $audit->record('security.login', Auth::user());
+            if (Auth::user()->must_change_password) {
+                return redirect()->route('account.password.change');
+            }
             return redirect()->intended(route('dashboard'));
         }
 

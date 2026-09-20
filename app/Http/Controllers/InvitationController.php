@@ -6,6 +6,7 @@ use App\Domain\Audit\AuditService;
 use App\Models\Form;
 use App\Models\Invitation;
 use App\Models\Publication;
+use App\Support\DateTimeDisplay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -15,6 +16,7 @@ class InvitationController extends Controller
     {
         $this->authorize('publish',$form); abort_unless($publication->form_id===$form->id&&$publication->access_mode==='invitation',404);
         $data=$request->validate(['recipient_reference'=>'nullable|string|max:255','max_uses'=>'required|integer|min:1|max:100','expires_at'=>'nullable|date']);
+        $data['expires_at'] = DateTimeDisplay::parseLocalInput($data['expires_at'] ?? null);
         $plain=Str::random(48); $invitation=$publication->invitations()->create([...$data,'token_hash'=>hash('sha256',$plain),'uses'=>0]);
         $audit->record('invitation.created',$invitation,$form->organisation_id,['max_uses'=>$invitation->max_uses]);
         return back()->with('success',__('messages.invitation_created'))->with('invitation_url',route('publications.show',['publication'=>$publication,'invite'=>$plain]));

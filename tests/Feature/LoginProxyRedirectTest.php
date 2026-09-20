@@ -11,39 +11,6 @@ class LoginProxyRedirectTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function createApplication()
-    {
-        $previousGetenv = getenv('TRUSTED_PROXIES');
-        $hadEnv = array_key_exists('TRUSTED_PROXIES', $_ENV);
-        $previousEnv = $_ENV['TRUSTED_PROXIES'] ?? null;
-        $hadServer = array_key_exists('TRUSTED_PROXIES', $_SERVER);
-        $previousServer = $_SERVER['TRUSTED_PROXIES'] ?? null;
-
-        putenv('TRUSTED_PROXIES=127.0.0.1');
-        $_ENV['TRUSTED_PROXIES'] = '127.0.0.1';
-        $_SERVER['TRUSTED_PROXIES'] = '127.0.0.1';
-
-        $app = parent::createApplication();
-
-        if ($previousGetenv === false) {
-            putenv('TRUSTED_PROXIES');
-        } else {
-            putenv("TRUSTED_PROXIES=$previousGetenv");
-        }
-        if ($hadEnv) {
-            $_ENV['TRUSTED_PROXIES'] = $previousEnv;
-        } else {
-            unset($_ENV['TRUSTED_PROXIES']);
-        }
-        if ($hadServer) {
-            $_SERVER['TRUSTED_PROXIES'] = $previousServer;
-        } else {
-            unset($_SERVER['TRUSTED_PROXIES']);
-        }
-
-        return $app;
-    }
-
     public function test_login_redirect_preserves_local_forwarded_host_and_port(): void
     {
         $user = User::factory()->create([
@@ -53,9 +20,11 @@ class LoginProxyRedirectTest extends TestCase
         ]);
 
         $this->withServerVariables([
+            'REMOTE_ADDR' => '172.30.0.3',
             'HTTP_HOST' => 'localhost:8080',
             'HTTP_X_FORWARDED_HOST' => 'localhost:8080',
             'HTTP_X_FORWARDED_PROTO' => 'http',
+            'HTTP_X_FORWARDED_PORT' => '8080',
         ])->post('/login', [
             'email' => $user->email,
             'password' => 'LongPassword123',
@@ -71,9 +40,11 @@ class LoginProxyRedirectTest extends TestCase
         ]);
 
         $this->withServerVariables([
+            'REMOTE_ADDR' => '172.30.0.3',
             'HTTP_HOST' => 'internal-nginx',
             'HTTP_X_FORWARDED_HOST' => 'questionnaires.example.test',
             'HTTP_X_FORWARDED_PROTO' => 'https',
+            'HTTP_X_FORWARDED_PORT' => '443',
         ])->post('/login', [
             'email' => $user->email,
             'password' => 'LongPassword123',

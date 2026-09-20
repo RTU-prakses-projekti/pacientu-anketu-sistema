@@ -4,6 +4,7 @@ use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\AttemptAdministrationController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AccountPasswordController;
 use App\Http\Controllers\AutosaveController;
 use App\Http\Controllers\AnonymizedResultController;
 use App\Http\Controllers\BuilderController;
@@ -32,6 +33,10 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+Route::middleware('auth')->group(function () {
+    Route::get('/account/password/change', [AccountPasswordController::class, 'edit'])->name('account.password.change');
+    Route::put('/account/password/change', [AccountPasswordController::class, 'update'])->name('account.password.update');
+});
 Route::post('/locale/{locale}', function (Request $request, string $locale) {
     abort_unless(in_array($locale, config('form_locales.supported'), true), 404);
     $request->session()->put('locale', $locale);
@@ -52,7 +57,7 @@ Route::post('/respond/{submission}/finalize', FinalizeSubmissionController::clas
 Route::get('/respond/{submission}/complete', [RespondentController::class, 'complete'])->name('submissions.complete');
 Route::get('/respond/{submission}/attachments/{attachment}', [AttachmentController::class, 'respondentDownload'])->name('submissions.attachments.download');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'password.change.required'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/doctor', [DoctorDashboardController::class, 'index'])->name('doctor.dashboard');
     Route::get('/doctor/organisations/{organisation}/patients-export', [DoctorDashboardController::class, 'exportForm'])->name('doctor.patients.export');
@@ -83,6 +88,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/system/audit', [AuditLogController::class, 'index'])->name('audit.system');
     Route::get('/system/users', [SystemAdministrationController::class, 'users'])->name('system.users');
     Route::post('/system/users', [SystemAdministrationController::class, 'storeUser'])->name('system.users.store');
+    Route::post('/system/users/{user}/password-reset', [SystemAdministrationController::class, 'resetUserPassword'])->name('system.users.password-reset');
     Route::get('/system/users/{user}/roles', [SystemAdministrationController::class, 'editUserRoles'])->name('system.users.roles.edit');
     Route::put('/system/users/{user}/roles', [SystemAdministrationController::class, 'updateUserRoles'])->name('system.users.roles.update');
     Route::get('/system/roles', [SystemAdministrationController::class, 'roles'])->name('system.roles');
@@ -147,4 +153,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/organisations/{organisation}/audit', [AuditLogController::class, 'index'])->name('audit.index');
     Route::get('/organisations/{organisation}/users', [UserAdministrationController::class, 'index'])->name('users.index');
     Route::post('/organisations/{organisation}/memberships', [UserAdministrationController::class, 'storeMembership'])->name('memberships.store');
+    Route::post('/organisations/{organisation}/users/{user}/password-reset', [UserAdministrationController::class, 'resetMemberPassword'])->name('users.password-reset');
 });

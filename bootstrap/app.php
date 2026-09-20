@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
     $middleware->appendToGroup('web', [\App\Http\Middleware\SetLocale::class]);
+    $middleware->alias(['password.change.required' => \App\Http\Middleware\RequirePasswordChange::class]);
 
     $configuredTrustedProxies = preg_split(
         '/\s*,\s*/',

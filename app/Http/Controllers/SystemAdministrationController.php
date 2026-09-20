@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Domain\Audit\AuditService;
 use App\Domain\Administration\CleanupService;
+use App\Domain\Administration\UserPasswordResetService;
 use App\Models\Organisation;
 use App\Models\OrganisationMembership;
 use App\Models\Permission;
@@ -182,6 +183,19 @@ class SystemAdministrationController extends Controller
 
         return redirect()->route('system.users.roles.edit', $user)
             ->with('success', __('messages.user_created'));
+    }
+
+    public function resetUserPassword(Request $request, User $user, UserPasswordResetService $passwords)
+    {
+        abort_unless($request->user()->canAdministerSystem(), 403);
+        abort_if($user->isBootstrapRoot() && !$request->user()->isBootstrapRoot(), 403);
+        $data = $request->validate([
+            'password' => ['required', 'confirmed', Password::min(12)->letters()->numbers()],
+        ]);
+
+        $passwords->reset($user, $data['password']);
+
+        return back()->with('success', __('messages.temporary_password_set'));
     }
 
     public function editUserRoles(Request $request, User $user)

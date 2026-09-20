@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Domain\Audit\AuditService;
 use App\Domain\Administration\CleanupService;
+use App\Domain\Administration\UserPasswordResetService;
 use App\Models\Organisation;
 use App\Models\OrganisationMembership;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rules\Password;
 
 class UserAdministrationController extends Controller
 {
@@ -56,6 +58,21 @@ class UserAdministrationController extends Controller
         $audit->record('membership.updated', $membership, $organisation->id, ['role_ids' => $roleIds->all()]);
 
         return back()->with('success', __('messages.saved'));
+    }
+
+    public function resetMemberPassword(Request $request, Organisation $organisation, User $user, UserPasswordResetService $passwords)
+    {
+        abort_unless($request->user()->hasOrganisationPermission($organisation->id, 'users.manage'), 403);
+        abort_unless($organisation->is_active, 403);
+        abort_unless($user->memberships()->where('organisation_id', $organisation->id)->where('is_active', true)->exists(), 404);
+        abort_if($user->canAdministerSystem() && !$request->user()->isBootstrapRoot(), 403);
+        $data = $request->validate([
+            'password' => ['required', 'confirmed', Password::min(12)->letters()->numbers()],
+        ]);
+
+        $passwords->reset($user, $data['password'], $organisation->id);
+
+        return back()->with('success', __('messages.temporary_password_set'));
     }
 
     public function toggleUser(Request $request, User $user, AuditService $audit, CleanupService $cleanup)

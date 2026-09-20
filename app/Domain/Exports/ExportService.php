@@ -5,6 +5,7 @@ namespace App\Domain\Exports;
 use App\Domain\Audit\AuditService;
 use App\Models\Export;
 use App\Models\FormSubmission;
+use App\Support\DateTimeDisplay;
 use Illuminate\Support\Facades\Storage;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
@@ -36,7 +37,7 @@ class ExportService
     private function csv(string $path, $submissions): void
     {
         $handle = fopen($path, 'wb');
-        fputcsv($handle, ['Submission', 'Form', 'Version', 'Status', 'Respondent', 'Attempt', 'Started', 'Submitted', 'Score', 'Percentage', 'Component key', 'Component', 'Type', 'Value']);
+        fputcsv($handle, ['Submission', 'Form', 'Version', 'Status', 'Respondent', 'Attempt', 'Started (Europe/Riga)', 'Submitted (Europe/Riga)', 'Score', 'Percentage', 'Component key', 'Component', 'Type', 'Value']);
         foreach ($submissions as $submission) {
             $row = $this->submissionRow($submission);
             if ($submission->answers->isEmpty()) {
@@ -54,9 +55,9 @@ class ExportService
     {
         $writer = new Writer(); $writer->openToFile($path);
         $writer->getCurrentSheet()->setName('Summary');
-        $writer->addRow(Row::fromValues(['Universal Form Builder export'])); $writer->addRow(Row::fromValues(['Generated', now()->toIso8601String()])); $writer->addRow(Row::fromValues(['Submissions', $submissions->count()]));
+        $writer->addRow(Row::fromValues(['Universal Form Builder export'])); $writer->addRow(Row::fromValues(['Generated (Europe/Riga)', DateTimeDisplay::format(now())])); $writer->addRow(Row::fromValues(['Submissions', $submissions->count()]));
         $writer->addNewSheetAndMakeItCurrent()->setName('Submissions');
-        $writer->addRow(Row::fromValues(['Submission', 'Form', 'Version', 'Status', 'Respondent', 'Attempt', 'Started', 'Submitted', 'Score', 'Percentage']));
+        $writer->addRow(Row::fromValues(['Submission', 'Form', 'Version', 'Status', 'Respondent', 'Attempt', 'Started (Europe/Riga)', 'Submitted (Europe/Riga)', 'Score', 'Percentage']));
         foreach ($submissions as $submission) $writer->addRow(Row::fromValues(array_map([$this, 'safe'], $this->submissionRow($submission))));
         $writer->addNewSheetAndMakeItCurrent()->setName('Answers');
         $writer->addRow(Row::fromValues(['Submission', 'Component key', 'Component', 'Type', 'Value']));
@@ -70,7 +71,7 @@ class ExportService
 
     private function submissionRow($s): array
     {
-        return [$s->public_id, $s->publication->form->name, $s->formVersion->version_number, $s->status, $s->user?->email ?? 'anonymous', $s->attempt_number, $s->started_at?->toIso8601String(), $s->submitted_at?->toIso8601String(), $s->final_points, $s->percentage];
+        return [$s->public_id, $s->publication->form->name, $s->formVersion->version_number, $s->status, $s->user?->email ?? 'anonymous', $s->attempt_number, DateTimeDisplay::format($s->started_at), DateTimeDisplay::format($s->submitted_at), $s->final_points, $s->percentage];
     }
 
     public function safe(mixed $value): mixed

@@ -54,13 +54,16 @@ class QuestionnairePackageController extends Controller
         $temporaryDirectory = storage_path('framework/questionnaire-imports'.DIRECTORY_SEPARATOR.$temporaryName);
         $uploadedPackageDirectory = null;
         $zip = new ZipArchive();
+        $zipOpened = false;
         $seen = [];
         $totalSize = 0;
 
         try {
-            if ($zip->open($uploaded->getRealPath()) !== true || $zip->numFiles < 1 || $zip->numFiles > 1000) {
+            if ($zip->open($uploaded->getRealPath()) !== true) {
                 $this->invalidUploadedPackage();
             }
+            $zipOpened = true;
+            if ($zip->numFiles < 1 || $zip->numFiles > 1000) $this->invalidUploadedPackage();
             File::ensureDirectoryExists($temporaryDirectory);
             for ($index = 0; $index < $zip->numFiles; $index++) {
                 $name = $zip->getNameIndex($index);
@@ -83,6 +86,7 @@ class QuestionnairePackageController extends Controller
                 if (File::size($target) !== $size) $this->invalidUploadedPackage();
             }
             $zip->close();
+            $zipOpened = false;
             $manifestPath = $temporaryDirectory.DIRECTORY_SEPARATOR.'manifest.json';
             if (!File::isFile($manifestPath)) $this->invalidUploadedPackage();
             $manifest = json_decode(File::get($manifestPath), true);
@@ -94,7 +98,7 @@ class QuestionnairePackageController extends Controller
             $form = $packages->importUploadedDirectory($uploadedPackageDirectory, $packageName, $organisation, $request->user());
             return redirect()->route('forms.builder', $form)->with('success', __('messages.questionnaire_imported_as_draft'));
         } finally {
-            if ($zip->status !== ZipArchive::ER_OK) $zip->close();
+            if ($zipOpened) $zip->close();
             if (File::isDirectory($temporaryDirectory)) File::deleteDirectory($temporaryDirectory);
             if ($uploadedPackageDirectory && File::isDirectory($uploadedPackageDirectory)) File::deleteDirectory($uploadedPackageDirectory);
         }

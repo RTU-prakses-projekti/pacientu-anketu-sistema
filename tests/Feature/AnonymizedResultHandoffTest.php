@@ -18,6 +18,7 @@ use App\Models\SubmissionAnswer;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -460,6 +461,62 @@ class AnonymizedResultHandoffTest extends TestCase
         $this->actingAs($root)->get(route('anonymized-results.index'))->assertOk();
     }
 
+    public function test_anonymized_handoff_timestamps_render_in_riga_and_exports_are_human_readable_without_changing_utc_storage(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-01-15 10:00:00', 'UTC'));
+
+        try {
+            [$doctor, $organisation, , , $normal, , , , $assignment, $submission, $patient] = $this->completedGraph();
+            SubmissionAnswer::create([
+                'form_submission_id' => $submission->id,
+                'form_component_id' => $normal->id,
+                'value' => '60',
+                'display_value' => '60',
+                'saved_at' => now(),
+            ]);
+            $submittedUtc = now()->toDateTimeString();
+            $recipient = $this->anonymizedRecipient($organisation);
+            $this->actingAs($doctor)->get(route('doctor.results.show', [$patient, $assignment]))
+                ->assertOk()->assertSee('15.01.2026 12:00');
+            Carbon::setTestNow(Carbon::parse('2026-01-15 10:30:00', 'UTC'));
+
+            $this->actingAs($doctor)->post(route('doctor.results.handoff', [$patient, $assignment]), [
+                'recipient' => $recipient->id,
+            ])->assertRedirect();
+            $handoff = AnonymizedResultHandoff::firstOrFail();
+            $expectedSubmitted = '15.01.2026 12:00';
+            $expectedHandoff = '15.01.2026 12:30';
+
+            $this->actingAs($recipient)->get(route('anonymized-results.index'))->assertOk()->assertSee($expectedSubmitted)->assertSee($expectedHandoff);
+            $this->actingAs($recipient)->get(route('anonymized-results.show', $handoff))->assertOk()->assertSee($expectedSubmitted)->assertSee($expectedHandoff);
+            $csv = $this->actingAs($recipient)->post(route('anonymized-results.export'), [
+                'format' => 'csv',
+                'handoff_ids' => [$handoff->public_id],
+            ])->assertDownload()->streamedContent();
+            $this->assertStringContainsString($expectedSubmitted, $csv);
+            $this->assertStringContainsString($expectedHandoff, $csv);
+
+            $xlsxResponse = $this->actingAs($recipient)->post(route('anonymized-results.export'), [
+                'format' => 'xlsx',
+                'handoff_ids' => [$handoff->public_id],
+            ])->assertDownload();
+            $xlsxPath = $xlsxResponse->baseResponse->getFile()->getPathname();
+            try {
+                $xlsxValues = $this->readXlsxText($xlsxPath);
+                $this->assertContains($expectedSubmitted, $xlsxValues);
+                $this->assertContains($expectedHandoff, $xlsxValues);
+            } finally {
+                @unlink($xlsxPath);
+                @unlink(substr($xlsxPath, 0, -5));
+            }
+
+            $this->assertSame($submittedUtc, \Illuminate\Support\Facades\DB::table('form_submissions')->where('id', $submission->id)->value('submitted_at'));
+            $this->assertSame('2026-01-15 10:30:00', \Illuminate\Support\Facades\DB::table('anonymized_result_handoffs')->where('id', $handoff->id)->value('handed_off_at'));
+        } finally {
+            Carbon::setTestNow();
+        }
+    }
+
     public function test_generic_submission_and_export_permissions_do_not_grant_anonymized_result_access(): void
     {
         [$doctor, $organisation, , , , , , , $assignment, , $patient] = $this->completedGraph();
@@ -565,5 +622,30 @@ class AnonymizedResultHandoffTest extends TestCase
         $membership = OrganisationMembership::create(['organisation_id' => $organisation->id, 'user_id' => $user->id, 'is_active' => true]);
         $membership->roles()->attach(Role::where('name', $role)->firstOrFail());
         return [$user, $membership];
+    }
+
+    private function readXlsxText(string $path): array
+    {
+        $zip = new \ZipArchive();
+        $this->assertTrue($zip->open($path) === true);
+        $values = [];
+
+        try {
+            for ($index = 0; $index < $zip->numFiles; $index++) {
+                $name = $zip->getNameIndex($index);
+                if (!is_string($name) || !str_ends_with($name, '.xml')) continue;
+                $xml = $zip->getFromIndex($index);
+                if (!is_string($xml)) continue;
+
+                $document = new \DOMDocument();
+                if (!$document->loadXML($xml, LIBXML_NONET | LIBXML_NOBLANKS)) continue;
+                $text = (new \DOMXPath($document))->query('//*[local-name()="t"]');
+                foreach ($text as $node) $values[] = $node->textContent;
+            }
+        } finally {
+            $zip->close();
+        }
+
+        return $values;
     }
 }

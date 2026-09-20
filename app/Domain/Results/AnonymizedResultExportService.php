@@ -3,6 +3,7 @@
 namespace App\Domain\Results;
 
 use Illuminate\Support\Collection;
+use App\Support\DateTimeDisplay;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\XLSX\Writer;
 
@@ -10,7 +11,7 @@ class AnonymizedResultExportService
 {
     public function download(Collection $handoffs, string $format)
     {
-        $headers = ['Research ID', 'Form', 'Submitted', 'Handed off', 'Question', 'Answer'];
+        $headers = ['Research ID', 'Form', 'Submitted (Europe/Riga)', 'Handed off (Europe/Riga)', 'Question', 'Answer'];
         $blocks = $this->respondentRows($handoffs);
         $rows = [];
         foreach ($blocks as $block) {
@@ -38,8 +39,8 @@ class AnonymizedResultExportService
                 $rows[] = [
                     $patientCode,
                     $formName,
-                    $handoff->submission->submitted_at?->toIso8601String(),
-                    $handoff->handed_off_at?->toIso8601String(),
+                    DateTimeDisplay::format($handoff->submission->submitted_at),
+                    DateTimeDisplay::format($handoff->handed_off_at),
                     $component->localizedLabel(),
                     $component->localizedAnswerValue($answer->value),
                 ];

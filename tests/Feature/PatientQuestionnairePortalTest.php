@@ -235,7 +235,7 @@ class PatientQuestionnairePortalTest extends TestCase
                     ->assertOk()
                     ->assertSee(__('messages.link_active_validity', [
                         'days' => $days,
-                        'date' => $package->expires_at->format('Y-m-d H:i'),
+                        'date' => \App\Support\DateTimeDisplay::format($package->expires_at),
                     ]))
                     ->assertSee('option value="'.$days.'" selected', false);
             }

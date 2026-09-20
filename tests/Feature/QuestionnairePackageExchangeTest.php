@@ -203,22 +203,47 @@ class QuestionnairePackageExchangeTest extends TestCase
 
     public function test_invalid_and_traversal_zip_uploads_are_rejected_without_import(): void
     {
-        [$creator, $organisation] = $this->member('form_creator', $this->organisation());
+        $organisation = $this->organisation();
+        [$creator] = $this->member('form_creator', $organisation);
         $before = Form::count();
-        $invalidPath = storage_path('framework/invalid-questionnaire.zip');
-        File::put($invalidPath, 'not a zip');
-        $this->actingAs($creator)->post(route('questionnaires.import-file', $organisation), [
-            'package_file' => new UploadedFile($invalidPath, 'invalid.zip', 'application/zip', null, true),
-        ])->assertSessionHasErrors('package_file');
-        File::delete($invalidPath);
+        $invalidPath = storage_path('framework/invalid-questionnaire-'.Str::uuid().'.zip');
+        $traversalPath = storage_path('framework/traversal-questionnaire-'.Str::uuid().'.zip');
+        $traversalZipOpened = false;
+        $zip = null;
 
-        $traversalPath = storage_path('framework/traversal-questionnaire.zip');
-        $zip = new \ZipArchive(); $zip->open($traversalPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE); $zip->addFromString('../manifest.json', '{}'); $zip->close();
-        $this->actingAs($creator)->post(route('questionnaires.import-file', $organisation), [
-            'package_file' => new UploadedFile($traversalPath, 'traversal.zip', 'application/zip', null, true),
-        ])->assertSessionHasErrors('package_file');
-        File::delete($traversalPath);
-        $this->assertSame($before, Form::count());
+        try {
+            File::put($invalidPath, 'not a zip');
+            $this->withoutExceptionHandling();
+            try {
+                $this->actingAs($creator)->post(route('questionnaires.import-file', $organisation), [
+                    'package_file' => new UploadedFile($invalidPath, 'invalid.zip', 'application/zip', null, true),
+                ]);
+                $this->fail('Expected malformed ZIP file validation to fail.');
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('package_file', $exception->errors());
+            }
+
+            $zip = new \ZipArchive();
+            $traversalZipOpened = $zip->open($traversalPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true;
+            $this->assertTrue($traversalZipOpened);
+            $zip->addFromString('../manifest.json', '{}');
+            $zip->close();
+            $traversalZipOpened = false;
+            try {
+                $this->actingAs($creator)->post(route('questionnaires.import-file', $organisation), [
+                    'package_file' => new UploadedFile($traversalPath, 'traversal.zip', 'application/zip', null, true),
+                ]);
+                $this->fail('Expected traversal ZIP entry validation to fail.');
+            } catch (ValidationException $exception) {
+                $this->assertArrayHasKey('package_file', $exception->errors());
+            }
+
+            $this->assertSame($before, Form::count());
+        } finally {
+            if ($traversalZipOpened && $zip instanceof \ZipArchive) $zip->close();
+            File::delete($invalidPath);
+            File::delete($traversalPath);
+        }
     }
 
     public function test_browser_file_import_requires_questionnaire_authoring_access(): void
@@ -358,7 +383,7 @@ class QuestionnairePackageExchangeTest extends TestCase
         $existingLastOrder = $existingSection->display_order;
 
         $this->actingAs($creator)->get(route('forms.builder', $targetForm))->assertOk()->assertSee(__('messages.add_questionnaire_part_from_git'));
-        $this->get(route('forms.show', $targetForm))->assertOk()->assertSee(__('messages.add_questionnaire_part_from_git'));
+        $this->get(route('forms.show', $targetForm))->assertOk()->assertDontSee(__('messages.add_questionnaire_part_from_git'));
         $this->get(route('questionnaires.parts', [$targetForm, $targetVersion]))->assertOk()->assertSee($export['package_name'])->assertSee(__('messages.import_as_next_part'));
 
         $imported = $this->packages()->importInto($export['package_name'], $targetVersion, $creator);

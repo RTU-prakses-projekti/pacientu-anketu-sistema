@@ -25,6 +25,7 @@
     @forelse($activeMemberships as $membership)<div>{{ $membership->organisation->name }} — {{ $membership->roles->map(fn ($role) => $role->label())->join(', ') }}</div>@empty — @endforelse
 </td><td data-label="{{ __('messages.status') }}">{{ $user->is_active ? __('messages.active') : __('messages.inactive') }}</td><td data-label="{{ __('messages.actions') }}"><div class="actions">
     <a class="btn" href="{{ route('system.users.roles.edit', $user) }}">{{ __('messages.change_roles') }}</a>
+    @include('users._password-reset', ['user' => $user, 'action' => route('system.users.password-reset', $user)])
     @unless(auth()->user()->is($user))
         <form method="POST" action="{{ route('users.toggle', $user) }}">@csrf<button class="btn">{{ $user->is_active ? __('messages.disable') : __('messages.enable') }}</button></form>
         @if($deleteEligibility[$user->id]['allowed'])
