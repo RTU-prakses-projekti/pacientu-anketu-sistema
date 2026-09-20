@@ -17,6 +17,7 @@ use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -212,6 +213,35 @@ class PatientQuestionnairePortalTest extends TestCase
         $ineligible = $this->publication($organisation, 'Public mode', 'public');
         $this->actingAs($doctor)->get(route('doctor.questionnaires.index', $patient))->assertOk()->assertSee($eligible->name)->assertDontSee($ineligible->name)
             ->assertSee(__('messages.create_link'))->assertSee(__('messages.assign_questionnaire'));
+    }
+
+    public function test_selected_patient_link_validity_is_saved_and_displayed_for_7_30_and_90_days(): void
+    {
+        [$doctor, $patient, $publication] = $this->base();
+        $this->assign($patient, $publication, 'First', 1);
+        Carbon::setTestNow(Carbon::parse('2026-09-20 12:00:00'));
+
+        try {
+            foreach ([7, 30, 90] as $days) {
+                $this->actingAs($doctor)->post(route('doctor.patient-link.issue', $patient), [
+                    'expires_in_days' => $days,
+                ])->assertRedirect();
+
+                $package = $patient->accessPackages()->latest('id')->firstOrFail();
+                $expectedExpiry = $package->created_at->copy()->addDays($days);
+                $this->assertSame($expectedExpiry->getTimestamp(), $package->expires_at->getTimestamp());
+
+                $this->actingAs($doctor)->get(route('doctor.questionnaires.index', $patient))
+                    ->assertOk()
+                    ->assertSee(__('messages.link_active_validity', [
+                        'days' => $days,
+                        'date' => $package->expires_at->format('Y-m-d H:i'),
+                    ]))
+                    ->assertSee('option value="'.$days.'" selected', false);
+            }
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_link_issue_safely_provisions_an_invitation_for_an_existing_assignment(): void

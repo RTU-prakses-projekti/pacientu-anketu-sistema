@@ -23,6 +23,7 @@ class DoctorDashboardController extends Controller
     {
         $actor = $request->user();
         abort_unless($actor->isBootstrapRoot() || $actor->hasDoctorWorkspace(), 403);
+        $showArchived = $request->query('status') === 'archived';
 
         $workspaces = OrganisationMembership::query()
             ->with(['organisation', 'user'])
@@ -48,6 +49,7 @@ class DoctorDashboardController extends Controller
             $patientCases = PatientCase::query()
                 ->visibleTo($actor)
                 ->where('organisation_id', $selected->organisation_id)
+                ->when($showArchived, fn ($query) => $query->whereNotNull('archived_at'), fn ($query) => $query->whereNull('archived_at'))
                 ->withCount([
                     'assignments',
                     'assignments as completed_assignments_count' => fn ($query) => $query->whereHas('submissions', fn ($submissions) => $submissions->whereIn('status', FormSubmission::PATIENT_COMPLETED_STATUSES)),
@@ -64,7 +66,43 @@ class DoctorDashboardController extends Controller
             'workspaces' => $workspaces,
             'selectedMembership' => $selected,
             'patientCases' => $patientCases,
+            'showArchived' => $showArchived,
         ]);
+    }
+
+    public function archivePatient(PatientCase $patientCase, AuditService $audit)
+    {
+        $this->authorize('update', $patientCase);
+
+        if (!$patientCase->archived_at) {
+            DB::transaction(function () use ($patientCase, $audit): void {
+                $patientCase->update(['archived_at' => now()]);
+                $audit->record('patient_case.archived', $patientCase, $patientCase->organisation_id, ['slot_number' => $patientCase->slot_number]);
+            });
+        }
+
+        return redirect()->route('doctor.dashboard', [
+            'organisation_id' => $patientCase->organisation_id,
+            'doctor_id' => $patientCase->doctor_id,
+            'status' => 'archived',
+        ])->with('success', __('messages.patient_archived'));
+    }
+
+    public function restorePatient(PatientCase $patientCase, AuditService $audit)
+    {
+        $this->authorize('update', $patientCase);
+
+        if ($patientCase->archived_at) {
+            DB::transaction(function () use ($patientCase, $audit): void {
+                $patientCase->update(['archived_at' => null]);
+                $audit->record('patient_case.restored', $patientCase, $patientCase->organisation_id, ['slot_number' => $patientCase->slot_number]);
+            });
+        }
+
+        return redirect()->route('doctor.dashboard', [
+            'organisation_id' => $patientCase->organisation_id,
+            'doctor_id' => $patientCase->doctor_id,
+        ])->with('success', __('messages.patient_restored'));
     }
 
     public function storePatient(Request $request, Organisation $organisation, AuditService $audit)

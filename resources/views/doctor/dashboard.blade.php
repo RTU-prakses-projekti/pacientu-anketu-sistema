@@ -18,6 +18,12 @@
 @endif
 <div class="mb-4 text-sm text-slate-600"><strong>{{ __('messages.organisation') }}:</strong> {{ $selectedMembership->organisation->name }}</div>
 
+<nav class="actions mb-4" aria-label="{{ __('messages.patient_registry') }}">
+    <a class="btn {{ $showArchived ? '' : 'primary' }}" href="{{ route('doctor.dashboard', ['organisation_id' => $selectedMembership->organisation_id, 'doctor_id' => $selectedMembership->user_id]) }}">{{ __('messages.active_patients') }}</a>
+    <a class="btn {{ $showArchived ? 'primary' : '' }}" href="{{ route('doctor.dashboard', ['organisation_id' => $selectedMembership->organisation_id, 'doctor_id' => $selectedMembership->user_id, 'status' => 'archived']) }}">{{ __('messages.archived_patients') }}</a>
+</nav>
+
+@unless($showArchived)
 <details class="card mb-6" @if($errors->any()) open @endif>
     <summary class="cursor-pointer font-semibold">{{ __('messages.add_patient') }}</summary>
     <form method="POST" action="{{ route('doctor.patients.store', $selectedMembership->organisation) }}" class="form-grid mt-4">@csrf
@@ -35,6 +41,7 @@
     <button class="btn primary" type="submit">{{ __('messages.assign_questionnaire') }}</button>
     <a class="btn" href="{{ route('doctor.patients.export', $selectedMembership->organisation) }}" data-patient-export>{{ __('messages.export_answers') }}</a>
 </form>
+@endunless
 
 <div class="table-wrap doctor-overview-table mobile-card-table"><table><thead><tr>
     <th class="selection-column"><span class="sr-only">{{ __('messages.select_patient') }}</span></th>
@@ -43,7 +50,7 @@
 @forelse($patientCases as $patientCase)
 @php($notStarted = max(0, $patientCase->assignments_count - $patientCase->completed_assignments_count - $patientCase->in_progress_assignments_count))
 <tr data-patient-row="{{ $patientCase->public_id }}">
-    <td class="selection-column" data-label="{{ __('messages.select_patient') }}"><input type="checkbox" form="bulk-selection-form" name="patient_case_ids[]" value="{{ $patientCase->id }}" data-patient-select aria-label="{{ __('messages.select_patient') }} {{ $patientCase->slot_number }}"></td>
+    <td class="selection-column" data-label="{{ __('messages.select_patient') }}">@unless($showArchived)<input type="checkbox" form="bulk-selection-form" name="patient_case_ids[]" value="{{ $patientCase->id }}" data-patient-select aria-label="{{ __('messages.select_patient') }} {{ $patientCase->slot_number }}">@endunless</td>
     <td data-label="{{ __('messages.slot_number') }}">{{ $patientCase->slot_number }}</td>
     <td data-label="{{ __('messages.patient') }}"><strong>{{ trim($patientCase->first_name.' '.$patientCase->last_name) ?: '—' }}</strong></td>
     <td data-label="{{ __('messages.patient_id') }}">{{ $patientCase->external_patient_code ?: '—' }}</td>
@@ -53,10 +60,17 @@
     <td class="doctor-row-actions" data-label="{{ __('messages.actions') }}">
         <button class="btn" type="button" data-patient-edit-open="{{ $patientCase->public_id }}">{{ __('messages.edit') }}</button>
         <a class="btn" href="{{ route('doctor.questionnaires.index', $patientCase) }}">{{ __('messages.questionnaires') }}</a>
+        @if(auth()->user()->isBootstrapRoot() || auth()->user()->hasDoctorPermission($selectedMembership->organisation_id, 'patients.update'))
+            @if($showArchived)
+                <form method="POST" action="{{ route('doctor.patients.restore', $patientCase) }}">@csrf<button class="btn" type="submit">{{ __('messages.restore_patient') }}</button></form>
+            @else
+                <form method="POST" action="{{ route('doctor.patients.archive', $patientCase) }}" data-confirm="{{ __('messages.confirm_patient_archive') }}">@csrf<button class="btn" type="submit">{{ __('messages.archive_patient') }}</button></form>
+            @endif
+        @endif
     </td>
 </tr>
 @empty
-<tr><td colspan="8">{{ __('messages.no_patients') }}</td></tr>
+<tr><td colspan="8">{{ $showArchived ? __('messages.no_archived_patients') : __('messages.no_patients') }}</td></tr>
 @endforelse
 </tbody></table></div>
 @foreach($patientCases as $patientCase)

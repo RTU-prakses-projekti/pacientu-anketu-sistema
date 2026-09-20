@@ -58,6 +58,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/doctor/organisations/{organisation}/patients-export', [DoctorDashboardController::class, 'exportForm'])->name('doctor.patients.export');
     Route::post('/doctor/organisations/{organisation}/patients-export', [DoctorDashboardController::class, 'exportAnswers'])->name('doctor.patients.export.download');
     Route::post('/doctor/organisations/{organisation}/patients', [DoctorDashboardController::class, 'storePatient'])->name('doctor.patients.store');
+    Route::post('/doctor/patients/{patientCase}/archive', [DoctorDashboardController::class, 'archivePatient'])->name('doctor.patients.archive');
+    Route::post('/doctor/patients/{patientCase}/restore', [DoctorDashboardController::class, 'restorePatient'])->name('doctor.patients.restore');
     Route::put('/doctor/organisations/{organisation}/doctors/{doctor}/slots/{slot}', [DoctorDashboardController::class, 'updateSlot'])->name('doctor.patients.slots.update');
     Route::get('/doctor/patients/{patientCase}/assignments/{assignment}/result', [DoctorDashboardController::class, 'result'])->name('doctor.results.show');
     Route::post('/doctor/patients/{patientCase}/assignments/{assignment}/result/handoff', [AnonymizedResultController::class, 'store'])->name('doctor.results.handoff');

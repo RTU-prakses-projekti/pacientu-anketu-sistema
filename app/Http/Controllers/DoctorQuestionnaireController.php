@@ -18,7 +18,17 @@ class DoctorQuestionnaireController extends Controller
         $patientCase->load(['assignments.publication.formVersion', 'assignments.completedSubmission', 'accessPackages' => fn ($query) => $query->latest()]);
         $publications = $assignments->availableFor($patientCase);
         $activePackage = $patientCase->accessPackages->first(fn ($package) => $package->isUsable());
-        return view('doctor.questionnaires.index', compact('patientCase', 'publications', 'activePackage'));
+        $activePackageValidityDays = 30;
+        if ($activePackage) {
+            foreach ([7, 14, 30, 60, 90] as $days) {
+                if (abs($activePackage->created_at->copy()->addDays($days)->diffInSeconds($activePackage->expires_at)) <= 5) {
+                    $activePackageValidityDays = $days;
+                    break;
+                }
+            }
+        }
+
+        return view('doctor.questionnaires.index', compact('patientCase', 'publications', 'activePackage', 'activePackageValidityDays'));
     }
 
     public function store(Request $request, PatientCase $patientCase, PatientQuestionnaireAssignmentService $assignments)

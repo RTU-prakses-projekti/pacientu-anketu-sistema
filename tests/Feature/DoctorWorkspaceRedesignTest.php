@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Domain\Forms\FormAuthoringService;
+use App\Domain\Patients\PatientAccessService;
 use App\Models\AuditLog;
 use App\Models\Form;
 use App\Models\Invitation;
@@ -165,6 +166,58 @@ class DoctorWorkspaceRedesignTest extends TestCase
             'organisation_id' => $otherOrganisation->id,
             'doctor_id' => $doctorA->id,
         ]);
+    }
+
+    public function test_doctor_can_archive_and_restore_owned_patient_without_deleting_history(): void
+    {
+        $organisation = $this->organisation();
+        [$doctor] = $this->member('doctor', $organisation);
+        $patient = $this->patient($organisation, $doctor, 1, 'Retained patient');
+        $publication = $this->publication($organisation, 'Retained questionnaire');
+        $assignment = $this->assignDirectly($patient, $publication, 1);
+        $this->actingAs($doctor);
+        [$package] = app(PatientAccessService::class)->issue($patient, $doctor->id, 30);
+        $dashboard = route('doctor.dashboard', ['organisation_id' => $organisation->id, 'doctor_id' => $doctor->id]);
+
+        $this->get($dashboard)->assertOk()->assertSee($patient->patient_code);
+        $this->post(route('doctor.patients.archive', $patient))
+            ->assertRedirect(route('doctor.dashboard', ['organisation_id' => $organisation->id, 'doctor_id' => $doctor->id, 'status' => 'archived']));
+
+        $this->assertNotNull($patient->fresh()->archived_at);
+        $this->assertDatabaseHas('patient_form_assignments', ['id' => $assignment->id, 'patient_case_id' => $patient->id]);
+        $this->assertDatabaseHas('patient_access_packages', ['id' => $package->id, 'patient_case_id' => $patient->id]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'patient_case.archived', 'subject_id' => $patient->id]);
+        $this->get($dashboard)->assertOk()->assertDontSee($patient->patient_code);
+        $this->get(route('doctor.dashboard', ['organisation_id' => $organisation->id, 'doctor_id' => $doctor->id, 'status' => 'archived']))
+            ->assertOk()
+            ->assertSee($patient->patient_code)
+            ->assertSee(__('messages.restore_patient'));
+
+        $this->post(route('doctor.patients.restore', $patient))
+            ->assertRedirect($dashboard);
+        $this->assertNull($patient->fresh()->archived_at);
+        $this->assertDatabaseHas('patient_form_assignments', ['id' => $assignment->id, 'patient_case_id' => $patient->id]);
+        $this->assertDatabaseHas('patient_access_packages', ['id' => $package->id, 'patient_case_id' => $patient->id]);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'patient_case.restored', 'subject_id' => $patient->id]);
+        $this->get($dashboard)->assertOk()->assertSee($patient->patient_code);
+    }
+
+    public function test_doctor_cannot_archive_patient_from_another_organisation_or_doctor(): void
+    {
+        $organisation = $this->organisation();
+        [$doctor] = $this->member('doctor', $organisation);
+        $foreignDoctorPatient = $this->patient($organisation, $this->member('doctor', $organisation)[0], 1, 'Other doctor');
+        $otherOrganisation = $this->organisation();
+        $otherOrganisationPatient = $this->patient($otherOrganisation, $this->member('doctor', $otherOrganisation)[0], 1, 'Other organisation');
+
+        $this->actingAs($doctor)
+            ->post(route('doctor.patients.archive', $foreignDoctorPatient))
+            ->assertForbidden();
+        $this->post(route('doctor.patients.archive', $otherOrganisationPatient))
+            ->assertForbidden();
+
+        $this->assertNull($foreignDoctorPatient->fresh()->archived_at);
+        $this->assertNull($otherOrganisationPatient->fresh()->archived_at);
     }
 
     public function test_active_workspace_does_not_enable_clinical_writes_in_an_inactive_organisation(): void

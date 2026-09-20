@@ -10,6 +10,7 @@ use InvalidArgumentException;
 class PatientCase extends Model
 {
     protected $guarded = [];
+    protected $casts = ['archived_at' => 'datetime'];
 
     protected static function booted(): void
     {
