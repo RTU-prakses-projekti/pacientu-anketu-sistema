@@ -60,7 +60,6 @@ Route::get('/respond/{submission}/attachments/{attachment}', [AttachmentControll
 Route::middleware(['auth', 'password.change.required'])->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::get('/doctor', [DoctorDashboardController::class, 'index'])->name('doctor.dashboard');
-    Route::get('/doctor/organisations/{organisation}/patients-export', [DoctorDashboardController::class, 'exportForm'])->name('doctor.patients.export');
     Route::post('/doctor/organisations/{organisation}/patients-export', [DoctorDashboardController::class, 'exportAnswers'])->name('doctor.patients.export.download');
     Route::post('/doctor/organisations/{organisation}/patients', [DoctorDashboardController::class, 'storePatient'])->name('doctor.patients.store');
     Route::post('/doctor/patients/{patientCase}/archive', [DoctorDashboardController::class, 'archivePatient'])->name('doctor.patients.archive');

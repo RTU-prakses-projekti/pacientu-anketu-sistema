@@ -39,8 +39,21 @@
 <form id="bulk-selection-form" method="POST" action="{{ route('doctor.questionnaires.bulk.create') }}" class="actions doctor-bulk-actions mb-3">@csrf
     <label class="check"><input type="checkbox" data-patient-select-all> {{ __('messages.select_all_visible') }}</label>
     <button class="btn primary" type="submit">{{ __('messages.assign_questionnaire') }}</button>
-    <a class="btn" href="{{ route('doctor.patients.export', $selectedMembership->organisation) }}" data-patient-export>{{ __('messages.export_answers') }}</a>
 </form>
+<details class="card mb-4" @if($errors->has('patient_case_ids')) open @endif>
+    <summary class="cursor-pointer font-semibold">{{ __('messages.export_answers') }}</summary>
+    <form method="POST" action="{{ route('doctor.patients.export.download', $selectedMembership->organisation) }}" class="form-grid mt-4" data-patient-export-form>
+        @csrf
+        <label>{{ __('messages.format') }}
+            <select name="format">
+                <option value="csv">CSV</option>
+                <option value="xlsx">XLSX</option>
+            </select>
+        </label>
+        @error('patient_case_ids')<p class="text-red-700">{{ $message }}</p>@enderror
+        <button class="btn primary" type="submit">{{ __('messages.export_answers') }}</button>
+    </form>
+</details>
 @if($handoffRecipients->isNotEmpty())
 <form id="bulk-anonymized-handoff-form" method="POST" action="{{ route('doctor.results.handoff.bulk') }}" class="card stack mb-4">
     @csrf
@@ -130,10 +143,16 @@
             refresh();
         });
         patients.forEach((checkbox) => checkbox.addEventListener('change', refresh));
-        document.querySelector('[data-patient-export]')?.addEventListener('click', (event) => {
+        document.querySelector('[data-patient-export-form]')?.addEventListener('submit', (event) => {
             const selectedIds = patients.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value);
-            if (selectedIds.length === 0) return;
-            event.currentTarget.href = `${event.currentTarget.href.split('?')[0]}?${new URLSearchParams(selectedIds.map((id) => ['patient_case_ids[]', id]))}`;
+            event.currentTarget.querySelectorAll('[name="patient_case_ids[]"]').forEach((input) => input.remove());
+            selectedIds.forEach((id) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'patient_case_ids[]';
+                input.value = id;
+                event.currentTarget.append(input);
+            });
         });
         refresh();
     });

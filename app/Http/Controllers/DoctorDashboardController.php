@@ -189,26 +189,19 @@ class DoctorDashboardController extends Controller
         return view('doctor.results.show', compact('patientCase', 'assignment', 'submission') + ['recipients' => $handoffs->recipients($patientCase->organisation)]);
     }
 
-    public function exportForm(Request $request, Organisation $organisation)
-    {
-        $actor = $request->user();
-        abort_unless($actor->isBootstrapRoot() || $actor->hasDoctorPermission($organisation->id, 'patient.questionnaires.view'), 403);
-        $data = $request->validate(['patient_case_ids' => ['nullable', 'array', 'min:1', 'max:200'], 'patient_case_ids.*' => ['integer', 'distinct']]);
-
-        return view('doctor.export', ['organisation' => $organisation, 'patientCaseIds' => $data['patient_case_ids'] ?? []]);
-    }
-
     public function exportAnswers(Request $request, Organisation $organisation)
     {
         $actor = $request->user();
         abort_unless($actor->isBootstrapRoot() || $actor->hasDoctorPermission($organisation->id, 'patient.questionnaires.view'), 403);
         $data = $request->validate([
             'format' => ['required', Rule::in(['csv', 'xlsx'])],
-            'anonymize' => ['sometimes', 'boolean'],
-            'patient_case_ids' => ['nullable', 'array', 'min:1', 'max:200'],
+            'patient_case_ids' => ['required', 'array', 'min:1', 'max:200'],
             'patient_case_ids.*' => ['integer', 'distinct'],
+        ], [
+            'patient_case_ids.required' => __('messages.select_at_least_one_patient'),
+            'patient_case_ids.array' => __('messages.select_at_least_one_patient'),
+            'patient_case_ids.min' => __('messages.select_at_least_one_patient'),
         ]);
-        $anonymize = $request->boolean('anonymize', true);
 
         $patientCases = PatientCase::query()->visibleTo($actor)
             ->where('organisation_id', $organisation->id)
@@ -219,19 +212,18 @@ class DoctorDashboardController extends Controller
 
         $rows = [];
         foreach ($patientCases as $patientCase) {
-            $patientName = $anonymize ? '' : trim($patientCase->first_name.' '.$patientCase->last_name);
             $hasAnswers = false;
             foreach ($patientCase->assignments as $assignment) {
                 $submission = $assignment->completedSubmission;
                 if (!$submission) continue;
                 foreach ($submission->orderedAnswers() as $answer) {
-                    $rows[] = [$patientCase->patient_code, $patientName, $assignment->label, $answer->component->label, $answer->display_value];
+                    $rows[] = [$patientCase->patient_code, $assignment->label, $answer->component->label, $answer->display_value];
                     $hasAnswers = true;
                 }
             }
-            if ($hasAnswers) $rows[] = array_fill(0, 5, '');
+            if ($hasAnswers) $rows[] = array_fill(0, 4, '');
         }
-        $header = [__('messages.research_id'), __('messages.patient'), __('messages.questionnaires'), __('messages.component'), __('messages.answer')];
+        $header = [__('messages.research_id'), __('messages.questionnaires'), __('messages.component'), __('messages.answer')];
 
         return $data['format'] === 'xlsx' ? $this->downloadXlsx($header, $rows) : $this->downloadCsv($header, $rows);
     }
@@ -258,10 +250,9 @@ class DoctorDashboardController extends Controller
         $writer->openToFile($path);
         $writer->getCurrentSheet()->setName('Patient answers');
         $writer->getCurrentSheet()->setColumnWidth(20, 1);
-        $writer->getCurrentSheet()->setColumnWidth(28, 2);
-        $writer->getCurrentSheet()->setColumnWidth(32, 3);
-        $writer->getCurrentSheet()->setColumnWidth(42, 4);
-        $writer->getCurrentSheet()->setColumnWidth(56, 5);
+        $writer->getCurrentSheet()->setColumnWidth(32, 2);
+        $writer->getCurrentSheet()->setColumnWidth(42, 3);
+        $writer->getCurrentSheet()->setColumnWidth(56, 4);
         $writer->addRow(Row::fromValues(['Patient answer export']));
         $writer->addRow(Row::fromValuesWithStyle($header, $headerStyle));
         foreach ($rows as $row) $writer->addRow(Row::fromValues(array_map([$this, 'csvSafe'], $row)));

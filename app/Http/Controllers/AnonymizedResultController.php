@@ -17,7 +17,10 @@ class AnonymizedResultController extends Controller
     {
         abort_unless($assignment->patient_case_id === $patientCase->id, 404);
         $this->authorize('viewQuestionnaires', $patientCase);
-        $data = $request->validate(['recipient' => ['required', 'integer']]);
+        $data = $request->validate(
+            ['recipient' => ['required', 'integer']],
+            ['recipient.required' => __('messages.select_recipient')],
+        );
         $submission = $assignment->completedSubmission()->firstOrFail();
         $handoff = $service->handoff($request->user(), $assignment, $submission, (int) $data['recipient']);
         return back()->with('success', __('messages.result_handed_off').' '.__('messages.handed_off_to', ['name' => $handoff->recipient->name]));
@@ -29,6 +32,11 @@ class AnonymizedResultController extends Controller
             'recipient' => ['required', 'integer'],
             'assignment_ids' => ['required', 'array', 'min:1', 'max:500'],
             'assignment_ids.*' => ['required', 'string', 'distinct', 'max:100'],
+        ], [
+            'recipient.required' => __('messages.select_recipient'),
+            'assignment_ids.required' => __('messages.select_completed_results'),
+            'assignment_ids.array' => __('messages.select_completed_results'),
+            'assignment_ids.min' => __('messages.select_completed_results'),
         ]);
         $assignments = PatientFormAssignment::query()
             ->whereIn('public_id', $data['assignment_ids'])

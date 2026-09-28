@@ -9,6 +9,7 @@ use App\Models\PatientCase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class DoctorQuestionnaireController extends Controller
 {
@@ -37,7 +38,7 @@ class DoctorQuestionnaireController extends Controller
         $data = $request->validate([
             'publication_id' => ['required', 'integer'],
             'label' => ['required', 'string', 'max:255'], 'display_order' => ['required', 'integer', 'min:1', 'max:1000'],
-        ]);
+        ], ['publication_id.required' => __('messages.select_survey')]);
         $assignments->assign($request->user(), collect([$patientCase]), (int) $data['publication_id'], $data['label'], (int) $data['display_order']);
         return back()->with('success', __('messages.questionnaire_assigned'));
     }
@@ -52,8 +53,15 @@ class DoctorQuestionnaireController extends Controller
 
     public function bulkStore(Request $request, PatientQuestionnaireAssignmentService $assignments, PatientAccessService $access)
     {
+        if (empty($request->input('patient_case_ids')) && !$request->filled('publication_id')) {
+            throw ValidationException::withMessages(['patient_case_ids' => __('messages.select_patients_and_survey')]);
+        }
+
         $patientCases = $this->selectedPatients($request);
-        $data = $request->validate(['publication_id' => ['required', 'integer'], 'expires_in_days' => ['nullable', Rule::in([7, 14, 30, 60, 90])]]);
+        $data = $request->validate(
+            ['publication_id' => ['required', 'integer'], 'expires_in_days' => ['nullable', Rule::in([7, 14, 30, 60, 90])]],
+            ['publication_id.required' => __('messages.select_survey')],
+        );
         $links = DB::transaction(function () use ($request, $patientCases, $assignments, $access, $data) {
             $created = $assignments->assign($request->user(), $patientCases, (int) $data['publication_id']);
             return $created->load('patientCase')->map(function ($assignment) use ($request, $access, $data): array {
@@ -92,6 +100,11 @@ class DoctorQuestionnaireController extends Controller
         $data = $request->validate([
             'patient_case_ids' => ['required', 'array', 'min:1', 'max:200'],
             'patient_case_ids.*' => ['required', 'integer', 'distinct'],
+        ], [
+            'patient_case_ids.required' => __('messages.select_at_least_one_patient'),
+            'patient_case_ids.array' => __('messages.select_at_least_one_patient'),
+            'patient_case_ids.min' => __('messages.select_at_least_one_patient'),
+            'patient_case_ids.*.required' => __('messages.select_at_least_one_patient'),
         ]);
         $ids = collect($data['patient_case_ids'])->map(fn ($id) => (int) $id);
         $patientCases = PatientCase::query()->whereIn('id', $ids)->get();

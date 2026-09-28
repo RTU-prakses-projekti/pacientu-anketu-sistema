@@ -218,6 +218,16 @@ class AnonymizedResultHandoffTest extends TestCase
         $recipient = $this->anonymizedRecipient($organisation);
 
         $this->actingAs($doctor)->post(route('doctor.results.handoff.bulk'), [
+            'assignment_ids' => [$completedAssignment->public_id],
+        ])->assertSessionHasErrors('recipient');
+        $this->assertSame(__('messages.select_recipient'), session('errors')->first('recipient'));
+
+        $this->actingAs($doctor)->post(route('doctor.results.handoff.bulk'), [
+            'recipient' => $recipient->id,
+        ])->assertSessionHasErrors('assignment_ids');
+        $this->assertSame(__('messages.select_completed_results'), session('errors')->first('assignment_ids'));
+
+        $this->actingAs($doctor)->post(route('doctor.results.handoff.bulk'), [
             'recipient' => $recipient->id,
             'assignment_ids' => [$completedAssignment->public_id, $incompleteAssignment->public_id],
         ])->assertSessionHasErrors('assignment_ids');

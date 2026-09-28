@@ -92,6 +92,36 @@ class DoctorWorkspaceRedesignTest extends TestCase
             ->assertSee($patientB->patient_code);
     }
 
+    public function test_bulk_assignment_validation_uses_specific_messages_and_preserves_business_errors(): void
+    {
+        $organisation = $this->organisation();
+        [$doctor] = $this->member('doctor', $organisation);
+        $patient = $this->patient($organisation, $doctor, 1, 'Patient');
+        $publication = $this->publication($organisation, 'Unavailable questionnaire');
+        $this->assignDirectly($patient, $publication, 1);
+
+        $this->actingAs($doctor)->post(route('doctor.questionnaires.bulk.create'), [])
+            ->assertSessionHasErrors('patient_case_ids');
+        $this->assertSame(__('messages.select_at_least_one_patient'), session('errors')->first('patient_case_ids'));
+
+        $this->post(route('doctor.questionnaires.bulk.store'), [])->assertSessionHasErrors('patient_case_ids');
+        $this->assertSame(__('messages.select_patients_and_survey'), session('errors')->first('patient_case_ids'));
+
+        $this->post(route('doctor.questionnaires.bulk.store'), [
+            'patient_case_ids' => [$patient->id],
+        ])->assertSessionHasErrors('publication_id');
+        $this->assertSame(__('messages.select_survey'), session('errors')->first('publication_id'));
+
+        $this->post(route('doctor.questionnaires.store', $patient), [])->assertSessionHasErrors('publication_id');
+        $this->assertSame(__('messages.select_survey'), session('errors')->first('publication_id'));
+
+        $this->post(route('doctor.questionnaires.bulk.store'), [
+            'patient_case_ids' => [$patient->id],
+            'publication_id' => $publication->id,
+        ])->assertSessionHasErrors('publication_id');
+        $this->assertSame(__('messages.questionnaire_not_available'), session('errors')->first('publication_id'));
+    }
+
     public function test_bulk_assignment_is_atomic_and_creates_distinct_ordered_patient_records_with_individual_links(): void
     {
         $organisation = $this->organisation();
